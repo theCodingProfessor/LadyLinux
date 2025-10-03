@@ -1,7 +1,7 @@
 # LadyLinux
 Open Source Operating System with LLM Support
 
-# Lady Linux 🧑‍💻🌿
+# Lady Linux 
 
 **Lady Linux** is a next-generation, privacy-first Linux distribution designed to empower digital citizens.  
 It blends the stability of Ubuntu/Mint with new layers for **transparency, data literacy, and AI-assisted system interaction.**  
