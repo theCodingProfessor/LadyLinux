@@ -2,17 +2,13 @@
 
 **Lady Linux** is an experimental, open-source Linux-based operating system designed to give people *language-level access* to their own systems and data through LLM Support.
 
-**Lady Linux** is a **privacy-first** Linux distribution designed to empower digital citizens.
+**Lady Linux** is a **privacy-first** Linux distribution designed to empower digital citizens. It blends the stability of Linux Mint with new layers for **transparency, data literacy, and AI-assisted system interaction.**  
 
-It blends the stability of Linux Mint with new layers for **transparency, data literacy, and AI-assisted system interaction.**  
+## What Makes Lady Linux Unique
 
---- 
 Unlike conventional operating systems that hide complexity behind opaque settings and brittle interfaces, Lady Linux treats the operating system itself as something you can **talk to**, **inspect**, and **understand**—with a human firmly in the loop.
 
 Lady Linux integrates a local Large Language Model (LLM) directly into the operating system stack, not as a chatbot or assistant overlay, but as a **bounded system role**: a guide that helps users interpret configuration files, understand system behavior, and make informed decisions about their data.
-
----
----
 
 ## ✨ Anticipated Features
 - 🐧 **Linux Core**: Based on Ubuntu/Mint for stability and hardware compatibility.  
@@ -20,8 +16,6 @@ Lady Linux integrates a local Large Language Model (LLM) directly into the opera
 - 📚 **Data Literacy Tools**: Explore logs, system state, and your data in plain language.  
 - 🔒 **Privacy by Default**: You choose how your data is stored, shared, and annotated.  
 - 🖥️ **Web-based Interface**: Manage your system with FastAPI + a browser UI.  
-
----
 
 ## Why Lady Linux?
 
@@ -40,9 +34,7 @@ Its goals are to:
 - Enable **human-in-the-loop automation**
 - Serve as an educational platform for systems, security, and AI
 
----
-
-## What Makes Lady Linux Different?
+## Who is Lady Linux?
 
 - **Conversational OS model**  
   Users interact with the system using natural language to *inspect*, not blindly modify, system state.
@@ -59,7 +51,6 @@ Its goals are to:
 - **Education-first architecture**  
   Lady Linux doubles as a living operating systems lab.
 
----
 
 ## Project Status
 
@@ -72,7 +63,6 @@ This repository currently contains:
 
 Code will follow once architectural boundaries are finalized.
 
----
 
 ## Who Is This For?
 
@@ -82,20 +72,18 @@ Code will follow once architectural boundaries are finalized.
 - Researchers in data rights, AI safety, and system transparency
 - Curious users who want to understand their machines
 
----
 
 ## License
 
 Lady Linux is intended to be released under an open-source GNU General Public License.
 
----
 
 ## Get Involved
 
-[Project Vision](VISION.md)
-[System Architecture](ARCHITECTURE.md)
-[Collaborate or Contribute](CONTRIBUTING.md)
-[Collaborate or Contribute](/docs/capstone/CAPSTONE.md)
+[Project Vision](VISION.md)<br>
+[System Architecture](ARCHITECTURE.md)<br>
+[Collaborate or Contribute](CONTRIBUTING.md)<br>
+[Collaborate or Contribute](/docs/capstone/CAPSTONE.md)<br>
 
 --- 
 
