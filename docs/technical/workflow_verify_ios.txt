@@ -1,0 +1,28 @@
+
+Workflow to Verify ISO Integrity
+
+
+PS C:\Users> cd G:\LadyLinux\mint_xfce                                                                        PS G:\LadyLinux\mint_xfce> Get-FileHash -Algorithm SHA256 .\linuxmint-22.2-xfce-64bit.iso                                                                                                                                   
+
+RETURNS:
+Algorithm       Hash                                                                   Path                   ---------       ----                                                                   ----                   SHA256          DEA13E523DCA28E3AA48D90167A6368C63E1B3251492115417FDBF648551558F
+
+Verify GPG Signature: 
+🔐 Step 1. Install GPG
+
+On Windows, you’ll want Gpg4win (recommended by Linux Mint):
+https://gpg4win.org/download.html
+
+# Check if gpg is installed
+PS> gpg --version 
+# If not install it with Powershell
+PS> winget install GnuPG.Gpg4win
+# Check if gpg is installed
+PS> gpg --version 
+
+PS C:\Users\you> gpg --version                                                                             gpg (GnuPG) 2.4.8                                                                                             libgcrypt 1.11.1                                                                                              Copyright (C) 2025 g10 Code GmbH                                                                              License GNU GPL-3.0-or-later <https://gnu.org/licenses/gpl.html>                                              This is free software: you are free to change and redistribute it.                                            There is NO WARRANTY, to the extent permitted by law.                                                                                                                                                                       Home: C:\Users\quincy\AppData\Roaming\gnupg                                                                   Supported algorithms:                                                                                         Pubkey: RSA, ELG, DSA, ECDH, ECDSA, EDDSA                                                                     Cipher: IDEA, 3DES, CAST5, BLOWFISH, AES, AES192, AES256, TWOFISH,                                                    CAMELLIA128, CAMELLIA192, CAMELLIA256                                                                 Hash: SHA1, RIPEMD160, SHA256, SHA384, SHA512, SHA224                                                         Compression: Uncompressed, ZIP, ZLIB, BZIP2 
+
+> C:\Users\you> cd g:\LadyLinux/mint_xfce 
+> G:\LadyLinux\mint_xfce> gpg --verify .\sha256sum.txt.gpg .\sha256sum.txt
+gpg: Signature made 09/02/25 04:40:21 Central Daylight Time                             gpg: using RSA key 27DEB15644C6B3CF3BD7D291300F846BA25BAE09   
+
