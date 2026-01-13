@@ -4,7 +4,7 @@
 
 **Lady Linux** is a **privacy-first** Linux distribution designed to empower digital citizens.
 
-It blends the stability of Ubuntu/Mint with new layers for **transparency, data literacy, and AI-assisted system interaction.**  
+It blends the stability of Linux Mint with new layers for **transparency, data literacy, and AI-assisted system interaction.**  
 
 --- 
 Unlike conventional operating systems that hide complexity behind opaque settings and brittle interfaces, Lady Linux treats the operating system itself as something you can **talk to**, **inspect**, and **understand**—with a human firmly in the loop.
