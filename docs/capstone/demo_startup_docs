@@ -1,0 +1,65 @@
+
+Starting up Lady Linux
+
+Everyday Workflow for Running the App
+1. Start the Ollama Service
+
+Ollama runs as a background system service once installed.
+
+On most Linux setups, ollama installs and registers a systemd service:
+
+> systemctl status ollama
+
+If active, Ollama is already listening on http://localhost:11434.
+
+If not running, start it:
+> systemctl start ollama
+
+To have it always start on boot:
+> systemctl enable ollama
+
+✅ That means you do NOT have to manually load the model into memory each time.
+When your FastAPI app calls POST /api/generate, Ollama will automatically:
+
+Load the requested model (e.g., phi3:mini) from disk into memory if not already loaded.
+
+Keep it “warm” in memory for reuse until idle.
+
+
+2. Verify the Model is Available
+
+Before using the web app, check Ollama knows about your model:
+> ollama list
+
+If the model isn’t installed, you’ll need to pull it once:
+> ollama pull phi3:mini
+
+3. Start the FastAPI App
+
+From your project directory:
+
+> uvicorn api_layer:app --reload --host 0.0.0.0 --port 8000
+
+4. Everyday Usage Flow
+Confirm Ollama service is running (systemctl status ollama).
+Confirm model is available (ollama list).
+Start FastAPI app (uvicorn ...).
+Open browser at http://localhost:8000.
+Chat away. 🎉
+
+5. (Optional) CLI vs Web App
+
+CLI: You can still test directly:
+
+> ollama run phi3:mini "Hello, who are you?"
+
+Web App: Uses the same Ollama service, just through FastAPI.
+
+Both can run at the same time, since they’re hitting the same backend API.
+
+🔑 Key Takeaway
+
+Everyday use = Start FastAPI + ensure Ollama service is running.
+
+No need to “manually load” the LLM each time — Ollama does that automatically when the first request arrives.
+
