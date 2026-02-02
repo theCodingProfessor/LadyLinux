@@ -39,7 +39,7 @@ set -Eeuo pipefail
 
 #----------------------------- Configuration -----------------------------------
 
-BRANCH="${1:-develop}"
+BRANCH="${1:-main}"
 
 APP_DIR="/opt/ladylinux/app"
 VENV_DIR="/opt/ladylinux/venv"
