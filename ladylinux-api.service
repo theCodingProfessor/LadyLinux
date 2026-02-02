@@ -1,0 +1,70 @@
+#===============================================================================
+# LadyLinux API Service
+# File: ladylinux-api.service
+#
+# Purpose:
+#   Run the LadyLinux FastAPI application as a managed system service.
+#
+# Assumptions:
+#   - Application code is located at /opt/ladylinux/app
+#   - Python virtual environment exists at /opt/ladylinux/venv
+#   - Environment configuration is defined in /etc/ladylinux/ladylinux.env
+#   - Service runs as the dedicated "ladylinux" system user
+#
+# This service is designed to be restarted safely by:
+#   scripts/refresh_vm.sh
+#
+#===============================================================================
+
+[Unit]
+Description=LadyLinux API Service
+Documentation=https://github.com/theCodingProfessor/LadyLinux
+After=network.target
+Wants=network.target
+
+# If the service crashes repeatedly, systemd will throttle restarts
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+
+# Run as dedicated service user
+User=ladylinux
+Group=ladylinux
+
+# Working directory is the cloned repo
+WorkingDirectory=/opt/ladylinux/app
+
+# Load environment variables (ports, paths, modes, etc.)
+EnvironmentFile=-/etc/ladylinux/ladylinux.env
+
+# Explicit PATH so systemd does not rely on shell defaults
+Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+
+# ---- Application launch ----
+# Adjust the module path below if your FastAPI app entry point changes.
+# Example assumes: interface_layer.py defines `app = FastAPI(...)`
+ExecStart=/opt/ladylinux/venv/bin/uvicorn interface_layer:app \
+    --host ${LADYLINUX_HOST:-0.0.0.0} \
+    --port ${LADYLINUX_PORT:-8000}
+
+# ---- Restart policy ----
+Restart=on-failure
+RestartSec=5
+
+# ---- Security hardening (safe defaults) ----
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/var/lib/ladylinux /opt/ladylinux
+
+# ---- Logging ----
+# Logs are available via:
+#   journalctl -u ladylinux-api.service
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,36 @@
+{
+  "schema_version": "0.1",
+  "purpose": "Declarative manifest of LLM assets expected by LadyLinux. This file describes models but does not contain model binaries.",
+  "default_runtime": "cpu",
+  "models_base_dir": "/opt/ladylinux/models",
+
+  "models": [
+    {
+      "id": "mistral-3b-instruct",
+      "display_name": "Mistral 3B Instruct",
+      "provider": "mistralai",
+      "family": "mistral",
+      "parameters": "3B",
+
+      "format": "gguf",
+      "quantization": "Q4_K_M",
+
+      "local_path": "mistral-3b-instruct/",
+      "filename": "mistral-3b-instruct.Q4_K_M.gguf",
+
+      "source": {
+        "type": "huggingface",
+        "repository": "mistralai/Mistral-3B-Instruct",
+        "url": "https://huggingface.co/mistralai/Mistral-3B-Instruct"
+      },
+
+      "checksum": {
+        "algorithm": "sha256",
+        "value": ""
+      },
+
+      "required": false,
+      "notes": "Recommended default local model for CPU-based inference during development."
+    }
+  ]
+}
