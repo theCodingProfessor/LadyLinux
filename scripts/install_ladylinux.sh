@@ -22,14 +22,14 @@
 # Options:
 #   --clone                 Clone repo into /opt/ladylinux/app if not present
 #   --repo <url>            Repo URL to clone (default: LadyLinux GitHub)
-#   --branch <name>         Branch to checkout after clone (default: develop)
+#   --branch <name>         Branch to checkout after clone (default: main)
 #   --no-user               Do not create the ladylinux service user
 #   --dry-run               Print what would happen without changing anything
 #   -h, --help              Show help
 #
 # Examples:
 #   sudo ./scripts/install_ladylinux.sh
-#   sudo ./scripts/install_ladylinux.sh --clone --branch develop
+#   sudo ./scripts/install_ladylinux.sh --clone --branch main
 #   sudo ./scripts/install_ladylinux.sh --clone --repo https://github.com/theCodingProfessor/LadyLinux
 #
 # Exit codes:
@@ -44,7 +44,7 @@ set -Eeuo pipefail
 
 DO_CLONE="false"
 REPO_URL="https://github.com/theCodingProfessor/LadyLinux"
-BRANCH="develop"
+BRANCH="main"
 DO_USER="true"
 DRY_RUN="false"
 
@@ -107,7 +107,7 @@ Options:
 
 Examples:
   sudo ./scripts/install_ladylinux.sh
-  sudo ./scripts/install_ladylinux.sh --clone --branch develop
+  sudo ./scripts/install_ladylinux.sh --clone --branch main
 EOF
 }
 
