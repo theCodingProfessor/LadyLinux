@@ -54,6 +54,7 @@ async def ask_phi3(req: PromptRequest):
             json={"model": "mistral:latest", "prompt": req.prompt},
             stream=True
         )
+        # this is a comment
         for line in resp.iter_lines():
             if line:
                 chunk = json.loads(line)
