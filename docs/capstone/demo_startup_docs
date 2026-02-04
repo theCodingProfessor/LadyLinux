@@ -1,4 +1,38 @@
 
+--- New Startup Routine
+Install Workflow
+
+>sudo apt update
+>sudo apt upgrade
+>sudo apt install python3-pip
+>sudo apt install git
+>git clone https://github.com/theCodingProfessor/LadyLinux.git
+----- created the /opt/ folder, with nothing it
+----- creates LadyLinux (in current folder) with /scripts/
+
+>sudo chmod +x install_ladylinux.sh
+>sudo chmod +x refresh_vm.sh
+>sudo ./install_ladylinux.sh
+
+Have a version of Linux Mint
+Must have python/pip installed to use git
+
+Install ollama
+>cd /
+>curl -fsSL https://ollama.com/install.sh | sh
+>systemctl start ollama
+>systemctl enable ollama
+>ollama serve
+>ollama pull mistral
+>ollama run mistral
+
+>cd LadyLinux
+>apt install python3-fastapi
+>sudo apt install uvicorn
+>uvicorn interface_layer:app --reload --host 0.0.0.0 --post 8000
+
+
+--- Old Startup Routine
 Starting up Lady Linux
 
 Everyday Workflow for Running the App
