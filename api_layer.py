@@ -51,9 +51,10 @@ async def ask_phi3(req: PromptRequest):
     def stream():
         resp = requests.post(
             OLLAMA_URL,
-            json={"model": "phi3:mini", "prompt": req.prompt},
+            json={"model": "mistral:latest", "prompt": req.prompt},
             stream=True
         )
+        # this is a comment
         for line in resp.iter_lines():
             if line:
                 chunk = json.loads(line)
@@ -65,10 +66,11 @@ async def ask_phi3(req: PromptRequest):
 def ask_phi3(prompt: str):
     response = requests.post(
         "http://localhost:11434/api/generate",
-        json={"model": "phi3:mini", "prompt": prompt}
+        json={"model": "mistral:latest", "prompt": prompt}
     )
     # return raw text
     return {"output": response.text}
+
 
 @app.post("/ask_firewall")
 async def ask_firewall(request: Request):
@@ -93,7 +95,7 @@ Explain this firewall configuration clearly for a Linux user.
         # Query the model (phi3:mini or other)
         resp = requests.post(
             OLLAMA_URL,
-            json={"model": "phi3:mini", "prompt": full_prompt}
+            json={"model": "mistral:latest", "prompt": full_prompt}
         )
 
         # Parse model’s streaming response lines safely
