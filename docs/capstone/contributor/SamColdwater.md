@@ -1,4 +1,4 @@
-# Hi, I'm Sam Coldwater AND I AM HER EVIL CLONE
+# Hi, I'm Sam Coldwater 
 
 I build things where software meets hardware… and occasionally where things meet unexpected errors.
 
