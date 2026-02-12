@@ -1,4 +1,4 @@
-# Hi, I'm Sam Coldwater AND I HAVE MORE CHANGES TO MAKE IN YOUR FILE!
+# Hi, I'm Sam Coldwater 
 
 I build things where software meets hardware… and occasionally where things meet unexpected errors.
 
