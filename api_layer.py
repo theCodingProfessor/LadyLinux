@@ -2,7 +2,6 @@ from fastapi import FastAPI, HTTPException, Request, Form
 import requests, json, subprocess, os, re
 from datetime import datetime
 from fastapi.staticfiles import StaticFiles
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.responses import StreamingResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel
@@ -115,128 +114,6 @@ Explain this firewall configuration clearly for a Linux user.
         return PlainTextResponse(content=f"Lady Linux: Error - {str(e)}")
 
 
-#@app.post("/ask_firewall")
-#async def ask_firewall(request: Request):
-#    """Handle LLM questions about firewall settings."""
-#    data = await request.json()
-#    prompt = data.get("prompt", "")
-#
-#    fw_json = get_firewall_status_json()
-#
-#    # Construct full LLM prompt
-#    full_prompt = f"""
-#User question: {prompt}
-#
-#Firewall status JSON:
-#{fw_json}
-#
-#Explain this firewall configuration in plain English for a Linux user.
-#"""
-#
-#    try:
-#        resp = requests.post(
-#            OLLAMA_URL,
-#            json={"model": "phi3:mini", "prompt": full_prompt}
-#        )
-#        lines = resp.text.strip().splitlines()
-#        output = ""
-#        for line in lines:
-#            if line:
-#                try:
-#                    chunk = json.loads(line)
-#                    output += chunk.get("response", "")
-#                except Exception:
-#                    # Non-JSON line from Ollama
-#                    output += line
-#        return JSONResponse(content={"output": output, "firewall_json": fw_json})
-#    except Exception as e:
-#        return JSONResponse(content={"output": f"Error: {str(e)}", "firewall_json": fw_json})
-
-
-#@app.post("/ask_firewall")
-#async def ask_firewall(request: Request):
-#    body = await request.json()
-#    prompt = body.get("prompt", "")
-#
-#    fw_json = get_firewall_status_json()
-#    full_prompt = f"""
-#User question: {prompt}
-#
-#Firewall status JSON:
-#{fw_json}
-#
-#Explain this firewall configuration in plain English for a Linux user.
-#"""
-#    resp = requests.post(
-#        OLLAMA_URL,
-#        json={"model": "phi3:mini", "prompt": full_prompt}
-#    )
-#
-#    try:
-#        lines = resp.text.strip().splitlines()
-#        output = ""
-#        for line in lines:
-#            if line:
-#                chunk = json.loads(line)
-#                output += chunk.get("response", "")
-#        return JSONResponse(content={"output": output, "firewall_json": fw_json})
-#    except Exception as e:
-#        return JSONResponse(content={"output": f"Error parsing model response: {str(e)}", "firewall_json": fw_json})
-#
-
-#@app.post("/ask_firewall")
-#def ask_firewall(prompt: str = Form(...)):
-#    fw_json = get_firewall_status_json()
-#
-#    # Optionally, provide the JSON to the LLM for a human-friendly summary
-#    full_prompt = f"""
-#User question: {prompt}
-#
-#Firewall status JSON:
-#{fw_json}
-#
-#Explain this firewall configuration in plain English for a Linux user.
-#"""
-#    resp = requests.post(
-#        OLLAMA_URL,
-#        json={"model": "phi3:mini", "prompt": full_prompt}
-#    )
-#
-#    try:
-#        lines = resp.text.strip().splitlines()
-#        output = ""
-#        for line in lines:
-#            if line:
-#                chunk = json.loads(line)
-#                output += chunk.get("response", "")
-#        return JSONResponse(content={"output": output, "firewall_json": fw_json})
-#    except Exception as e:
-#        return JSONResponse(content={"output": f"Error parsing model response: {str(e)}", "firewall_json": fw_json})
-#
-
-#@app.post("/ask_firewall")
-#async def ask_firewall(req: PromptRequest):
-#    firewall_output = get_firewall_status()
-#    full_prompt = f"""
-#User question: {req.prompt}
-#
-#Here are the firewall settings from this Linux system:
-#{firewall_output}
-#
-#Please tell me what I can do to improve my system security.
-#"""
-#    def stream():
-#        resp = requests.post(
-#            OLLAMA_URL,
-#            json={"model": "phi3:mini", "prompt": full_prompt},
-#            stream=True
-#        )
-#        for line in resp.iter_lines():
-#            if line:
-#                chunk = json.loads(line)
-#                yield chunk.get("response", "")
-#    return StreamingResponse(stream(), media_type="text/plain")
-#
 
 def get_firewall_status_json():
     """Return UFW firewall status as structured JSON."""
