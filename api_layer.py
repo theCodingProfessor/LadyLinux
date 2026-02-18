@@ -51,8 +51,8 @@ class PromptRequest(BaseModel):
     prompt: str
 
 
-@app.post("/ask_phi3")
-async def ask_phi3(req: PromptRequest):
+@app.post("/ask_llm")
+async def ask_llm_post(req: PromptRequest):
     def stream():
         resp = requests.post(
             OLLAMA_URL,
@@ -68,8 +68,8 @@ async def ask_phi3(req: PromptRequest):
     return StreamingResponse(stream(), media_type="text/plain")
 
 
-@app.get("/ask_phi3")
-def ask_phi3(prompt: str):
+@app.get("/ask_llm")
+def ask_llm_get(prompt: str):
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={"model": "mistral:latest", "prompt": prompt}

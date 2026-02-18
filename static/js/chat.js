@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
       chatResponse.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
       promptInput.value = "";
 
-      await streamToElement("/ask_phi3", { prompt: userMessage }, chatResponse);
+      await streamToElement("/ask_llm", { prompt: userMessage }, chatResponse);
     });
   }
 
