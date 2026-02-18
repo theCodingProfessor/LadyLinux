@@ -46,6 +46,7 @@ def os_page(request: Request):
 class PromptRequest(BaseModel):
     prompt: str
 
+
 @app.post("/ask_phi3")
 async def ask_phi3(req: PromptRequest):
     def stream():
@@ -59,6 +60,7 @@ async def ask_phi3(req: PromptRequest):
             if line:
                 chunk = json.loads(line)
                 yield chunk.get("response", "")
+
     return StreamingResponse(stream(), media_type="text/plain")
 
 

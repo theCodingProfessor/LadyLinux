@@ -2,6 +2,7 @@ import subprocess
 import re
 import json
 
+
 def get_firewall_status_json():
     """Return UFW firewall status as structured JSON."""
     result = subprocess.run(["sudo", "/sbin/ufw", "status", "verbose"], capture_output=True, text=True)
@@ -92,4 +93,3 @@ def get_firewall_status():
         pass
 
     return "No firewall configuration could be retrieved."
-
