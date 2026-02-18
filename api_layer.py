@@ -1,11 +1,15 @@
-from fastapi import FastAPI, HTTPException, Request, Form
-import requests, json, subprocess, os, re
 from datetime import datetime
+
+import json
+import requests
+import subprocess
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import StreamingResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import StreamingResponse, JSONResponse, PlainTextResponse
 from pydantic import BaseModel
-from api_layer.firewall_core import get_firewall_status_json, get_firewall_status
+
+from api_layer.firewall_core import get_firewall_status_json
 
 app = FastAPI()
 

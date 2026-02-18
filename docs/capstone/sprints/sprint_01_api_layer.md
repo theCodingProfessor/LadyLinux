@@ -42,12 +42,16 @@ files that connect to the templates/firewall, /os, and /users.
 
 via >ask Claude GitHub Copilot Chat
 
-- **Part 1** Plan the Modular Structure:
+**Part 1** Plan the Modular Structure:
+
+[NOTED]
 
   - Divide the functionality into separate modules based on their purpose (e.g., firewall, os, users). 
   - Each module should handle a specific set of related tasks (e.g., firewall.py for firewall-related operations).
 
-- **Part 2** Create a Directory Structure:
+**Part 2** Create a Directory Structure:
+
+[IMPLEMENTED]
 
   - Organize the project into directories for better maintainability. For example:
 
@@ -67,21 +71,22 @@ via >ask Claude GitHub Copilot Chat
      └── requirements.txt
  ```
 
-- **Part 3** Refactor Functions into Modules:
+**Part 3** Refactor Functions into Modules:
 
-    - Move related functions into their respective modules.
+- Move related functions into their respective modules.
 
-        - firewall.py: get_firewall_status_json, get_firewall_status, and any firewall-related endpoints.
-        - os.py: Functions related to operating system queries.
-        - users.py: Functions related to user management.
+  - [Implemented ] firewall.py: get_firewall_status_json, get_firewall_status, and any firewall-related endpoints.
+  - os.py: Functions related to operating system queries.
+  - users.py: Functions related to user management.
 
-- **Part 4** Replace sudo Commands:
+**Part 4** Replace sudo Commands:
 
 - Replace subprocess.run calls with Python's os or shutil modules where possible. 
 - For example, use os.listdir, os.stat, or os.system for file and system operations. 
 - For firewall settings, use libraries like pyufw or directly parse configuration files (e.g., /etc/ufw/).
+
   
-- **Part 4** Create a Centralized API Layer:
+**Part 5** Create a Centralized API Layer:
 
 - Use main.py to initialize the FastAPI app and include routers from the individual modules.
 - Example:
@@ -97,7 +102,7 @@ via >ask Claude GitHub Copilot Chat
        app.include_router(users.router, prefix="/users", tags=["users"])
 ```
 
-- **Part 5** Refactor Endpoints:
+**Part 6** Refactor Endpoints:
 
 - Move each endpoint to its respective module and use FastAPI's APIRouter to define routes. 
 - Example for firewall.py:
@@ -125,20 +130,21 @@ via >ask Claude GitHub Copilot Chat
              return PlainTextResponse(content=f"Error: {str(e)}")
 ```
 
-**Part 6** Update Templates:
+**Part 7** Update Templates:
 
 - Ensure the templates in the templates/ directory match the new modular structure. 
 - Update the url_for calls in the templates to match the new routes.
 
-**Part 7** Test the Refactored Code:
+**Part 8** Test the Refactored Code:
+
 - Write unit tests for each module to ensure the functionality is preserved. 
 - Use FastAPI's TestClient to test the API endpoints.
 
-**Part 8** Document the Workflow:
+**Part 9** Document the Workflow:
 
 - Document the Workflow:
 - Create a README.md file to document the new structure and how to add new modules or endpoints.
 
-**Part 9** Version Control:
+**Part 10** Version Control:
 
 - Use git to track changes. Use git log to review the history and git show to inspect specific commits.
