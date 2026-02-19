@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Updated for proper line endings
 set -euo pipefail
 set -x
 
