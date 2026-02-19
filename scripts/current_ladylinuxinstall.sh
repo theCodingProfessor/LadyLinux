@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 set -euo pipefail
 set -x
 
@@ -11,10 +12,7 @@ echo "Fetched list of programs/features to update, updating now..."
 sudo apt upgrade -y
 echo "Updated programs successfully."
 
-
-
-
-#Test, updating DNS settings for downloading Mistral
+# Test, updating DNS settings for downloading Mistral
 
 # Backup the original resolved.conf file
 sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
@@ -32,11 +30,6 @@ sudo systemctl restart systemd-resolved
 
 # Confirm that systemd-resolved has restarted and DNS settings are applied
 echo "Systemd-resolved service has been restarted with new DNS settings."
-
-
-
-
-
 
 # --- Install required system packages ---
 echo "Installing required system packages..."
@@ -113,4 +106,3 @@ sudo -u ladylinux bash -c "
 
 echo "Mistral ready to run, running..."
 ollama run mistral
-
