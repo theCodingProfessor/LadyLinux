@@ -47,7 +47,8 @@ echo "Lady Linux Repo cloned successfully."
 cd /opt
 sudo chmod +x scripts/install_ladylinux.sh
 sudo chmod +x scripts/refresh_vm.sh
-sudo ./scripts/install_ladylinux.sh --clone --branch main
+sudo ./scripts/install_ladylinux.sh --clone --branch Capstone_Dev_01
+# sudo ./scripts/install_ladylinux.sh --clone --branch main
 
 # --- Install Ollama ---
 echo "Installing Ollama"
