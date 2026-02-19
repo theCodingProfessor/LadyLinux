@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux – System</title>
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>System</h1>
+      <p class="subtitle">Configuration and diagnostics.</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item active">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+    </nav>
+
+    <!-- System Panels -->
+    <section class="panel-grid">
+      <div class="panel">
+        <h3>CPU</h3>
+        <p>Status and usage information.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Memory</h3>
+        <p>RAM allocation and availability.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Storage</h3>
+        <p>Disk usage and mounted volumes.</p>
+      </div>
+    </section>
+
+    <!-- Appearance Panel -->
+    <section class="panel-grid">
+      <div class="panel">
+        <h3>Appearance</h3>
+        <p class="subtitle">Select a system theme.</p>
+
+        <div class="theme-grid">
+
+          <div class="theme-card" data-theme-select="soft">
+            <div class="theme-preview soft"></div>
+            <span>Soft Core</span>
+          </div>
+
+          <div class="theme-card" data-theme-select="crimson">
+            <div class="theme-preview crimson"></div>
+            <span>Crimson Core</span>
+          </div>
+
+          <div class="theme-card" data-theme-select="glass">
+            <div class="theme-preview glass"></div>
+            <span>Glass</span>
+          </div>
+
+          <div class="theme-card" data-theme-select="terminal">
+            <div class="theme-preview terminal"></div>
+            <span>Terminal</span>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- AI PANEL -->
+    <section class="ai-panel">
+      <form class="ai-form" id="aiForm">
+        <input
+          type="text"
+          id="aiInput"
+          placeholder="Try: switch to crimson"
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">Execute</button>
+      </form>
+
+      <span class="ai-status">System control active</span>
+    </section>
+
+    <div class="response-box hidden" id="aiResponse"></div>
+
+  </section>
+</main>
+
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>

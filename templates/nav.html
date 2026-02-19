@@ -1,0 +1,16 @@
+<nav class="nav-pill">
+  <a href="index.html" class="nav-item">Home</a>
+  <a href="system.html" class="nav-item">System</a>
+  <a href="users.html" class="nav-item">Users</a>
+  <a href="firewall.html" class="nav-item">Firewall</a>
+</nav>
+
+<script>
+const currentPage = window.location.pathname.split("/").pop();
+
+document.querySelectorAll(".nav-item").forEach(link => {
+  if (link.getAttribute("href") === currentPage) {
+    link.classList.add("active");
+  }
+});
+</script>
