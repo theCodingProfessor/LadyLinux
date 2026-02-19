@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux – Firewall</title>
+  <link href="style.css" rel="stylesheet">
+</head>
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Firewall</h1>
+      <p class="subtitle">
+        Network rules and security settings
+      </p>
+    </header>
+
+    <!-- Navigation Pill (STANDARDIZED) -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item active">Firewall</a>
+    </nav>
+
+    <!-- Main Panels -->
+    <section class="panel-grid">
+      <!-- Firewall Assistant -->
+      <div class="panel">
+        <h3>Firewall Assistant</h3>
+        <form id="firewallForm">
+          <label for="firewallPrompt">Your question:</label>
+          <input
+            type="text"
+            id="firewallPrompt"
+            name="firewallPrompt"
+            class="ai-input"
+            value="What are the settings for my firewall on this Linux system?"
+          />
+          <button type="submit" class="ai-button">Ask</button>
+        </form>
+      </div>
+
+      <!-- Response -->
+      <div class="panel">
+        <h3>Response</h3>
+        <div id="firewallResponse" class="response-box"></div>
+      </div>
+    </section>
+
+    <!-- JSON Output -->
+    <section class="panel-grid">
+      <div class="panel">
+        <h3>Firewall JSON Output</h3>
+        <pre id="firewallJSON" class="code-block"></pre>
+      </div>
+    </section>
+
+  </section>
+</main>
+
+<!-- Centralized JS -->
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>

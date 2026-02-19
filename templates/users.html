@@ -1,0 +1,98 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux – Users</title>
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Users</h1>
+      <p class="subtitle">
+        Account management and permissions
+      </p>
+    </header>
+
+    <!-- Navigation Pill (STANDARDIZED) -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item active">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+    </nav>
+
+    <!-- Main Panels -->
+    <section class="panel-grid">
+
+      <!-- User List -->
+      <div class="panel">
+        <h3>Current Users</h3>
+
+        <ul class="user-list" id="userList">
+          <li>
+            NAME
+            <span class="role-badge admin">Admin</span>
+          </li>
+          <li>
+            guest
+            <span class="role-badge standard">Standard</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Actions -->
+      <div class="panel">
+        <h3>Actions</h3>
+
+        <button class="action-btn" id="addUserBtn">
+          Add User
+        </button>
+
+        <button class="action-btn" id="changePasswordBtn">
+          Change Password
+        </button>
+
+        <button class="action-btn danger" id="removeUserBtn">
+          Remove User
+        </button>
+      </div>
+
+    </section>
+
+    <!-- AI Control (Module-Specific) -->
+    <section class="ai-panel">
+      <form class="ai-form" id="usersAIForm">
+        <input
+          type="text"
+          id="usersAIInput"
+          placeholder="Example: Add a new admin named Alex"
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">
+          Execute
+        </button>
+      </form>
+
+      <span class="ai-status">Users module active</span>
+    </section>
+
+    <!-- AI Response -->
+    <div class="response-box hidden" id="usersAIResponse"></div>
+
+  </section>
+</main>
+
+<!-- Centralized JS -->
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>
+```

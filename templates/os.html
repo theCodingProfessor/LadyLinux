@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux – OS</title>
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Operating System</h1>
+      <p class="subtitle">Core system configuration and AI interaction.</p>
+    </header>
+
+    <!-- Navigation (INLINE FIX) -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+      <a href="os.html" class="nav-item active">OS</a>
+    </nav>
+
+    <!-- OS AI PANEL -->
+    <section class="ai-panel">
+      <form class="ai-form" id="osForm">
+        <input
+          type="text"
+          id="osPrompt"
+          placeholder="Describe a system change..."
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">Execute</button>
+      </form>
+
+      <span class="ai-status">System layer active</span>
+    </section>
+
+    <!-- Response -->
+    <div class="response-box hidden" id="osResponse"></div>
+
+  </section>
+</main>
+
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>
