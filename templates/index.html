@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Lady Linux</title>
-  <link href="style.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -21,6 +21,15 @@
         Describe what you want to change.
       </p>
     </header>
+
+    <!-- Navigation -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item active">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+      <a href="os.html" class="nav-item">OS</a>
+    </nav>
 
     <!-- AI Control Surface -->
     <section class="ai-panel">
@@ -40,22 +49,13 @@
       <span class="ai-status">Local model active</span>
     </section>
 
-    <!-- Suggested Actions -->
-    <p class="suggest-label">Suggested actions</p>
-
-    <nav class="nav-pill">
-      <a href="system.html" class="nav-item">System</a>
-      <a href="users.html" class="nav-item">Users</a>
-      <a href="firewall.html" class="nav-item">Firewall</a>
-    </nav>
-
     <!-- AI Response -->
     <div class="response-box hidden" id="aiResponse"></div>
 
   </section>
 </main>
 
-<script src="/static/js/chat.js"></script>
+<script src="js/chat.js"></script>
 
 </body>
 </html>
