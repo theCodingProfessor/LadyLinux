@@ -2,24 +2,53 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OS Settings Demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link href="/static/css/style.css" rel="stylesheet">
+  <title>Lady Linux – OS</title>
+  <link href="css/style.css" rel="stylesheet">
 </head>
-<body>
-{% include 'nav.html' %}
-<br>
-<div class="container">
-  <h1 class="accent">Lady Linux System Settings Assistant</h1>
-<div id="OSResponse" class="response-box"></div>
-<form id="firewallForm">
-  <label for="firewallPrompt">Your question:</label><br>
-  <input type="text" id="firewallPrompt" name="firewallPrompt" value="What are the settings for my firewall on this Linux system?"><br><br>
-  <button type="submit">Ask</button>
-</form>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="/static/js/chat.js"></script>
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Operating System</h1>
+      <p class="subtitle">Core system configuration and AI interaction.</p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+      <a href="os.html" class="nav-item active">OS</a>
+    </nav>
+
+    <!-- OS AI PANEL -->
+    <section class="ai-panel">
+      <form class="ai-form" id="osForm">
+        <input
+          type="text"
+          id="osPrompt"
+          placeholder="Describe a system change..."
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">Execute</button>
+      </form>
+
+      <span class="ai-status">System layer active</span>
+    </section>
+
+    <!-- Response -->
+    <div class="response-box hidden" id="osResponse"></div>
+
+  </section>
+</main>
+
+<script src="js/chat.js"></script>
 
 </body>
 </html>

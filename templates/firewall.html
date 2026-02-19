@@ -2,74 +2,68 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Firewall Demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link href="/static/css/style.css" rel="stylesheet">
+  <title>Lady Linux – Firewall</title>
+  <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
-{% include 'nav.html' %}
-<br>
-<div class="container">
-  <h1 class="accent">Lady Linux Firewall Assistant</h1>
-  <p>This demo page show API integreation with an on-board LLM.</p>
 
+<main class="app-shell">
+  <section class="app-surface">
 
-<div class="container mt-4">
-  <h2>Lady Linux Firewall Assistant</h2>
-  <form id="firewallForm" class="mt-3">
-    <label for="firewallPrompt" class="form-label">Your question:</label>
-    <input type="text" id="firewallPrompt" name="firewallPrompt"
-           class="form-control"
-           value="What are the settings for my firewall on this Linux system?">
-    <button type="submit" class="btn btn-primary mt-3">Ask</button>
-  </form>
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Firewall</h1>
+      <p class="subtitle">
+        Network rules and security settings
+      </p>
+    </header>
 
-  <div id="firewallResponse" class="p-3 border rounded bg-dark text-light mb-3 response-box"></div>
+    <!-- Navigation Pill -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item active">Firewall</a>
+      <a href="os.html" class="nav-item">OS</a>
+    </nav>
 
-  <h5>Firewall JSON:</h5>
-  <pre id="firewallJSON" class="bg-dark text-light p-3 rounded small"></pre>
+    <!-- Main Panels -->
+    <section class="panel-grid">
+      <!-- Firewall Assistant -->
+      <div class="panel">
+        <h3>Firewall Assistant</h3>
+        <form id="firewallForm">
+          <label for="firewallPrompt">Your question:</label>
+          <input
+            type="text"
+            id="firewallPrompt"
+            name="firewallPrompt"
+            class="ai-input"
+            value="What are the settings for my firewall on this Linux system?"
+          />
+          <button type="submit" class="ai-button">Ask</button>
+        </form>
+      </div>
 
-</div>
+      <!-- Response -->
+      <div class="panel">
+        <h3>Response</h3>
+        <div id="firewallResponse" class="response-box"></div>
+      </div>
+    </section>
 
-<!--
+    <!-- JSON Output -->
+    <section class="panel-grid">
+      <div class="panel">
+        <h3>Firewall JSON Output</h3>
+        <pre id="firewallJSON" class="code-block"></pre>
+      </div>
+    </section>
 
-<div class="container py-4">
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <h3 class="card-title mb-3">Firewall Assistant</h3>
+  </section>
+</main>
 
-      <form id="firewallForm" class="mb-3">
-        <div class="mb-3">
-          <label for="firewallPrompt" class="form-label bg-dark text-light">Your question:</label>
-          <input type="text" class="form-control" id="firewallPrompt"
-                 value="What are the settings for my firewall on this Linux system?">
-        </div>
-        <button type="submit" class="btn btn-primary">Ask</button>
-      </form>
-
-      <div id="firewallResponse" class="alert alert-secondary"></div>
-
-      <h5>Firewall JSON Output</h5>
-      <pre id="firewallJSON"
-           class="bg-dark text-light p-3 rounded"
-           style="white-space: pre-wrap; font-size: 0.9rem;"></pre>
-    </div>
-  </div>
-</div>
-
-<div id="firewallResponse" class="response-box"></div>
-<h3>Firewall Rules:</h3>
-<div id="firewallTableContainer" class="mt-3"></div>
-
-<form id="firewallForm">
-  <label for="firewallPrompt">Your question:</label><br>
-  <input type="text" id="firewallPrompt" name="firewallPrompt" value="What are the settings for my firewall on this Linux system?"><br><br>
-  <button type="submit">Ask</button>
-</form>
- -->
-
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="/static/js/chat.js"></script>
+<script src="js/chat.js"></script>
 
 </body>
 </html>

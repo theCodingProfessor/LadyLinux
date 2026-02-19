@@ -3,43 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <title>Lady Linux</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
 </head>
+
 <body>
-{% include 'nav.html' %}
-<br>
-<div class="container">
-  <h1 class="accent">Welcome to Lady Linux</h1>
-  <p>This demo shows how an on-board LLM can interact with your system.</p>
 
-  <div id="chatResponse" class="response-box"></div>
-  <form id="chatForm">
-    <label for="prompt" class="form-label">Ask Lady Linux:</label>
-    <input type="text" id="prompt" name="prompt" class="form-control" placeholder="Type your question here...">
-    <button type="submit" class="btn btn-accent mt-3">Send</button>
-  </form>
+<main class="app-shell">
+  <section class="app-surface">
 
-</div>
+    <!-- Hero -->
+    <header class="hero">
+      <h1>
+        Lady Linux
+        <span class="build-tag">v0.1.0</span>
+      </h1>
+      <p class="subtitle">
+        Describe what you want to change.
+      </p>
+    </header>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="/static/js/chat.js"></script>
+    <!-- Navigation -->
+    <nav class="nav-pill">
+      <a href="index.html" class="nav-item active">Home</a>
+      <a href="system.html" class="nav-item">System</a>
+      <a href="users.html" class="nav-item">Users</a>
+      <a href="firewall.html" class="nav-item">Firewall</a>
+      <a href="os.html" class="nav-item">OS</a>
+    </nav>
+
+    <!-- AI Control Surface -->
+    <section class="ai-panel">
+      <form class="ai-form" id="aiForm">
+        <input
+          type="text"
+          id="aiInput"
+          placeholder="Example: Show my firewall status"
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">
+          Execute
+        </button>
+      </form>
+
+      <span class="ai-status">Local model active</span>
+    </section>
+
+    <!-- AI Response -->
+    <div class="response-box hidden" id="aiResponse"></div>
+
+  </section>
+</main>
+
+<script src="js/chat.js"></script>
 
 </body>
 </html>
-
-<!--  
-    <h1>Lady Linux Assistant</h1>
-    <div id="chat-box"></div>
-    <input type="text" id="user-input" placeholder="Type your message...">
-    <button id="send-btn">Send</button>
-
-  <form id="chatForm">
-    <label for="prompt" class="form-label">Ask Lady Linux:</label>
-    <input type="text" id="prompt" name="prompt" class="form-control" placeholder="Type your question here...">
-    <button type="submit" class="btn btn-accent mt-3">Send</button>
-  </form>
-
-  <div id="chatResponse" class="response-box"></div>
-</div>
--->
