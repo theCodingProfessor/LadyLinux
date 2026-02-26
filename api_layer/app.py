@@ -130,3 +130,4 @@ def disable_service(target: str):
     except Exception as e:
         log_action("disable_service", target, "failed")
         raise HTTPException(status_code=500, detail=str(e))
+
