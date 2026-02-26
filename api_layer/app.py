@@ -32,6 +32,11 @@ def firewall_page(request: Request):
     return templates.TemplateResponse("firewall.html", {"request": request})
 
 
+@app.get("/system")
+def system_page(request: Request):
+    return templates.TemplateResponse("system.html", {"request": request})
+
+
 @app.post("/users")
 @app.get("/users")
 def users_page(request: Request):
