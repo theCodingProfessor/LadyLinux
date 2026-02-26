@@ -13,18 +13,15 @@ from api_layer.firewall_core import get_firewall_status_json
 
 app = FastAPI()
 
-# Mount /static so Jinja url_for("static", filename="...") works
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
 LOG_FILE = "/var/log/ladylinux/actions.log"
 
-# LLM API endpoint
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 
-# Endpoint for HTML page
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -59,7 +56,6 @@ async def ask_llm_post(req: PromptRequest):
             json={"model": "mistral:latest", "prompt": req.prompt},
             stream=True
         )
-        # this is a comment
         for line in resp.iter_lines():
             if line:
                 chunk = json.loads(line)
@@ -74,20 +70,16 @@ def ask_llm_get(prompt: str):
         "http://localhost:11434/api/generate",
         json={"model": "mistral:latest", "prompt": prompt}
     )
-    # return raw text
     return {"output": response.text}
 
 
 @app.post("/ask_firewall")
 async def ask_firewall(request: Request):
-    """Ask the Lady Linux assistant about the system firewall (plain text response)."""
     body = await request.json()
     prompt = body.get("prompt", "")
 
-    # Get the firewall status as JSON (for context)
     fw_json = get_firewall_status_json()
 
-    # Combine into a human-readable prompt for the model
     full_prompt = f"""
 User question: {prompt}
 
@@ -98,13 +90,11 @@ Explain this firewall configuration clearly for a Linux user.
 """
 
     try:
-        # Query the model (phi3:mini or other)
         resp = requests.post(
             OLLAMA_URL,
             json={"model": "mistral:latest", "prompt": full_prompt}
         )
 
-        # Parse model's streaming response lines safely
         lines = resp.text.strip().splitlines()
         output = ""
         for line in lines:
@@ -112,9 +102,8 @@ Explain this firewall configuration clearly for a Linux user.
                 chunk = json.loads(line)
                 output += chunk.get("response", "")
             except json.JSONDecodeError:
-                output += line  # handle non-JSON chunks gracefully
+                output += line
 
-        # ✅ Return just plain text (no JSON at all)
         return PlainTextResponse(content=f"Lady Linux: {output.strip()}")
 
     except Exception as e:
@@ -133,8 +122,6 @@ def log_action(action, target, status):
 
 @app.post("/disable_service")
 def disable_service(target: str):
-    # Ask Gatekeeper (could be another microservice)
-    # For now, auto-approve
     try:
         subprocess.run(["systemctl", "disable", target], check=True)
         subprocess.run(["systemctl", "stop", target], check=True)
@@ -143,3 +130,4 @@ def disable_service(target: str):
     except Exception as e:
         log_action("disable_service", target, "failed")
         raise HTTPException(status_code=500, detail=str(e))
+
