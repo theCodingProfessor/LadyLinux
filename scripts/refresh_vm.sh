@@ -2,6 +2,8 @@
 #===============================================================================
 # LadyLinux VM Refresh Script
 # File: scripts/refresh_vm.sh
+# Author: Sean Connelly
+# Version: 0.2
 #
 # Purpose:
 #   Refresh the LadyLinux Application Layer on a running system from GitHub.
@@ -95,20 +97,25 @@ service_status() {
   systemctl --no-pager --full status "$SERVICE_NAME" || true
 }
 
+run_as_service() {
+  # Run a command as the ladylinux service user.
+  sudo -u "$SERVICE_USER" -- "$@"
+}
+
 git_sync() {
-  log "Syncing repo in $APP_DIR to origin/$BRANCH"
+  log "Syncing repo in $APP_DIR to origin/$BRANCH (as $SERVICE_USER)"
   pushd "$APP_DIR" >/dev/null
 
   # Fetch and hard-align. This intentionally removes local drift.
-  git fetch --prune origin
-  git checkout -f "$BRANCH" 2>/dev/null || true
+  run_as_service git fetch --prune origin
+  run_as_service git checkout -f "$BRANCH" 2>/dev/null || true
 
   # Use remote-tracking branch as source of truth:
-  git reset --hard "origin/$BRANCH"
-  git clean -fd
+  run_as_service git reset --hard "origin/$BRANCH"
+  run_as_service git clean -fd
 
   local commit
-  commit="$(git rev-parse --short HEAD)"
+  commit="$(run_as_service git rev-parse --short HEAD)"
   log "Repo now at commit: $commit (branch: $BRANCH)"
 
   popd >/dev/null
@@ -121,7 +128,7 @@ fingerprint_deps() {
 
   for f in "${DEPS_FILES[@]}"; do
     if [[ -f "$f" ]]; then
-      sha256sum "$f" | awk '{print $1}'
+      run_as_service sha256sum "$f" | awk '{print $1}'
       popd >/dev/null
       return 0
     fi
@@ -161,18 +168,19 @@ venv_rebuild_needed() {
 }
 
 build_venv() {
-  log "Building Python venv at: $VENV_DIR"
+  log "Building Python venv at: $VENV_DIR (as $SERVICE_USER)"
   rm -rf "$VENV_DIR"
   mkdir -p "$VENV_DIR"
+  chown "$SERVICE_USER":"$SERVICE_USER" "$VENV_DIR"
 
-  "$PYTHON_BIN" -m venv "$VENV_DIR"
-  "$PIP_BIN" install --upgrade pip wheel setuptools
+  run_as_service "$PYTHON_BIN" -m venv "$VENV_DIR"
+  run_as_service "$PIP_BIN" install --upgrade pip wheel setuptools
 
   pushd "$APP_DIR" >/dev/null
 
   if [[ -f "requirements.txt" ]]; then
     log "Installing dependencies from requirements.txt"
-    "$PIP_BIN" install -r requirements.txt
+    run_as_service "$PIP_BIN" install -r requirements.txt
   elif [[ -f "pyproject.toml" ]]; then
     warn "pyproject.toml found but no installer configured in this script yet."
     warn "If you adopt Poetry/UV/PDM, update this section accordingly."
@@ -184,7 +192,7 @@ build_venv() {
   local fp
   fp="$(fingerprint_deps)"
   if [[ -n "$fp" ]]; then
-    echo "$fp" > "$FINGERPRINT_FILE"
+    run_as_service bash -c "echo '$fp' > '$FINGERPRINT_FILE'"
   fi
 
   popd >/dev/null
@@ -192,10 +200,10 @@ build_venv() {
 
 prep_application() {
   # Optional hook: run migrations, validations, compile steps, etc.
-  # Keep it safe and fast.
+  # Keep it safe and fast. Runs as the service user.
   log "Preparation step: (none configured)"
   # Example (future):
-  # "$VENV_DIR/bin/python" -m ladylinux.migrate || die "Migration failed"
+  # run_as_service "$VENV_DIR/bin/python" -m ladylinux.migrate || die "Migration failed"
 }
 
 print_summary() {
