@@ -509,3 +509,98 @@ a {
 [data-theme="terminal"] .app-surface {
     box-shadow: none !important;
 }
+
+
+
+.custom-preview {
+  background: linear-gradient(
+    135deg,
+    var(--bg-main),
+    var(--accent)
+  );
+}
+
+.custom-slot {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.custom-slot:hover {
+  transform: scale(1.03);
+}
+/* =====================================================
+   LADY LINUX COLOR CLASSES
+   ===================================================== */
+
+.ll-card {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--shadow-main);
+    transition: all var(--transition-speed);
+}
+
+.ll-card:hover {
+    border-color: var(--accent);
+}
+
+.ll-btn {
+    padding: 12px 20px;
+    border-radius: var(--radius-medium);
+    border: none;
+    background: var(--accent);
+    color: #111;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-speed);
+}
+
+.ll-btn:hover {
+    background: var(--accent-hover);
+    transform: translateY(-2px);
+}
+
+.ll-btn:active {
+    transform: translateY(0);
+}
+
+.ll-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.ll-nav .nav-link {
+    color: var(--text-main);
+    border-radius: var(--radius-medium);
+    padding: 10px 16px;
+    transition: all var(--transition-speed);
+}
+
+.ll-nav .nav-link:hover {
+    background: rgba(196, 181, 253, 0.1);
+}
+
+.ll-nav .nav-link.active {
+    background: var(--accent);
+    color: #111;
+}
+
+.modal-content {
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border: 1px solid var(--border-soft);
+}
+
+.modal-header {
+    border-bottom-color: var(--border-soft);
+}
+
+.modal-footer {
+    border-top-color: var(--border-soft);
+}
+
+.btn-close {
+    filter: brightness(0) invert(1);
+}

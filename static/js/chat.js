@@ -1,53 +1,202 @@
 /* =====================================================
-   LADY LINUX – UNIFIED SYSTEM CONTROLLER
+   LADY LINUX – UNIFIED SYSTEM CONTROLLER (JSON DRIVEN)
    ===================================================== */
-
 
 /* =====================================================
-   THEME MANAGEMENT (SINGLE SOURCE OF TRUTH)
+   GLOBAL THEME REGISTRY
    ===================================================== */
 
-function setTheme(themeName) {
-    document.documentElement.setAttribute("data-theme", themeName);
-    localStorage.setItem("lady-theme", themeName);
-    updateActiveThemeCard(themeName);
+let THEMES = {};
+let activeCustomSlot = null;
+
+/* =====================================================
+   LOAD THEMES.JSON
+   ===================================================== */
+
+async function loadThemes() {
+    try {
+        const response = await fetch("themes.json");
+        if (!response.ok) throw new Error("Failed to load themes.json");
+
+        const data = await response.json();
+        THEMES = data.themes || {};
+
+    } catch (err) {
+        console.error("Theme load error:", err);
+    }
 }
 
-function loadSavedTheme() {
+/* =====================================================
+   APPLY THEME
+   ===================================================== */
+
+function applyTheme(themeKey) {
+    if (!THEMES[themeKey]) return;
+
+    const theme = THEMES[themeKey];
+
+    Object.entries(theme).forEach(([key, value]) => {
+        document.documentElement.style.setProperty(`--${key}`, value);
+    });
+
+    localStorage.setItem("lady-theme", themeKey);
+    updateActiveThemeCard(themeKey);
+}
+
+/* =====================================================
+   RESTORE SAVED THEME
+   ===================================================== */
+
+function restoreTheme() {
     const saved = localStorage.getItem("lady-theme") || "soft";
-    document.documentElement.setAttribute("data-theme", saved);
+    applyTheme(saved);
 }
 
-function updateActiveThemeCard(themeName) {
-    document.querySelectorAll("[data-theme-select]").forEach(card => {
-        card.classList.remove("active");
-        if (card.getAttribute("data-theme-select") === themeName) {
-            card.classList.add("active");
+/* =====================================================
+   NAVIGATION LOADER
+   ===================================================== */
+
+async function loadNavigation() {
+    try {
+        const response = await fetch("nav.html");
+        if (!response.ok) throw new Error("Failed to load nav");
+
+        const navMarkup = await response.text();
+        const navContainer = document.querySelector("nav[data-nav-target]");
+
+        if (navContainer) {
+            navContainer.innerHTML = navMarkup;
+            highlightActiveNavLink();
+        }
+    } catch (err) {
+        console.error("Navigation load error:", err);
+    }
+}
+
+function highlightActiveNavLink() {
+    const currentPage = window.location.pathname.split("/").pop() || "index.html";
+
+    document.querySelectorAll(".nav-link").forEach(link => {
+        const href = link.getAttribute("href");
+        if (href === currentPage) {
+            link.classList.add("active");
+        } else {
+            link.classList.remove("active");
         }
     });
 }
 
+/* =====================================================
+   THEME PICKER
+   ===================================================== */
+
+function updateActiveThemeCard(themeName) {
+
+    document.querySelectorAll("[data-theme-select]").forEach(card => {
+        card.classList.toggle(
+            "active",
+            card.getAttribute("data-theme-select") === themeName
+        );
+    });
+
+    document.querySelectorAll("[data-custom-slot]").forEach(card => {
+        card.classList.toggle(
+            "active",
+            card.getAttribute("data-custom-slot") === themeName
+        );
+    });
+}
+
 function initThemePicker() {
-    const cards = document.querySelectorAll("[data-theme-select]");
-    if (!cards.length) return;
-
-    const currentTheme = localStorage.getItem("lady-theme") || "soft";
-    updateActiveThemeCard(currentTheme);
-
-    cards.forEach(card => {
+    document.querySelectorAll("[data-theme-select]").forEach(card => {
         card.addEventListener("click", () => {
             const theme = card.getAttribute("data-theme-select");
-            setTheme(theme);
+            applyTheme(theme);
         });
     });
 }
 
+/* =====================================================
+   CUSTOM THEME SYSTEM
+   ===================================================== */
+
+function initCustomThemes() {
+
+    const slots = document.querySelectorAll("[data-custom-slot]");
+    if (!slots.length) return;
+
+    slots.forEach(slot => {
+
+        const key = slot.getAttribute("data-custom-slot");
+        loadCustomPreview(key);
+
+        slot.addEventListener("click", () => {
+            activeCustomSlot = key;
+
+            const modal = new bootstrap.Modal(
+                document.getElementById("customThemeModal")
+            );
+            modal.show();
+        });
+    });
+
+    const saveBtn = document.getElementById("saveCustomTheme");
+    if (saveBtn) {
+        saveBtn.addEventListener("click", saveCustomTheme);
+    }
+}
+
+function saveCustomTheme() {
+
+    if (!activeCustomSlot) return;
+
+    const accent = document.getElementById("customAccent").value;
+    const background = document.getElementById("customBackground").value;
+    const surface = document.getElementById("customSurface").value;
+
+    // Mutate runtime theme
+    THEMES[activeCustomSlot] = {
+        ...THEMES[activeCustomSlot],
+        "accent": accent,
+        "accent-hover": accent,
+        "bg-main": background,
+        "bg-surface": surface,
+        "bg-elevated": surface,
+        "bg-input": surface
+    };
+
+    // Persist custom theme separately
+    localStorage.setItem(activeCustomSlot, JSON.stringify(THEMES[activeCustomSlot]));
+
+    loadCustomPreview(activeCustomSlot);
+    applyTheme(activeCustomSlot);
+
+    const modalInstance = bootstrap.Modal.getInstance(
+        document.getElementById("customThemeModal")
+    );
+    if (modalInstance) modalInstance.hide();
+}
+
+function loadCustomPreview(slotKey) {
+
+    const preview = document.getElementById(`preview-${slotKey}`);
+    if (!preview) return;
+
+    const stored = localStorage.getItem(slotKey);
+    if (!stored) return;
+
+    const data = JSON.parse(stored);
+
+    preview.style.background =
+        `linear-gradient(135deg, ${data["bg-main"] || data.background}, ${data["accent"]})`;
+}
 
 /* =====================================================
-   STREAMING HELPER (for AI responses)
+   STREAMING HELPER
    ===================================================== */
 
 async function streamToElement(url, payload, targetElement) {
+
     try {
         const response = await fetch(url, {
             method: "POST",
@@ -55,13 +204,7 @@ async function streamToElement(url, payload, targetElement) {
             body: JSON.stringify(payload)
         });
 
-        if (!response.ok) {
-            throw new Error(`Server error (${response.status})`);
-        }
-
-        if (!response.body) {
-            throw new Error("Streaming not supported.");
-        }
+        if (!response.body) throw new Error("Streaming not supported.");
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -74,7 +217,6 @@ async function streamToElement(url, payload, targetElement) {
             accumulated += decoder.decode(value, { stream: true });
             targetElement.innerHTML =
                 `<p><strong>Lady Linux:</strong> ${accumulated}</p>`;
-            targetElement.scrollTop = targetElement.scrollHeight;
         }
 
     } catch (err) {
@@ -83,12 +225,12 @@ async function streamToElement(url, payload, targetElement) {
     }
 }
 
-
 /* =====================================================
-   ROUTING SYSTEM
+   ROUTING
    ===================================================== */
 
 function handleRouting(inputText) {
+
     const text = inputText.toLowerCase().trim();
 
     const routes = {
@@ -109,209 +251,47 @@ function handleRouting(inputText) {
     return false;
 }
 
-
 /* =====================================================
-   GENERAL AI (Index & System pages)
+   GENERAL AI HANDLER
    ===================================================== */
 
 function initGeneralAI() {
+
     const form = document.getElementById("aiForm");
-    const input = document.getElementById("aiInput");
-    const response = document.getElementById("aiResponse");
-
-    if (!form || !input || !response) return;
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const userMessage = input.value.trim();
-        if (!userMessage) return;
-
-        response.classList.remove("hidden");
-        response.innerHTML =
-            `<p><strong>You:</strong> ${userMessage}</p>`;
-
-        input.value = "";
-
-        // Theme command detection
-        const lower = userMessage.toLowerCase();
-
-        if (lower.includes("crimson")) {
-            setTheme("crimson");
-            return;
-        }
-        if (lower.includes("glass")) {
-            setTheme("glass");
-            return;
-        }
-        if (lower.includes("terminal") || lower.includes("minimal")) {
-            setTheme("terminal");
-            return;
-        }
-        if (lower.includes("soft") || lower.includes("default")) {
-            setTheme("soft");
-            return;
-        }
-
-        // Page routing
-        const routed = handleRouting(userMessage);
-        if (routed) return;
-
-        // Send to AI backend
-        await streamToElement("/ask_phi3",
-            { prompt: userMessage },
-            response
-        );
-    });
-}
-
-
-/* =====================================================
-   USERS MODULE
-   ===================================================== */
-
-function initUsersModule() {
-    const form = document.getElementById("usersAIForm");
-    const input = document.getElementById("usersAIInput");
-    const response = document.getElementById("usersAIResponse");
-
-    if (!form || !input || !response) return;
+    if (!form) return;
 
     form.addEventListener("submit", (e) => {
-        e.preventDefault();
 
-        const prompt = input.value.trim();
+        e.preventDefault();
+        const input = document.getElementById("aiInput");
+        const prompt = input.value.trim().toLowerCase();
         if (!prompt) return;
 
-        response.classList.remove("hidden");
-        response.innerHTML =
-            `<p><strong>Users Module:</strong><br>${prompt}</p>`;
-
-        input.value = "";
-    });
-
-    // Wire user action buttons
-    const addUserBtn = document.getElementById("addUserBtn");
-    if (addUserBtn) {
-        addUserBtn.addEventListener("click", () => {
-            response.classList.remove("hidden");
-            response.innerHTML =
-                `<p><strong>Action:</strong> Add User dialog would open here.</p>`;
-        });
-    }
-
-    const changePasswordBtn = document.getElementById("changePasswordBtn");
-    if (changePasswordBtn) {
-        changePasswordBtn.addEventListener("click", () => {
-            response.classList.remove("hidden");
-            response.innerHTML =
-                `<p><strong>Action:</strong> Change Password dialog would open here.</p>`;
-        });
-    }
-
-    const removeUserBtn = document.getElementById("removeUserBtn");
-    if (removeUserBtn) {
-        removeUserBtn.addEventListener("click", () => {
-            response.classList.remove("hidden");
-            response.innerHTML =
-                `<p><strong>Action:</strong> Remove User confirmation would appear here.</p>`;
-        });
-    }
-}
-
-
-/* =====================================================
-   FIREWALL MODULE
-   ===================================================== */
-
-function initFirewallModule() {
-    const form = document.getElementById("firewallForm");
-    const input = document.getElementById("firewallPrompt");
-    const response = document.getElementById("firewallResponse");
-    const jsonBox = document.getElementById("firewallJSON");
-
-    if (!form || !input || !response) return;
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const prompt = input.value.trim();
-        if (!prompt) return;
-
-        response.innerHTML =
-            `<p><strong>You:</strong> ${prompt}</p>`;
-
-        if (jsonBox) jsonBox.textContent = "Loading...";
-
-        try {
-            const res = await fetch("/ask_firewall", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt }),
-            });
-
-            if (!res.ok) {
-                throw new Error(`Server error (${res.status})`);
-            }
-
-            const data = await res.json();
-
-            response.innerHTML +=
-                `<p><strong>Lady Linux:</strong> ${data.output}</p>`;
-
-            if (jsonBox) {
-                jsonBox.textContent =
-                    JSON.stringify(data.firewall_json, null, 2);
-            }
-
-        } catch (err) {
-            response.innerHTML +=
-                `<p><strong>Error:</strong> ${err.message}</p>`;
-            if (jsonBox) jsonBox.textContent = "Error loading firewall data.";
+        if (THEMES[prompt]) {
+            applyTheme(prompt);
+            input.value = "";
+            return;
         }
-    });
-}
 
-
-/* =====================================================
-   OS MODULE
-   ===================================================== */
-
-function initOSModule() {
-    const form = document.getElementById("osForm");
-    const input = document.getElementById("osPrompt");
-    const response = document.getElementById("osResponse");
-
-    if (!form || !input || !response) return;
-
-    form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const prompt = input.value.trim();
-        if (!prompt) return;
-
-        response.classList.remove("hidden");
-        response.innerHTML =
-            `<p><strong>You:</strong> ${prompt}</p>`;
+        if (handleRouting(prompt)) return;
 
         input.value = "";
-
-        await streamToElement("/ask_phi3", { prompt }, response);
     });
 }
-
 
 /* =====================================================
    INITIALIZATION
    ===================================================== */
 
-document.addEventListener("DOMContentLoaded", () => {
-    loadSavedTheme();
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await loadThemes();
+
+    await loadNavigation();
+
+    restoreTheme();
+
     initThemePicker();
-
+    initCustomThemes();
     initGeneralAI();
-    initUsersModule();
-    initFirewallModule();
-    initOSModule();
-
 });
