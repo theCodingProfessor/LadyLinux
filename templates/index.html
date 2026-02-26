@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Lady Linux</title>
-  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
 </head>
 
 <body>
@@ -15,21 +15,15 @@
     <header class="hero">
       <h1>
         Lady Linux
-        <span class="build-tag">v0.1.4</span>
+        <span class="build-tag">v0.1.0</span>
       </h1>
       <p class="subtitle">
         Describe what you want to change.
       </p>
     </header>
 
-    <!-- Navigation -->
-    <nav class="nav-pill">
-      <a href="index.html" class="nav-item active">Home</a>
-      <a href="system.html" class="nav-item">System</a>
-      <a href="users.html" class="nav-item">Users</a>
-      <a href="firewall.html" class="nav-item">Firewall</a>
-      <a href="os.html" class="nav-item">OS</a>
-    </nav>
+    <!-- Navigation Container -->
+    <nav data-nav-target=""></nav>
 
     <!-- AI Control Surface -->
     <section class="ai-panel">
@@ -55,6 +49,7 @@
   </section>
 </main>
 
+<script src="js/themes.js"></script>
 <script src="js/chat.js"></script>
 
 </body>
