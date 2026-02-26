@@ -1,4 +1,11 @@
-// ===== Shared helper: Stream model output to an element =====
+/* =====================================================
+   LADY LINUX – AI / CHAT SYSTEM
+   ===================================================== */
+
+/* =====================================================
+   STREAM HELPER (KEEP GLOBAL)
+   ===================================================== */
+
 async function streamToElement(url, payload, targetElement) {
   const response = await fetch(url, {
     method: "POST",
@@ -24,8 +31,11 @@ async function streamToElement(url, payload, targetElement) {
   }
 }
 
-// ===== Page logic =====
-document.addEventListener("DOMContentLoaded", () => {
+/* =====================================================
+   INIT CHAT SYSTEM
+   ===================================================== */
+
+function initChat() {
 
   // ---- INDEX PAGE ----
   const chatForm = document.getElementById("chatForm");
@@ -56,7 +66,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const prompt = firewallPrompt.value.trim();
       if (!prompt) return;
 
-      // Show loading message
       firewallResponse.textContent = `You: ${prompt}\n\nLoading firewall data...`;
 
       try {
@@ -75,7 +84,4 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-
-}); // ✅ closes DOMContentLoaded
-
-
+}

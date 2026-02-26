@@ -2,24 +2,128 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OS Users Demo</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
-  <link href="/static/css/style.css" rel="stylesheet">
-</head>
-<body>
-{% include 'nav.html' %}
-<br>
-<div class="container">
-  <h1 class="accent">Lady Linux System Settings Assistant</h1>
-<div id="userResponse" class="response-box"></div>
-<form id="firewallForm">
-  <label for="firewallPrompt">Your question:</label><br>
-  <input type="text" id="firewallPrompt" name="firewallPrompt" value="What are the settings for my firewall on this Linux system?"><br><br>
-  <button type="submit">Ask</button>
-</form>
+  <title>Lady Linux – Users</title>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="/static/js/chat.js"></script>
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Optional theme overrides -->
+  <link rel="stylesheet" href="https://raw.githubusercontent.com/theCodingProfessor/LadyLinux/Capstone_Dev_01/static/css/style.css">
+</head>
+
+<body>
+
+<main class="container-fluid py-4">
+
+  <!-- Hero -->
+  <header class="mb-4">
+    <h1 class="display-5">Users</h1>
+    <p>
+      Account management and permissions
+    </p>
+  </header>
+
+  <!-- Navigation Container -->
+  <nav data-nav-target=""></nav>
+
+  <!-- Main Panels -->
+  <div class="row g-4 mb-4">
+
+    <!-- User List -->
+    <div class="col-12 col-lg-6">
+      <div class="card ll-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Current Users</h5>
+
+          <ul class="list-group list-group-flush mt-3" id="userList">
+            <li class="list-group-item" style="background: var(--bg-input); border-color: var(--border-soft);">
+              <div class="d-flex justify-content-between align-items-center">
+                <span>NAME</span>
+                <span class="badge" style="background: var(--accent); color: #111;">Admin</span>
+              </div>
+            </li>
+
+            <li class="list-group-item" style="background: var(--bg-input); border-color: var(--border-soft);">
+              <div class="d-flex justify-content-between align-items-center">
+                <span>guest</span>
+                <span class="badge" style="background: var(--accent); color: #111;">Standard</span>
+              </div>
+            </li>
+          </ul>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="col-12 col-lg-6">
+      <div class="card ll-card h-100">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Actions</h5>
+
+          <div class="d-grid gap-3">
+            <button class="ll-btn" id="addUserBtn">
+              Add User
+            </button>
+
+            <button class="ll-btn" id="changePasswordBtn">
+              Change Password
+            </button>
+
+            <button class="ll-btn" id="removeUserBtn">
+              Remove User
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- AI Control -->
+  <div class="card ll-card mb-3">
+    <div class="card-body">
+
+      <form id="usersAIForm" class="row g-3 align-items-center">
+        <div class="col-12 col-lg">
+          <input
+            type="text"
+            id="usersAIInput"
+            placeholder="Example: Add a new admin named Alex"
+            class="form-control"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="col-12 col-lg-auto">
+          <button type="submit" class="ll-btn w-100">
+            Execute
+          </button>
+        </div>
+      </form>
+
+      <div class="mt-3 small" style="color: var(--text-muted);">
+        Users module active
+      </div>
+
+    </div>
+  </div>
+
+  <!-- AI Response -->
+  <div id="usersAIResponse" class="card ll-card d-none">
+    <div class="card-body">
+      <div class="p-3 rounded"></div>
+    </div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/main.js"></script>
 
 </body>
 </html>
+

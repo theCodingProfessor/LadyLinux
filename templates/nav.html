@@ -1,16 +1,17 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">Lady Linux</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ms-auto">
-        <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-        <li class="nav-item"><a class="nav-link" href="/os">System</a></li>
-        <li class="nav-item"><a class="nav-link" href="/users">Users</a></li>
-        <li class="nav-item"><a class="nav-link" href="/firewall">Firewall</a></li>
-      </ul>
-    </div>
-  </div>
+<nav class="nav nav-pills mb-4 ll-nav">
+  <a href="index.html" class="nav-link">Home</a>
+  <a href="system.html" class="nav-link">System</a>
+  <a href="users.html" class="nav-link">Users</a>
+  <a href="firewall.html" class="nav-link">Firewall</a>
+  <a href="os.html" class="nav-link">OS</a>
 </nav>
+
+<script>
+const currentPage = window.location.pathname.split("/").pop();
+
+document.querySelectorAll(".nav-link").forEach(link => {
+  if (link.getAttribute("href") === currentPage) {
+    link.classList.add("active");
+  }
+});
+</script>
