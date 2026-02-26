@@ -3,7 +3,7 @@
 # LadyLinux VM Refresh Script
 # File: scripts/refresh_vm.sh
 # Author: Sean Connelly
-# Version: 0.2
+# Version: 0.21
 #
 # Purpose:
 #   Refresh the LadyLinux Application Layer on a running system from GitHub.
@@ -83,16 +83,33 @@ assert_paths() {
 }
 
 service_stop() {
+  # Skip stop if the unit is not loaded (e.g., first install, unit removed).
+  if ! systemctl list-unit-files "$SERVICE_NAME" >/dev/null 2>&1 \
+     || systemctl show -p LoadState "$SERVICE_NAME" 2>/dev/null | grep -q "LoadState=not-found"; then
+    warn "Service $SERVICE_NAME is not loaded. Skipping stop."
+    return 0
+  fi
+
   log "Stopping service: $SERVICE_NAME"
   systemctl stop "$SERVICE_NAME" || die "Failed to stop $SERVICE_NAME"
 }
 
 service_start() {
+  if systemctl show -p LoadState "$SERVICE_NAME" 2>/dev/null | grep -q "LoadState=not-found"; then
+    warn "Service $SERVICE_NAME is not loaded. Skipping start."
+    return 0
+  fi
+
   log "Starting service: $SERVICE_NAME"
   systemctl start "$SERVICE_NAME" || die "Failed to start $SERVICE_NAME"
 }
 
 service_status() {
+  if systemctl show -p LoadState "$SERVICE_NAME" 2>/dev/null | grep -q "LoadState=not-found"; then
+    warn "Service $SERVICE_NAME is not loaded. No status to report."
+    return 0
+  fi
+
   log "Service status:"
   systemctl --no-pager --full status "$SERVICE_NAME" || true
 }
