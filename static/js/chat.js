@@ -45,6 +45,7 @@ function initChat() {
 
     chatForm.addEventListener("submit", async (e) => {
       e.preventDefault();
+
       const userMessage = promptInput.value.trim();
       if (!userMessage) return;
 
