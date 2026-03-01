@@ -3,101 +3,263 @@
 <head>
   <meta charset="UTF-8">
   <title>Lady Linux – System</title>
-  <link href="/static/css/style.css" rel="stylesheet">
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Your theme overrides -->
+  <link rel="stylesheet" href="https://raw.githubusercontent.com/theCodingProfessor/LadyLinux/Capstone_Dev_01/static/css/style.css">
 </head>
 
 <body>
 
-<main class="app-shell">
-  <section class="app-surface">
+<main class="container-fluid py-4">
 
-    <!-- Hero -->
-    <header class="hero">
-      <h1>System</h1>
-      <p class="subtitle">Configuration and diagnostics.</p>
-    </header>
+  <!-- Hero -->
+  <header class="mb-4">
+    <h1 class="display-5">System</h1>
+    <p>Configuration and diagnostics.</p>
+  </header>
 
-    <!-- Navigation -->
-    <nav class="nav-pill">
-      <a href="index.html" class="nav-item">Home</a>
-      <a href="system.html" class="nav-item active">System</a>
-      <a href="users.html" class="nav-item">Users</a>
-      <a href="firewall.html" class="nav-item">Firewall</a>
-      <a href="os.html" class="nav-item">OS</a>
-    </nav>
+  <!-- Navigation Container -->
+  <nav data-nav-target=""></nav>
 
-    <!-- System Panels -->
-    <section class="panel-grid">
-      <div class="panel">
-        <h3>CPU</h3>
-        <p>Status and usage information.</p>
+  <!-- System Panels -->
+  <div class="row g-4 mb-4">
+
+    <div class="col-12 col-md-4">
+      <div class="card ll-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">CPU</h5>
+          <p class="card-text">Status and usage information.</p>
+        </div>
       </div>
+    </div>
 
-      <div class="panel">
-        <h3>Memory</h3>
-        <p>RAM allocation and availability.</p>
+    <div class="col-12 col-md-4">
+      <div class="card ll-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Memory</h5>
+          <p class="card-text">RAM allocation and availability.</p>
+        </div>
       </div>
+    </div>
 
-      <div class="panel">
-        <h3>Storage</h3>
-        <p>Disk usage and mounted volumes.</p>
+    <div class="col-12 col-md-4">
+      <div class="card ll-card h-100">
+        <div class="card-body">
+          <h5 class="card-title">Storage</h5>
+          <p class="card-text">Disk usage and mounted volumes.</p>
+        </div>
       </div>
-    </section>
+    </div>
 
-    <!-- Appearance Panel -->
-    <section class="panel-grid">
-      <div class="panel">
-        <h3>Appearance</h3>
-        <p class="subtitle">Select a system theme.</p>
+  </div>
 
-        <div class="theme-grid">
+  <!-- Appearance Panel -->
+  <div class="row g-4 mb-4">
+    <div class="col-12">
+      <div class="card ll-card">
+        <div class="card-body">
 
-          <div class="theme-card" data-theme-select="soft">
-            <div class="theme-preview soft"></div>
-            <span>Soft Core</span>
-          </div>
+          <h5 class="card-title">Appearance</h5>
+          <p class="small">Select a system theme.</p>
 
-          <div class="theme-card" data-theme-select="crimson">
-            <div class="theme-preview crimson"></div>
-            <span>Crimson Core</span>
-          </div>
+          <div class="row g-3 mt-2">
 
-          <div class="theme-card" data-theme-select="glass">
-            <div class="theme-preview glass"></div>
-            <span>Glass</span>
-          </div>
+            <div class="col-6 col-md-3">
+              <div class="card ll-card text-center" role="button" data-theme-select="soft">
+                <div class="card-body">
+                  <div class="mb-2 theme-preview soft rounded" style="height:40px;"></div>
+                  <span>Soft Core</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="theme-card" data-theme-select="terminal">
-            <div class="theme-preview terminal"></div>
-            <span>Terminal</span>
+            <div class="col-6 col-md-3">
+              <div class="card ll-card text-center" role="button" data-theme-select="crimson">
+                <div class="card-body">
+                  <div class="mb-2 theme-preview crimson rounded" style="height:40px;"></div>
+                  <span>Crimson Core</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <div class="card ll-card text-center" role="button" data-theme-select="glass">
+                <div class="card-body">
+                  <div class="mb-2 theme-preview glass rounded" style="height:40px;"></div>
+                  <span>Glass</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-md-3">
+              <div class="card ll-card text-center" role="button" data-theme-select="terminal">
+                <div class="card-body">
+                  <div class="mb-2 theme-preview terminal rounded" style="height:40px;"></div>
+                  <span>Terminal</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Custom Themes -->
+            <hr class="my-4">
+
+            <h6 class="mb-3">Custom Themes</h6>
+
+            <div class="row g-3">
+
+              <div class="col-6 col-md-3">
+                <div class="card ll-card text-center custom-slot"
+                     role="button"
+                     data-custom-slot="custom-1">
+                  <div class="card-body">
+                    <div class="mb-2 theme-preview rounded custom-preview"
+                         id="preview-custom-1"
+                         style="height:40px;"></div>
+                    <span>Custom 1</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <div class="card ll-card text-center custom-slot"
+                     role="button"
+                     data-custom-slot="custom-2">
+                  <div class="card-body">
+                    <div class="mb-2 theme-preview rounded custom-preview"
+                         id="preview-custom-2"
+                         style="height:40px;"></div>
+                    <span>Custom 2</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <div class="card ll-card text-center custom-slot"
+                     role="button"
+                     data-custom-slot="custom-3">
+                  <div class="card-body">
+                    <div class="mb-2 theme-preview rounded custom-preview"
+                         id="preview-custom-3"
+                         style="height:40px;"></div>
+                    <span>Custom 3</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-6 col-md-3">
+                <div class="card ll-card text-center custom-slot"
+                     role="button"
+                     data-custom-slot="custom-4">
+                  <div class="card-body">
+                    <div class="mb-2 theme-preview rounded custom-preview"
+                         id="preview-custom-4"
+                         style="height:40px;"></div>
+                    <span>Custom 4</span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
         </div>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <!-- AI PANEL -->
-    <section class="ai-panel">
-      <form class="ai-form" id="aiForm">
-        <input
-          type="text"
-          id="aiInput"
-          placeholder="Try: switch to crimson"
-          class="ai-input"
-          autocomplete="off"
-        />
-        <button type="submit" class="ai-button">Execute</button>
+  <!-- AI PANEL -->
+  <div class="card ll-card mb-3">
+    <div class="card-body">
+
+      <form id="aiForm" class="row g-3 align-items-center">
+        <div class="col-12 col-lg">
+          <input
+            type="text"
+            id="aiInput"
+            placeholder="Try: switch to crimson"
+            class="form-control"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="col-12 col-lg-auto">
+          <button type="submit" class="ll-btn w-100">
+            Execute
+          </button>
+        </div>
       </form>
 
-      <span class="ai-status">System control active</span>
-    </section>
+      <div class="mt-3 small" style="color: var(--text-muted);">
+        System control active
+      </div>
 
-    <div class="response-box hidden" id="aiResponse"></div>
+    </div>
+  </div>
 
-  </section>
+  <!-- AI Response -->
+  <div id="aiResponse" class="card ll-card d-none">
+    <div class="card-body">
+      <div class="p-3 rounded"></div>
+    </div>
+  </div>
+
 </main>
 
-<script src="js/chat.js"></script>
+<!-- Custom Theme Modal -->
+<div class="modal fade" id="customThemeModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
 
+      <div class="modal-header">
+        <h5 class="modal-title">Create Custom Theme</h5>
+        <button type="button" class="btn-close"
+                data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+
+        <div class="mb-3">
+          <label class="form-label">Primary Accent</label>
+          <input type="color" id="customAccent" class="form-control form-control-color">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Background</label>
+          <input type="color" id="customBackground" class="form-control form-control-color">
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Surface</label>
+          <input type="color" id="customSurface" class="form-control form-control-color">
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn" style="background: var(--bg-input); color: var(--text-main);"
+                data-bs-dismiss="modal">
+          Cancel
+        </button>
+
+        <button type="button" class="ll-btn"
+                id="saveCustomTheme">
+          Save Theme
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/themes.js"></script>
+<script src="js/chat.js"></script>
+<script src="js/main.js"></script>
 </body>
 </html>
+
