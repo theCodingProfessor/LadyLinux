@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from api_layer import os_core
 from api_layer.firewall_core import get_firewall_status_json
 
 app = FastAPI()
@@ -48,8 +49,8 @@ class PromptRequest(BaseModel):
     prompt: str
 
 
-@app.post("/ask_llm")
-async def ask_llm_post(req: PromptRequest):
+@app.post("/ask_phi3")
+async def ask_phi3_post(req: PromptRequest):
     def stream():
         resp = requests.post(
             OLLAMA_URL,
@@ -64,8 +65,8 @@ async def ask_llm_post(req: PromptRequest):
     return StreamingResponse(stream(), media_type="text/plain")
 
 
-@app.get("/ask_llm")
-def ask_llm_get(prompt: str):
+@app.get("/ask_phi3")
+def ask_phi3_get(prompt: str):
     response = requests.post(
         "http://localhost:11434/api/generate",
         json={"model": "mistral:latest", "prompt": prompt}
@@ -131,3 +132,42 @@ def disable_service(target: str):
         log_action("disable_service", target, "failed")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/system")
+def api_system():
+    return os_core.handle_intent({
+        "intent": "system.snapshot",
+        "args": {},
+        "meta": {"dry_run": False},
+    })
+
+@app.get("/api/firewall")
+def api_firewall():
+    return os_core.handle_intent({
+        "intent": "firewall.status",
+        "args": {},
+        "meta": {"dry_run": False},
+    })
+
+@app.get("/api/users")
+def api_users():
+    return os_core.handle_intent({
+        "intent": "users.list",
+        "args": {},
+        "meta": {"dry_run": False},
+    })
+
+@app.post("/api/service/{service}/{action}")
+def api_service(service: str, action: str):
+    return os_core.handle_intent({
+        "intent": "service.action",
+        "args": {"name": service, "action": action},
+        "meta": {"dry_run": False},
+    })
+
+
+@app.post("/api/intent")
+async def api_intent(request: Request):
+    payload = await request.json()
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=400, detail="request body must be a JSON object")
+    return os_core.handle_intent(payload)
