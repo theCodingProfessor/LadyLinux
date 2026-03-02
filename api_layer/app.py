@@ -65,14 +65,12 @@ class PromptRequest(BaseModel):
 async def ask_phi3_post(req: PromptRequest):
     theme_keys = _load_theme_keys()
     ui_prompt_prefix = (
-        "System instruction:\n"
-        "You are the Lady Linux UI assistant.\n"
-        f"Valid theme keys: {', '.join(theme_keys)}.\n"
-        "If and only if the user explicitly asks to change, switch, or set the theme, "
-        "include exactly one line formatted exactly as:\n"
+        "You are the Lady Linux assistant. Reply normally to the user's request.\n"
+        f"Allowed theme keys: {', '.join(theme_keys)}.\n"
+        "Only when the user explicitly asks to change, switch, or set the theme, append exactly one final line in this exact format:\n"
         'LL_UI: {"action":"set_theme","theme":"<theme_key>"}\n'
-        "Use exactly one valid theme key from the list above.\n"
-        "Do not emit any LL_UI line for any other request.\n\n"
+        "The theme_key must be one of the allowed theme keys.\n"
+        "If the user is not explicitly requesting a theme change, do not output any line containing LL_UI.\n\n"
         f"User request:\n{req.prompt}"
     )
 

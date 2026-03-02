@@ -13,31 +13,35 @@ const KNOWN_THEME_KEYS = [
   "custom-4",
 ];
 
-function tryHandleUiCommand(fullText) {
-  try {
-    const match = fullText.match(/(?:^|\n)(LL_UI:\s*(\{[^\n]*\}))(?=\n|$)/);
-    if (!match) {
-      return { handled: false, cleanText: fullText };
-    }
+function stripUiSegments(fullText) {
+  return fullText.replace(/LL_UI:\s*(\{[\s\S]*?\})/g, "").replace(/\n{3,}/g, "\n\n").trim();
+}
 
-    const payload = JSON.parse(match[2]);
+function tryHandleUiCommand(fullText) {
+  const match = fullText.match(/LL_UI:\s*(\{[\s\S]*?\})/);
+  if (!match) {
+    return { handled: false, cleanText: fullText };
+  }
+
+  const cleanText = stripUiSegments(fullText);
+
+  try {
+    const payload = JSON.parse(match[1]);
     if (
       payload.action === "set_theme" &&
       typeof payload.theme === "string" &&
+      payload.theme.trim() &&
       KNOWN_THEME_KEYS.includes(payload.theme) &&
       typeof window.applyTheme === "function"
     ) {
       window.applyTheme(payload.theme);
-      return {
-        handled: true,
-        cleanText: fullText.replace(match[1], "").replace(/\n{3,}/g, "\n\n").trim(),
-      };
+      return { handled: true, cleanText };
     }
   } catch (err) {
-    return { handled: false, cleanText: fullText };
+    return { handled: false, cleanText };
   }
 
-  return { handled: false, cleanText: fullText };
+  return { handled: false, cleanText };
 }
 
 async function streamToElement(url, payload, targetElement) {
@@ -59,17 +63,25 @@ async function streamToElement(url, payload, targetElement) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let result = "";
+  let uiHandled = false;
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     result += decoder.decode(value, { stream: true });
-    const uiState = tryHandleUiCommand(result);
+    const uiState = uiHandled
+      ? { handled: false, cleanText: stripUiSegments(result) }
+      : tryHandleUiCommand(result);
+    if (uiState.handled) {
+      uiHandled = true;
+    }
     assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${uiState.cleanText}`;
     targetElement.scrollTop = targetElement.scrollHeight;
   }
 
-  const uiState = tryHandleUiCommand(result);
+  const uiState = uiHandled
+    ? { handled: false, cleanText: stripUiSegments(result) }
+    : tryHandleUiCommand(result);
   assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${uiState.cleanText}`;
 }
 
