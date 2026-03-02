@@ -55,16 +55,12 @@ a {
     padding: 40px 20px;
 }
 
-
 /* Core application panel surface fed by theme variables. */
 .app-surface {
-    width: 100%;
-    max-width: 900px;
-    padding: 40px 50px;
-    border-radius: var(--radius-large);
-    background: var(--bg-surface);
-    box-shadow: var(--shadow-main);
-    transition: all var(--transition-speed);}
+  background: var(--bg-surface);
+  border: 1px solid var(--border-soft);
+}
+
 
 /* =====================================================
    HERO
