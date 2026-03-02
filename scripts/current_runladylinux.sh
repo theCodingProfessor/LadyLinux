@@ -2,6 +2,7 @@
 set -euo pipefail
 set -x
 
+# Updated for Line Endings
 echo "Launching LadyLinux LLM system..."
 
 # --- Ensure Ollama service is running ---

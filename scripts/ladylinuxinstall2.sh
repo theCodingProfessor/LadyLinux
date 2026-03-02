@@ -1,6 +1,4 @@
 #!/usr/bin/env bash
-
-# Updated for proper line endings
 set -euo pipefail
 set -x
 
@@ -13,7 +11,10 @@ echo "Fetched list of programs/features to update, updating now..."
 sudo apt upgrade -y
 echo "Updated programs successfully."
 
-# Test, updating DNS settings for downloading Mistral
+
+
+
+#Test, updating DNS settings for downloading Mistral
 
 # Backup the original resolved.conf file
 sudo cp /etc/systemd/resolved.conf /etc/systemd/resolved.conf.bak
@@ -32,6 +33,11 @@ sudo systemctl restart systemd-resolved
 # Confirm that systemd-resolved has restarted and DNS settings are applied
 echo "Systemd-resolved service has been restarted with new DNS settings."
 
+
+
+
+
+
 # --- Install required system packages ---
 echo "Installing required system packages..."
 sudo apt install -y git python3.12 python3.12-venv curl systemd
@@ -40,15 +46,14 @@ echo "System packages installed."
 # --- Clone LadyLinux repository ---
 cd ~
 echo "Cloning Lady Linux Repository..."
-sudo git clone https://github.com/theCodingProfessor/LadyLinux.git /opt
+sudo git clone https://github.com/theCodingProfessor/LadyLinux.git /opt/ladylinux
 echo "Lady Linux Repo cloned successfully."
 
 # --- Run the installer scripts ---
-cd /opt
+cd /opt/ladylinux
 sudo chmod +x scripts/install_ladylinux.sh
 sudo chmod +x scripts/refresh_vm.sh
-sudo ./scripts/install_ladylinux.sh --clone --branch Capstone_Dev_01
-# sudo ./scripts/install_ladylinux.sh --clone --branch main
+sudo ./scripts/install_ladylinux.sh --clone --branch main
 
 # --- Install Ollama ---
 echo "Installing Ollama"
@@ -108,3 +113,24 @@ sudo -u ladylinux bash -c "
 
 echo "Mistral ready to run, running..."
 ollama run mistral
+
+
+
+# --- Open web interface ---
+echo "Opening web interface at http://localhost:8000 ..."
+if command -v xdg-open > /dev/null; then
+    xdg-open http://localhost:8000 >/dev/null 2>&1 &
+else
+    echo "Please open your browser and visit: http://localhost:8000"
+fi
+
+# --- Optional: Open Mistral in new terminal ---
+if command -v gnome-terminal > /dev/null; then
+    echo "Opening Mistral terminal..."
+    gnome-terminal -- bash -c "ollama run mistral; exec bash"
+else
+    echo "To run Mistral manually, use:"
+    echo "ollama run mistral"
+fi
+
+echo "LadyLinux system launched successfully."

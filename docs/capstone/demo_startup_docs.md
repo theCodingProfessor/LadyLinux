@@ -1,7 +1,6 @@
+### New Install Startup Workflow
 
---- New Startup Routine
-Install Workflow
-
+``` bash 
 >sudo apt update
 >sudo apt upgrade
 >sudo apt install python3-pip
@@ -13,11 +12,12 @@ Install Workflow
 >sudo chmod +x install_ladylinux.sh
 >sudo chmod +x refresh_vm.sh
 >sudo ./install_ladylinux.sh
-
+```
 Have a version of Linux Mint
 Must have python/pip installed to use git
 
 Install ollama
+``` bash
 >cd /
 >curl -fsSL https://ollama.com/install.sh | sh
 >systemctl start ollama
@@ -30,32 +30,35 @@ Install ollama
 >apt install python3-fastapi
 >sudo apt install uvicorn
 >uvicorn interface_layer:app --reload --host 0.0.0.0 --post 8000
-
+```
 
 --- Old Startup Routine
 Starting up Lady Linux
 
 Everyday Workflow for Running the App
 1. Start the Ollama Service
+2. Ollama runs as a background system service once installed. 
+3. On most Linux setups, ollama installs and registers a systemd service:
 
-Ollama runs as a background system service once installed.
-
-On most Linux setups, ollama installs and registers a systemd service:
-
+``` bash
 > systemctl status ollama
+```
 
 If active, Ollama is already listening on http://localhost:11434.
 
 If not running, start it:
+``` bash
 > systemctl start ollama
+```
 
 To have it always start on boot:
+``` bash
 > systemctl enable ollama
+```
 
-✅ That means you do NOT have to manually load the model into memory each time.
+That means you do NOT have to manually load the model into memory each time.
 When your FastAPI app calls POST /api/generate, Ollama will automatically:
-
-Load the requested model (e.g., phi3:mini) from disk into memory if not already loaded.
+Load the requested model (e.g., phi3:mini) from disk into memory if not already loaded. 
 
 Keep it “warm” in memory for reuse until idle.
 
@@ -93,7 +96,6 @@ Both can run at the same time, since they’re hitting the same backend API.
 
 🔑 Key Takeaway
 
-Everyday use = Start FastAPI + ensure Ollama service is running.
+Everyday use = Start FastAPI + ensure Ollama service is running. 
 
 No need to “manually load” the LLM each time — Ollama does that automatically when the first request arrives.
-
