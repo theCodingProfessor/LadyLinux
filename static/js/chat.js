@@ -2,6 +2,44 @@
    LADY LINUX - AI / CHAT SYSTEM
    ===================================================== */
 
+const KNOWN_THEME_KEYS = [
+  "soft",
+  "crimson",
+  "glass",
+  "terminal",
+  "custom-1",
+  "custom-2",
+  "custom-3",
+  "custom-4",
+];
+
+function tryHandleUiCommand(fullText) {
+  try {
+    const match = fullText.match(/(?:^|\n)(LL_UI:\s*(\{[^\n]*\}))(?=\n|$)/);
+    if (!match) {
+      return { handled: false, cleanText: fullText };
+    }
+
+    const payload = JSON.parse(match[2]);
+    if (
+      payload.action === "set_theme" &&
+      typeof payload.theme === "string" &&
+      KNOWN_THEME_KEYS.includes(payload.theme) &&
+      typeof window.applyTheme === "function"
+    ) {
+      window.applyTheme(payload.theme);
+      return {
+        handled: true,
+        cleanText: fullText.replace(match[1], "").replace(/\n{3,}/g, "\n\n").trim(),
+      };
+    }
+  } catch (err) {
+    return { handled: false, cleanText: fullText };
+  }
+
+  return { handled: false, cleanText: fullText };
+}
+
 async function streamToElement(url, payload, targetElement) {
   const response = await fetch(url, {
     method: "POST",
@@ -26,9 +64,13 @@ async function streamToElement(url, payload, targetElement) {
     const { done, value } = await reader.read();
     if (done) break;
     result += decoder.decode(value, { stream: true });
-    assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${result}`;
+    const uiState = tryHandleUiCommand(result);
+    assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${uiState.cleanText}`;
     targetElement.scrollTop = targetElement.scrollHeight;
   }
+
+  const uiState = tryHandleUiCommand(result);
+  assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${uiState.cleanText}`;
 }
 
 function initChat() {

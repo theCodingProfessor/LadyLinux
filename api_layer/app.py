@@ -23,6 +23,18 @@ LOG_FILE = "/var/log/ladylinux/actions.log"
 OLLAMA_URL = "http://localhost:11434/api/generate"
 
 
+def _load_theme_keys():
+    try:
+        with open("static/themes.json", "r", encoding="utf-8") as handle:
+            theme_data = json.load(handle)
+        themes = theme_data.get("themes", {})
+        if isinstance(themes, dict):
+            return list(themes.keys())
+    except Exception:
+        pass
+    return ["soft", "crimson", "glass", "terminal", "custom-1", "custom-2", "custom-3", "custom-4"]
+
+
 @app.get("/")
 def index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
@@ -51,10 +63,23 @@ class PromptRequest(BaseModel):
 
 @app.post("/ask_phi3")
 async def ask_phi3_post(req: PromptRequest):
+    theme_keys = _load_theme_keys()
+    ui_prompt_prefix = (
+        "System instruction:\n"
+        "You are the Lady Linux UI assistant.\n"
+        f"Valid theme keys: {', '.join(theme_keys)}.\n"
+        "If and only if the user explicitly asks to change, switch, or set the theme, "
+        "include exactly one line formatted exactly as:\n"
+        'LL_UI: {"action":"set_theme","theme":"<theme_key>"}\n'
+        "Use exactly one valid theme key from the list above.\n"
+        "Do not emit any LL_UI line for any other request.\n\n"
+        f"User request:\n{req.prompt}"
+    )
+
     def stream():
         resp = requests.post(
             OLLAMA_URL,
-            json={"model": "mistral:latest", "prompt": req.prompt},
+            json={"model": "mistral:latest", "prompt": ui_prompt_prefix},
             stream=True
         )
         for line in resp.iter_lines():
