@@ -2,91 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lady Linux – Firewall</title>
-
-  <!-- Bootstrap 5.3 CSS -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lady Linux - Firewall</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
-  <!-- Optional: Keep your theme overrides -->
-  <link rel="stylesheet" href="/static/css/style.css">
+  <link href="/static/css/style.css" rel="stylesheet">
 </head>
 <body>
+  <div class="container-fluid py-4">
+    <header class="mb-4">
+      <h1 class="display-5">Firewall</h1>
+      <p class="text-muted">Network rules and security settings.</p>
+    </header>
 
-<main class="container-fluid py-4">
+    <nav id="nav-container" class="mb-4"></nav>
 
-  <!-- Hero -->
-  <header class="mb-4">
-    <h1 class="display-5">Firewall</h1>
-    <p>
-      Network rules and security settings
-    </p>
-  </header>
-
-  <!-- Navigation Container -->
-  <nav data-nav-target=""></nav>
-
-  <!-- Main Panels -->
-  <div class="row g-4">
-
-    <!-- Firewall Assistant -->
-    <div class="col-12 col-lg-6">
-      <div class="card ll-card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Firewall Assistant</h5>
-
-          <form id="firewallForm">
-            <div class="mb-3">
-              <label for="firewallPrompt" class="form-label">
-                Your question:
-              </label>
-              <input
-                type="text"
-                id="firewallPrompt"
-                name="firewallPrompt"
-                class="form-control"
-                value="What are the settings for my firewall on this Linux system?"
-              />
-            </div>
-
-            <button type="submit" class="ll-btn">
-              Ask
-            </button>
-          </form>
-
+    <div class="row g-4">
+      <div class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <h2 class="h4 mb-3">Firewall Assistant</h2>
+            <form id="firewallForm" class="row g-3">
+              <div class="col-12">
+                <label for="firewallPrompt" class="form-label">Your question</label>
+                <input
+                  type="text"
+                  id="firewallPrompt"
+                  name="firewallPrompt"
+                  class="form-control"
+                  value="What are the settings for my firewall on this Linux system?"
+                >
+              </div>
+              <div class="col-12">
+                <button type="submit" class="btn btn-primary">Ask</button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Response -->
-    <div class="col-12 col-lg-6">
-      <div class="card ll-card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Response</h5>
-          <div id="firewallResponse" class="p-3 rounded"></div>
+      <div class="col-12 col-lg-6">
+        <div class="card h-100">
+          <div class="card-body p-4">
+            <h2 class="h4 mb-3">Response Output</h2>
+            <div id="firewallResponse" class="border rounded p-3 response-area"></div>
+          </div>
         </div>
       </div>
-    </div>
 
-  </div>
-
-  <!-- JSON Output -->
-  <div class="row g-4 mt-4">
-    <div class="col-12">
-      <div class="card ll-card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Firewall JSON Output</h5>
-          <pre id="firewallJSON" class="p-3 rounded small"></pre>
+      <div class="col-12">
+        <div class="card">
+          <div class="card-body p-4">
+            <h2 class="h4 mb-3">JSON Output</h2>
+            <pre id="firewallJSON" class="mb-0 rounded p-3 response-area"></pre>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
-</main>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/static/js/main.js"></script>
-<script src="/static/js/chat.js"></script>
-<script src="/static/js/themes.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/themes.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/chat.js"></script>
 </body>
 </html>

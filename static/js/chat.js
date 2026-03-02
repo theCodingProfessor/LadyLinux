@@ -1,9 +1,5 @@
 /* =====================================================
-   LADY LINUX – AI / CHAT SYSTEM
-   ===================================================== */
-
-/* =====================================================
-   STREAM HELPER (KEEP GLOBAL)
+   LADY LINUX - AI / CHAT SYSTEM
    ===================================================== */
 
 async function streamToElement(url, payload, targetElement) {
@@ -13,8 +9,12 @@ async function streamToElement(url, payload, targetElement) {
     body: JSON.stringify(payload),
   });
 
+  const assistantReply = document.createElement("p");
+  assistantReply.innerHTML = "<strong>Lady Linux:</strong> ";
+  targetElement.appendChild(assistantReply);
+
   if (!response.body) {
-    targetElement.innerHTML += "<p><strong>Error:</strong> No response body.</p>";
+    assistantReply.innerHTML = "<strong>Error:</strong> No response body.";
     return;
   }
 
@@ -26,18 +26,23 @@ async function streamToElement(url, payload, targetElement) {
     const { done, value } = await reader.read();
     if (done) break;
     result += decoder.decode(value, { stream: true });
-    targetElement.innerHTML = `<p><strong>Lady Linux:</strong> ${result}</p>`;
+    assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${result}`;
     targetElement.scrollTop = targetElement.scrollHeight;
   }
 }
 
-/* =====================================================
-   INIT CHAT SYSTEM
-   ===================================================== */
-
 function initChat() {
+  function revealResponse(targetElement) {
+    if (!targetElement) return;
 
-  // ---- INDEX PAGE ----
+    targetElement.classList.remove("d-none", "hidden");
+
+    const parentCard = targetElement.closest(".card");
+    if (parentCard) {
+      parentCard.classList.remove("d-none", "hidden");
+    }
+  }
+
   const chatForm = document.getElementById("chatForm");
   if (chatForm) {
     const promptInput = document.getElementById("prompt");
@@ -49,6 +54,7 @@ function initChat() {
       const userMessage = promptInput.value.trim();
       if (!userMessage) return;
 
+      revealResponse(chatResponse);
       chatResponse.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
       promptInput.value = "";
 
@@ -56,18 +62,24 @@ function initChat() {
     });
   }
 
-  // ---- FIREWALL PAGE ----
   const firewallForm = document.getElementById("firewallForm");
   if (firewallForm) {
     const firewallPrompt = document.getElementById("firewallPrompt");
     const firewallResponse = document.getElementById("firewallResponse");
+    const firewallJSON = document.getElementById("firewallJSON");
 
     firewallForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const prompt = firewallPrompt.value.trim();
       if (!prompt) return;
 
+      revealResponse(firewallResponse);
+      revealResponse(firewallJSON);
       firewallResponse.textContent = `You: ${prompt}\n\nLoading firewall data...`;
+
+      if (firewallJSON) {
+        firewallJSON.textContent = "Loading...";
+      }
 
       try {
         const res = await fetch("/ask_firewall", {
@@ -79,10 +91,20 @@ function initChat() {
         const text = await res.text();
         firewallResponse.textContent = text;
 
+        if (firewallJSON) {
+          try {
+            firewallJSON.textContent = JSON.stringify(JSON.parse(text), null, 2);
+          } catch (err) {
+            firewallJSON.textContent = text;
+          }
+        }
       } catch (err) {
-        firewallResponse.textContent = `Lady Linux: Error - ${err.message}`;
+        const message = `Lady Linux: Error - ${err.message}`;
+        firewallResponse.textContent = message;
+        if (firewallJSON) {
+          firewallJSON.textContent = message;
+        }
       }
     });
   }
-
 }
