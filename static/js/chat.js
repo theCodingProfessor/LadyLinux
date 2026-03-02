@@ -12,21 +12,40 @@ const KNOWN_THEME_KEYS = [
   "custom-3",
   "custom-4",
 ];
+let devShortcutBound = false;
+
+function isDevMode() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("dev") === "1") {
+      localStorage.setItem("LL_DEV_MODE", "1");
+      return true;
+    }
+    return localStorage.getItem("LL_DEV_MODE") === "1";
+  } catch (err) {
+    return false;
+  }
+}
 
 function stripUiSegments(fullText) {
   return fullText.replace(/LL_UI:\s*(\{[\s\S]*?\})/g, "").replace(/\n{3,}/g, "\n\n").trim();
 }
 
 function tryHandleUiCommand(fullText) {
+  const devMode = isDevMode();
   const match = fullText.match(/LL_UI:\s*(\{[\s\S]*?\})/);
   if (!match) {
-    return { handled: false, cleanText: fullText };
+    return { handled: false, cleanText: fullText, command: null };
   }
 
-  const cleanText = stripUiSegments(fullText);
+  const cleanText = devMode ? fullText : stripUiSegments(fullText);
 
   try {
     const payload = JSON.parse(match[1]);
+    if (devMode) {
+      console.log("LL_UI", payload);
+    }
+
     if (
       payload.action === "set_theme" &&
       typeof payload.theme === "string" &&
@@ -35,13 +54,13 @@ function tryHandleUiCommand(fullText) {
       typeof window.applyTheme === "function"
     ) {
       window.applyTheme(payload.theme);
-      return { handled: true, cleanText };
+      return { handled: true, cleanText, command: payload };
     }
   } catch (err) {
-    return { handled: false, cleanText };
+    return { handled: false, cleanText, command: null };
   }
 
-  return { handled: false, cleanText };
+  return { handled: false, cleanText, command: null };
 }
 
 async function streamToElement(url, payload, targetElement) {
@@ -69,8 +88,13 @@ async function streamToElement(url, payload, targetElement) {
     const { done, value } = await reader.read();
     if (done) break;
     result += decoder.decode(value, { stream: true });
+    const devMode = isDevMode();
     const uiState = uiHandled
-      ? { handled: false, cleanText: stripUiSegments(result) }
+      ? {
+          handled: false,
+          cleanText: devMode ? result : stripUiSegments(result),
+          command: null,
+        }
       : tryHandleUiCommand(result);
     if (uiState.handled) {
       uiHandled = true;
@@ -79,8 +103,13 @@ async function streamToElement(url, payload, targetElement) {
     targetElement.scrollTop = targetElement.scrollHeight;
   }
 
+  const devMode = isDevMode();
   const uiState = uiHandled
-    ? { handled: false, cleanText: stripUiSegments(result) }
+    ? {
+        handled: false,
+        cleanText: devMode ? result : stripUiSegments(result),
+        command: null,
+      }
     : tryHandleUiCommand(result);
   assistantReply.innerHTML = `<strong>Lady Linux:</strong> ${uiState.cleanText}`;
 }
@@ -158,6 +187,27 @@ function initChat() {
         if (firewallJSON) {
           firewallJSON.textContent = message;
         }
+      }
+    });
+  }
+
+  if (!devShortcutBound) {
+    devShortcutBound = true;
+    document.addEventListener("keydown", (event) => {
+      if (!event.ctrlKey || !event.altKey || event.key.toLowerCase() !== "d") {
+        return;
+      }
+
+      try {
+        if (localStorage.getItem("LL_DEV_MODE") === "1") {
+          localStorage.removeItem("LL_DEV_MODE");
+          console.log("LL_DEV_MODE disabled");
+        } else {
+          localStorage.setItem("LL_DEV_MODE", "1");
+          console.log("LL_DEV_MODE enabled");
+        }
+      } catch (err) {
+        console.log("LL_DEV_MODE toggle failed");
       }
     });
   }
