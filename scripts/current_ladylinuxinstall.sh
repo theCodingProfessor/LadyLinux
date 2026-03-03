@@ -76,22 +76,39 @@ fi
 
 # --- Clone or update LadyLinux repository ---
 echo "[5/10] Setting up LadyLinux repository..."
+BRANCH="${LADYLINUX_BRANCH:-Capstone_Dev_01}"
+echo "  → Using branch: $BRANCH"
+
 if [ -d "/opt/ladylinux" ]; then
     echo "  → Repository already exists at /opt/ladylinux"
     echo "  → Checking for updates..."
     cd /opt/ladylinux
     sudo git fetch origin
-    LOCAL=$(git rev-parse HEAD)
-    REMOTE=$(git rev-parse origin/Capstone_Dev_01 2>/dev/null || git rev-parse origin/main)
+
+    # Get current branch and commit
+    CURRENT_BRANCH=$(sudo git rev-parse --abbrev-ref HEAD)
+    LOCAL=$(sudo git rev-parse HEAD)
+    REMOTE=$(sudo git rev-parse origin/$BRANCH 2>/dev/null || echo "not-found")
+
+    # If on different branch, switch
+    if [ "$CURRENT_BRANCH" != "$BRANCH" ]; then
+        echo "  → Switching from branch '$CURRENT_BRANCH' to '$BRANCH'..."
+        sudo git checkout -f "$BRANCH"
+    fi
+
+    # If remote commit differs from local, pull updates
     if [ "$LOCAL" != "$REMOTE" ]; then
         echo "  → Updates available. Pulling latest changes..."
-        sudo git pull
+        sudo git reset --hard "origin/$BRANCH"
+        sudo git clean -fd
     else
-        echo "  → Repository is up to date."
+        echo "  → Repository is up to date on branch '$BRANCH'."
     fi
+
+    cd - >/dev/null
 else
-    echo "  → Cloning LadyLinux repository..."
-    sudo git clone https://github.com/theCodingProfessor/LadyLinux.git /opt/ladylinux
+    echo "  → Cloning LadyLinux repository from branch '$BRANCH'..."
+    sudo git clone --branch "$BRANCH" https://github.com/theCodingProfessor/LadyLinux.git /opt/ladylinux
     echo "  → Repository cloned successfully."
 fi
 
@@ -191,6 +208,10 @@ if [ -d "/opt/ladylinux/venv" ]; then
     echo "  → Checking Python dependencies..."
 else
     echo "  → Creating virtual environment..."
+
+    # Ensure /opt/ladylinux directory is owned by ladylinux user
+    echo "  → Fixing permissions on /opt/ladylinux..."
+    sudo chown -R ladylinux:ladylinux /opt/ladylinux
 fi
 
 sudo -u ladylinux bash -c "
@@ -199,22 +220,32 @@ sudo -u ladylinux bash -c "
 
     # Create venv if it doesn't exist
     if [ ! -d venv ]; then
+        echo '  → Creating Python virtual environment with uv...'
         uv venv venv
-        echo '  → Virtual environment created.'
+        if [ \$? -eq 0 ]; then
+            echo '  → Virtual environment created successfully.'
+        else
+            echo '  → Error creating virtual environment. Checking permissions...'
+            exit 1
+        fi
     fi
 
-    # Install/upgrade dependencies
-    echo '  → Installing Python dependencies...'
-    uv pip install --python venv/bin/python \
-        fastapi \
-        requests \
-        pydantic \
-        jinja2 \
-        uvicorn \
-        qdrant-client \
-        watchdog
+    # Install/upgrade dependencies from requirements.txt
+    if [ -f 'requirements.txt' ]; then
+        echo '  → Installing Python dependencies from requirements.txt...'
+        uv pip install --python venv/bin/python -r requirements.txt
+        if [ \$? -eq 0 ]; then
+            echo '  → Python dependencies installed successfully.'
+        else
+            echo '  → Warning: Some dependencies may not have installed correctly.'
+            exit 1
+        fi
+    else
+        echo '  → requirements.txt not found! Skipping dependency installation.'
+        exit 1
+    fi
 "
-echo "  → Python dependencies installed successfully."
+echo "  → Python environment setup complete."
 
 # --- Restore shell to nologin for security ---
 if [ "$RESTORE_SHELL" = true ]; then

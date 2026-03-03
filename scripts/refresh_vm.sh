@@ -41,7 +41,7 @@ set -Eeuo pipefail
 
 #----------------------------- Configuration -----------------------------------
 
-BRANCH="${1:-main}"
+BRANCH="${1:-Capstone_Dev_01}"
 
 APP_DIR="/opt/ladylinux/app"
 VENV_DIR="/opt/ladylinux/venv"
@@ -111,7 +111,7 @@ service_status() {
   fi
 
   log "Service status:"
-  systemctl --no-pager --full status "$SERVICE_NAME" || true
+  systemctl status "$SERVICE_NAME" --no-pager --full 2>&1 | head -20 || true
 }
 
 run_as_service() {
@@ -123,11 +123,27 @@ git_sync() {
   log "Syncing repo in $APP_DIR to origin/$BRANCH (as $SERVICE_USER)"
   pushd "$APP_DIR" >/dev/null
 
-  # Fetch and hard-align. This intentionally removes local drift.
+  # Fetch to get latest refs
+  log "  Fetching from remote..."
   run_as_service git fetch --prune origin
-  run_as_service git checkout -f "$BRANCH" 2>/dev/null || true
 
-  # Use remote-tracking branch as source of truth:
+  # Check if remote branch exists
+  if ! run_as_service git rev-parse --verify "origin/$BRANCH" >/dev/null 2>&1; then
+    die "Remote branch 'origin/$BRANCH' does not exist. Available branches:" 1
+  fi
+
+  # Get current branch
+  local current_branch
+  current_branch="$(run_as_service git rev-parse --abbrev-ref HEAD)"
+
+  # Switch branch if needed
+  if [ "$current_branch" != "$BRANCH" ]; then
+    log "  Switching from branch '$current_branch' to '$BRANCH'..."
+    run_as_service git checkout -f "$BRANCH" 2>/dev/null || run_as_service git checkout -b "$BRANCH" "origin/$BRANCH"
+  fi
+
+  # Hard align to remote (removes local drift)
+  log "  Hard-aligning to origin/$BRANCH..."
   run_as_service git reset --hard "origin/$BRANCH"
   run_as_service git clean -fd
 
@@ -186,33 +202,58 @@ venv_rebuild_needed() {
 
 build_venv() {
   log "Building Python venv at: $VENV_DIR (as $SERVICE_USER)"
-  rm -rf "$VENV_DIR"
+
+  # Back up existing venv if present (for safety)
+  if [[ -d "$VENV_DIR" ]]; then
+    log "  Removing existing venv..."
+    rm -rf "$VENV_DIR"
+  fi
+
+  # Create and own the directory
   mkdir -p "$VENV_DIR"
   chown "$SERVICE_USER":"$SERVICE_USER" "$VENV_DIR"
 
-  run_as_service "$PYTHON_BIN" -m venv "$VENV_DIR"
-  run_as_service "$PIP_BIN" install --upgrade pip wheel setuptools
+  # Create venv as service user
+  log "  Creating new virtual environment..."
+  run_as_service "$PYTHON_BIN" -m venv "$VENV_DIR" \
+    || die "Failed to create virtual environment" 1
+
+  # Upgrade pip, wheel, setuptools
+  log "  Upgrading pip, wheel, setuptools..."
+  run_as_service "$PIP_BIN" install --upgrade pip wheel setuptools \
+    || die "Failed to upgrade pip/wheel/setuptools" 1
 
   pushd "$APP_DIR" >/dev/null
 
+  # Install from requirements.txt
   if [[ -f "requirements.txt" ]]; then
-    log "Installing dependencies from requirements.txt"
-    run_as_service "$PIP_BIN" install -r requirements.txt
+    log "  Installing dependencies from requirements.txt..."
+    log "    Dependencies:"
+    grep -v "^#" requirements.txt | grep -v "^$" | sed 's/^/      /'
+
+    run_as_service "$PIP_BIN" install -r requirements.txt \
+      || die "Failed to install dependencies from requirements.txt" 1
+
+    log "  Dependencies installed successfully."
   elif [[ -f "pyproject.toml" ]]; then
     warn "pyproject.toml found but no installer configured in this script yet."
     warn "If you adopt Poetry/UV/PDM, update this section accordingly."
     die "Dependency install not configured for pyproject.toml yet." 1
   else
-    warn "No requirements.txt or pyproject.toml found. Skipping dependency install."
+    die "No requirements.txt or pyproject.toml found in $APP_DIR" 1
   fi
 
+  # Save fingerprint for next run
   local fp
   fp="$(fingerprint_deps)"
   if [[ -n "$fp" ]]; then
-    run_as_service bash -c "echo '$fp' > '$FINGERPRINT_FILE'"
+    run_as_service bash -c "echo '$fp' > '$FINGERPRINT_FILE'" \
+      || warn "Could not save dependency fingerprint"
   fi
 
   popd >/dev/null
+
+  log "Venv built successfully."
 }
 
 prep_application() {
@@ -240,6 +281,17 @@ print_summary() {
 #-------------------------------- Main -----------------------------------------
 
 main() {
+  log "======================================================================"
+  log "LadyLinux Refresh Script"
+  log "======================================================================"
+  log "Branch:  $BRANCH"
+  log "App:     $APP_DIR"
+  log "Venv:    $VENV_DIR"
+  log "Service: $SERVICE_NAME"
+  log "User:    $SERVICE_USER"
+  log "======================================================================"
+  echo ""
+
   require_root
   require_cmd git
   require_cmd "$PYTHON_BIN"
@@ -250,6 +302,7 @@ main() {
 
   # Ensure correct ownership baseline for service user (non-fatal).
   if id "$SERVICE_USER" >/dev/null 2>&1; then
+    log "Ensuring correct ownership of application directories..."
     chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR" >/dev/null 2>&1 || true
     mkdir -p /var/lib/ladylinux/{data,cache,logs} >/dev/null 2>&1 || true
     chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux >/dev/null 2>&1 || true
@@ -261,18 +314,25 @@ main() {
   git_sync
 
   if venv_rebuild_needed; then
-    log "Venv rebuild needed (ALWAYS_REBUILD_VENV=$ALWAYS_REBUILD_VENV)"
+    log "Venv rebuild needed (ALWAYS_REBUILD_VENV=$ALWAYS_REBUILD_VENV, or deps changed)"
     build_venv
   else
     log "Venv rebuild not needed; dependency fingerprint unchanged."
+    log "To force rebuild, set: ALWAYS_REBUILD_VENV=true"
   fi
 
   prep_application
   service_start
+
+  echo ""
   print_summary
+  echo ""
+
   service_status
 
-  log "Refresh complete."
+  log "======================================================================"
+  log "Refresh complete. ✓"
+  log "======================================================================"
 }
 
 main "$@"
