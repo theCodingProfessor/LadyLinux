@@ -17,9 +17,15 @@ sudo ./scripts/current_ladylinuxinstall.sh
 6. Downloads Mistral LLM model (~4GB)
 7. Creates `ladylinux` service user
 8. Sets up Python venv with all dependencies
-9. Displays next steps
+9. **Automatically sets up and starts the systemd service**
+10. Shows you how to access the web interface
 
 **Time:** ~10-15 minutes (first run) / ~2-3 minutes (already installed)
+
+**After installation:**
+- Service is automatically running at http://localhost:8000
+- No manual service setup needed!
+- Just open your browser and go
 
 ### With Custom Branch
 ```bash
@@ -99,6 +105,26 @@ sudo ./scripts/refresh_vm.sh main
 ---
 
 ## Python Environment
+
+### Manual Testing (Activate Virtual Environment)
+
+If you want to run the application manually (not via systemd service):
+
+```bash
+cd /opt/ladylinux
+source venv/bin/activate              # Activate the virtual environment
+uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000
+```
+
+**When done testing:**
+```bash
+deactivate                             # Exit the virtual environment
+```
+
+**Why activate the venv?**
+- The dependencies (fastapi, qdrant-client, etc.) are installed in the venv
+- Without activating, Python won't find these modules
+- The systemd service automatically uses the venv, so this is only needed for manual testing
 
 ### Check Installed Packages
 ```bash

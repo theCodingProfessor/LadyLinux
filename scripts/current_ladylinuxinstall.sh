@@ -253,28 +253,71 @@ if [ "$RESTORE_SHELL" = true ]; then
     sudo usermod -s /usr/sbin/nologin ladylinux
 fi
 
+# --- Set up systemd service ---
+echo ""
+echo "[11/11] Setting up systemd service..."
+
+# Check if service file exists in repo
+if [ -f "/opt/ladylinux/ladylinux-api.service" ]; then
+    echo "  → Copying service file to systemd..."
+    sudo cp /opt/ladylinux/ladylinux-api.service /etc/systemd/system/
+
+    echo "  → Reloading systemd daemon..."
+    sudo systemctl daemon-reload
+
+    echo "  → Enabling service to start at boot..."
+    sudo systemctl enable ladylinux-api.service
+
+    echo "  → Starting LadyLinux API service..."
+    sudo systemctl start ladylinux-api.service
+
+    # Give service a moment to start
+    sleep 2
+
+    # Check if service started successfully
+    if systemctl is-active --quiet ladylinux-api.service; then
+        echo "  → Service started successfully! ✓"
+    else
+        echo "  → Warning: Service may not have started correctly."
+        echo "  → Check status with: sudo systemctl status ladylinux-api.service"
+        echo "  → View logs with: journalctl -u ladylinux-api.service -n 20"
+    fi
+else
+    echo "  → Warning: Service file not found at /opt/ladylinux/ladylinux-api.service"
+    echo "  → You'll need to set up the service manually."
+fi
+
 # --- Installation complete ---
 echo ""
 echo "═══════════════════════════════════════════════════════════════════════"
-echo "  LadyLinux Installation Complete!"
+echo "  🎉 LadyLinux Installation Complete!"
 echo "═══════════════════════════════════════════════════════════════════════"
 echo ""
-echo "Next steps:"
-echo "  1. Copy the service file to systemd:"
-echo "     sudo cp /opt/ladylinux/ladylinux-api.service /etc/systemd/system/"
+echo "The LadyLinux API service is now running!"
 echo ""
-echo "  2. Reload systemd and start the service:"
-echo "     sudo systemctl daemon-reload"
-echo "     sudo systemctl start ladylinux-api"
-echo "     sudo systemctl enable ladylinux-api"
+echo "📍 Quick Access:"
+echo "  • Web Interface:  http://localhost:8000"
+echo "  • API Endpoint:   http://localhost:8000/docs"
 echo ""
-echo "  3. Access the web interface:"
-echo "     http://localhost:8000"
+echo "🔧 Service Management:"
+echo "  • Check status:   sudo systemctl status ladylinux-api"
+echo "  • Stop service:   sudo systemctl stop ladylinux-api"
+echo "  • Start service:  sudo systemctl start ladylinux-api"
+echo "  • Restart:        sudo systemctl restart ladylinux-api"
+echo "  • View logs:      journalctl -u ladylinux-api -f"
 echo ""
-echo "  4. Check service status:"
-echo "     sudo systemctl status ladylinux-api"
+echo "🐍 For Manual Testing (requires activating virtual environment):"
+echo "  cd /opt/ladylinux"
+echo "  source venv/bin/activate"
+echo "  uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000"
 echo ""
-echo "  5. View logs:"
-echo "     journalctl -u ladylinux-api -f"
+echo "  To deactivate the virtual environment when done:"
+echo "  deactivate"
+echo ""
+echo "📚 Documentation:"
+echo "  • Quick Reference: docs/SCRIPTS_QUICK_REFERENCE.md"
+echo "  • Full Guide:      docs/SCRIPTS_INSTALLATION_AND_REFRESH.md"
+echo "  • Quick Start:     QUICK_START_CHECKLIST.md"
 echo ""
 echo "═══════════════════════════════════════════════════════════════════════"
+echo ""

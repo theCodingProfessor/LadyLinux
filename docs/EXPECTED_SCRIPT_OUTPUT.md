@@ -60,27 +60,43 @@ Resolving deltas: 100% (425/425), done.
   → Python environment setup complete.
   → Restoring shell to /usr/sbin/nologin for security...
 
+[11/11] Setting up systemd service...
+  → Copying service file to systemd...
+  → Reloading systemd daemon...
+  → Enabling service to start at boot...
+Created symlink /etc/systemd/system/multi-user.target.wants/ladylinux-api.service → /etc/systemd/system/ladylinux-api.service.
+  → Starting LadyLinux API service...
+  → Service started successfully! ✓
+
 ═══════════════════════════════════════════════════════════════════════
-  LadyLinux Installation Complete!
+  🎉 LadyLinux Installation Complete!
 ═══════════════════════════════════════════════════════════════════════
 
-Next steps:
-  1. Copy the service file to systemd:
-     sudo cp /opt/ladylinux/ladylinux-api.service /etc/systemd/system/
+The LadyLinux API service is now running!
 
-  2. Reload systemd and start the service:
-     sudo systemctl daemon-reload
-     sudo systemctl start ladylinux-api
-     sudo systemctl enable ladylinux-api
+📍 Quick Access:
+  • Web Interface:  http://localhost:8000
+  • API Endpoint:   http://localhost:8000/docs
 
-  3. Access the web interface:
-     http://localhost:8000
+🔧 Service Management:
+  • Check status:   sudo systemctl status ladylinux-api
+  • Stop service:   sudo systemctl stop ladylinux-api
+  • Start service:  sudo systemctl start ladylinux-api
+  • Restart:        sudo systemctl restart ladylinux-api
+  • View logs:      journalctl -u ladylinux-api -f
 
-  4. Check service status:
-     sudo systemctl status ladylinux-api
+🐍 For Manual Testing (requires activating virtual environment):
+  cd /opt/ladylinux
+  source venv/bin/activate
+  uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000
 
-  5. View logs:
-     journalctl -u ladylinux-api -f
+  To deactivate the virtual environment when done:
+  deactivate
+
+📚 Documentation:
+  • Quick Reference: docs/SCRIPTS_QUICK_REFERENCE.md
+  • Full Guide:      docs/SCRIPTS_INSTALLATION_AND_REFRESH.md
+  • Quick Start:     QUICK_START_CHECKLIST.md
 
 ═══════════════════════════════════════════════════════════════════════
 ```
@@ -89,8 +105,10 @@ Next steps:
 - ✓ Shows `Capstone_Dev_01` as the branch being used
 - ✓ Skips steps that are already done (DNS, packages, Ollama)
 - ✓ Shows dependencies being installed from `requirements.txt`
-- ✓ Restores security (nologin shell)
-- ✓ Provides clear next steps
+- ✓ **Automatically sets up and starts systemd service**
+- ✓ **Service is running immediately - no manual steps needed**
+- ✓ **Shows how to activate venv for manual testing**
+- ✓ Provides clear service management commands
 
 ---
 
