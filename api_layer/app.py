@@ -199,6 +199,15 @@ Explain this firewall configuration clearly for a Linux user.
         return PlainTextResponse(content=f"Lady Linux: Error - {str(e)}")
 
 
+@app.get("/firewall_status")
+def firewall_status():
+    """Return current firewall status as JSON for UI/debug panels."""
+    try:
+        return get_firewall_status_json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def log_action(action, target, status):
     with open(LOG_FILE, "a") as f:
         f.write(json.dumps({
@@ -219,4 +228,3 @@ def disable_service(target: str):
     except Exception as e:
         log_action("disable_service", target, "failed")
         raise HTTPException(status_code=500, detail=str(e))
-

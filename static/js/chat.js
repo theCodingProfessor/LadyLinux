@@ -279,6 +279,59 @@ function initGeneralAI() {
     });
 }
 
+function initFirewallAssistant() {
+
+    const firewallForm = document.getElementById("firewallForm");
+    if (!firewallForm) return;
+
+    const firewallPrompt = document.getElementById("firewallPrompt");
+    const firewallResponse = document.getElementById("firewallResponse");
+
+    firewallForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const prompt = (firewallPrompt?.value || "").trim();
+        if (!prompt) return;
+
+        if (firewallResponse) {
+            firewallResponse.textContent = `You: ${prompt}\n\nLoading firewall data...`;
+        }
+
+        try {
+            const res = await fetch("/ask_firewall", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ prompt })
+            });
+
+            const text = await res.text();
+            if (firewallResponse) {
+                firewallResponse.textContent = text;
+            }
+        } catch (err) {
+            if (firewallResponse) {
+                firewallResponse.textContent = `Lady Linux: Error - ${err.message}`;
+            }
+        }
+    });
+}
+
+async function loadFirewallJsonPanel() {
+
+    const firewallJsonEl = document.getElementById("firewallJSON");
+    if (!firewallJsonEl) return;
+
+    try {
+        const res = await fetch("/firewall_status");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const fwJson = await res.json();
+        firewallJsonEl.textContent = JSON.stringify(fwJson, null, 2);
+    } catch (err) {
+        firewallJsonEl.textContent = `Unable to load firewall JSON: ${err.message}`;
+    }
+}
+
 /* =====================================================
    INITIALIZATION
    ===================================================== */
@@ -294,4 +347,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     initThemePicker();
     initCustomThemes();
     initGeneralAI();
+    initFirewallAssistant();
+    await loadFirewallJsonPanel();
 });
