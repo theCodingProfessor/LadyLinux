@@ -6,7 +6,7 @@
 #   Run the LadyLinux FastAPI application as a managed system service.
 #
 # Assumptions:
-#   - Application code is located at /opt/ladylinux/app
+#   - Application code is located at /opt/ladylinux
 #   - Python virtual environment exists at /opt/ladylinux/venv
 #   - Environment configuration is defined in /etc/ladylinux/ladylinux.env
 #   - Service runs as the dedicated "ladylinux" system user
@@ -34,7 +34,7 @@ User=ladylinux
 Group=ladylinux
 
 # Working directory is the cloned repo
-WorkingDirectory=/opt/ladylinux/app
+WorkingDirectory=/opt/ladylinux
 
 # Load environment variables (ports, paths, modes, etc.)
 EnvironmentFile=-/etc/ladylinux/ladylinux.env

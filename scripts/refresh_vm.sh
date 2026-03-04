@@ -43,7 +43,8 @@ set -Eeuo pipefail
 
 BRANCH="${1:-Capstone_Dev_01}"
 
-APP_DIR="/opt/ladylinux/app"
+APP_DIR=""
+APP_DIR_CANDIDATES=("/opt/ladylinux/app" "/opt/ladylinux")
 VENV_DIR="/opt/ladylinux/venv"
 ENV_FILE="/etc/ladylinux/ladylinux.env"
 
@@ -75,6 +76,18 @@ require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
     die "Please run as root (e.g., sudo ./scripts/refresh_vm.sh $BRANCH)" 2
   fi
+}
+
+detect_app_dir() {
+  local candidate
+  for candidate in "${APP_DIR_CANDIDATES[@]}"; do
+    if [[ -d "$candidate/.git" ]]; then
+      APP_DIR="$candidate"
+      return 0
+    fi
+  done
+
+  die "Could not find a LadyLinux git repo. Checked: ${APP_DIR_CANDIDATES[*]}" 2
 }
 
 assert_paths() {
@@ -267,7 +280,7 @@ prep_application() {
 print_summary() {
   pushd "$APP_DIR" >/dev/null
   local commit
-  commit="$(git rev-parse --short HEAD)"
+  commit="$(run_as_service git rev-parse --short HEAD)"
   popd >/dev/null
 
   log "Summary:"
@@ -281,6 +294,14 @@ print_summary() {
 #-------------------------------- Main -----------------------------------------
 
 main() {
+  require_root
+  require_cmd git
+  require_cmd "$PYTHON_BIN"
+  require_cmd systemctl
+  require_cmd sha256sum
+
+  detect_app_dir
+
   log "======================================================================"
   log "LadyLinux Refresh Script"
   log "======================================================================"
@@ -292,11 +313,6 @@ main() {
   log "======================================================================"
   echo ""
 
-  require_root
-  require_cmd git
-  require_cmd "$PYTHON_BIN"
-  require_cmd systemctl
-  require_cmd sha256sum
 
   assert_paths
 
