@@ -7,10 +7,12 @@ Description: Makes rag_layer/ a Python package and exports the public API so
 """
 
 from rag_layer.retriever import build_context_block, retrieve
+from rag_layer.seed import seed
 from rag_layer.vector_store import ensure_collection
 
 __all__ = [
     "retrieve",
     "build_context_block",
     "ensure_collection",
+    "seed",
 ]

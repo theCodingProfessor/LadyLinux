@@ -10,24 +10,42 @@ from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 from api_layer.firewall_core import get_firewall_status_json
-from rag_layer import retrieve, build_context_block, ensure_collection
+from rag_layer import retrieve, build_context_block, ensure_collection, seed
 
 import logging
+import threading
 
 log = logging.getLogger("api_layer.app")
 
 app = FastAPI()
 
 
-# ── Startup: initialise Qdrant collection ────────────────────────────
+# ── Startup: initialise Qdrant collection and seed in background ─────
 @app.on_event("startup")
 def _init_rag():
-    """Create the Qdrant collection (in-memory for Sprint 1) on boot."""
+    """Create the Qdrant collection (in-memory for Sprint 1) on boot,
+    then kick off seeding in a background thread so the server is
+    immediately available while files are being ingested."""
     try:
         ensure_collection()
-        log.info("RAG layer initialised")
+        log.info("RAG collection ready — starting background seed")
+        threading.Thread(target=_seed_background, daemon=True).start()
     except Exception as exc:
         log.error("RAG layer init failed: %s", exc)
+
+
+def _seed_background():
+    """Run the seed pipeline off the main thread."""
+    try:
+        stats = seed()
+        log.info(
+            "Background seed done — %d file(s), %d chunk(s), %d error(s)",
+            stats["files_ingested"],
+            stats["chunks_stored"],
+            len(stats["errors"]),
+        )
+    except Exception as exc:
+        log.error("Background seed failed: %s", exc)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -116,8 +134,13 @@ async def ask_rag(req: RagRequest):
     """Retrieve relevant OS context from Qdrant, inject it into a Mistral
     prompt, and stream the grounded response back to the client."""
 
-    # 1. Retrieve evidence chunks
-    results = retrieve(req.prompt, top_k=req.top_k, domain=req.domain)
+    # 1. Retrieve evidence chunks (graceful degradation if embedding/Qdrant fails)
+    results: list[dict] = []
+    try:
+        results = retrieve(req.prompt, top_k=req.top_k, domain=req.domain)
+    except Exception as exc:
+        log.warning("RAG retrieval failed (falling back to plain LLM): %s", exc)
+
     context_block = build_context_block(results)
 
     # 2. Build the augmented prompt
@@ -141,7 +164,9 @@ async def ask_rag(req: RagRequest):
                 OLLAMA_URL,
                 json={"model": "mistral:latest", "prompt": full_prompt},
                 stream=True,
+                timeout=60,
             )
+            resp.raise_for_status()
             for line in resp.iter_lines():
                 if line:
                     chunk = json.loads(line)
@@ -156,6 +181,14 @@ async def ask_rag(req: RagRequest):
                     if src not in seen:
                         seen.add(src)
                         yield src + "\n"
+
+        except requests.ConnectionError:
+            yield (
+                "\n⚠️ Could not connect to Ollama at "
+                f"{OLLAMA_URL}.\n"
+                "Make sure Ollama is running (`ollama serve`) and the "
+                "mistral model is pulled (`ollama pull mistral`)."
+            )
         except Exception as exc:
             yield f"\n[RAG stream error: {exc}]"
 
