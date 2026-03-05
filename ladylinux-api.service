@@ -6,7 +6,7 @@
 #   Run the LadyLinux FastAPI application as a managed system service.
 #
 # Assumptions:
-#   - Application code is located at /opt/ladylinux/app
+#   - Application code is located at /opt/ladylinux
 #   - Python virtual environment exists at /opt/ladylinux/venv
 #   - Environment configuration is defined in /etc/ladylinux/ladylinux.env
 #   - Service runs as the dedicated "ladylinux" system user
@@ -34,7 +34,7 @@ User=ladylinux
 Group=ladylinux
 
 # Working directory is the cloned repo
-WorkingDirectory=/opt/ladylinux/app
+WorkingDirectory=/opt/ladylinux
 
 # Load environment variables (ports, paths, modes, etc.)
 EnvironmentFile=-/etc/ladylinux/ladylinux.env
@@ -44,8 +44,8 @@ Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sb
 
 # ---- Application launch ----
 # Adjust the module path below if your FastAPI app entry point changes.
-# Example assumes: app_layer.py defines `app = FastAPI(...)`
-ExecStart=/opt/ladylinux/venv/bin/uvicorn app_layer:app \
+# After refactoring: api_layer/app.py defines `app = FastAPI(...)`
+ExecStart=/opt/ladylinux/venv/bin/uvicorn api_layer.app:app \
     --host ${LADYLINUX_HOST:-0.0.0.0} \
     --port ${LADYLINUX_PORT:-8000}
 
