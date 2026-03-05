@@ -333,6 +333,38 @@ async function loadFirewallJsonPanel() {
 }
 
 /* =====================================================
+   OS PAGE — RAG PANEL
+   ===================================================== */
+
+function initOsPanel() {
+
+    const form = document.getElementById("osForm");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById("osPrompt");
+        const responseBox = document.getElementById("osResponse");
+        const prompt = input.value.trim();
+        if (!prompt) return;
+
+        // Show the response area with a loading state
+        responseBox.classList.remove("hidden");
+        responseBox.innerHTML = "<p><em>Thinking…</em></p>";
+
+        // Stream the RAG-augmented answer from Mistral
+        await streamToElement(
+            "/ask_rag",
+            { prompt: prompt, domain: "os" },
+            responseBox
+        );
+
+        input.value = "";
+    });
+}
+
+/* =====================================================
    INITIALIZATION
    ===================================================== */
 
@@ -349,4 +381,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     initGeneralAI();
     initFirewallAssistant();
     await loadFirewallJsonPanel();
+    initOsPanel();
 });
