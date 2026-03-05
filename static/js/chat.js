@@ -280,6 +280,38 @@ function initGeneralAI() {
 }
 
 /* =====================================================
+   OS PAGE — RAG PANEL
+   ===================================================== */
+
+function initOsPanel() {
+
+    const form = document.getElementById("osForm");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const input = document.getElementById("osPrompt");
+        const responseBox = document.getElementById("osResponse");
+        const prompt = input.value.trim();
+        if (!prompt) return;
+
+        // Show the response area and set a loading state
+        responseBox.classList.remove("hidden");
+        responseBox.innerHTML = "<p><em>Thinking…</em></p>";
+
+        // Stream the RAG-augmented answer
+        await streamToElement(
+            "/ask_rag",
+            { prompt: prompt, domain: "os" },
+            responseBox
+        );
+
+        input.value = "";
+    });
+}
+
+/* =====================================================
    INITIALIZATION
    ===================================================== */
 
@@ -294,4 +326,5 @@ document.addEventListener("DOMContentLoaded", async () => {
     initThemePicker();
     initCustomThemes();
     initGeneralAI();
+    initOsPanel();
 });
