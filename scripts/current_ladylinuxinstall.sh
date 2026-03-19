@@ -157,6 +157,16 @@ else
     echo "  → Mistral model downloaded successfully."
 fi
 
+# --- Pull nomic-embed-text embedding model ---
+echo "[8a/10] Checking nomic-embed-text embedding model..."
+if ollama list | grep -q "nomic-embed-text"; then
+    echo "  → nomic-embed-text model already downloaded. Skipping."
+else
+    echo "  → Pulling nomic-embed-text embedding model (this may take a while)..."
+    ollama pull nomic-embed-text
+    echo "  → nomic-embed-text model downloaded successfully."
+fi
+
 # --- Ensure ladylinux user exists and is properly configured ---
 echo "[9/10] Configuring ladylinux service user..."
 
