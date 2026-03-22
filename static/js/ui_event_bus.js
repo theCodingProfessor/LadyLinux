@@ -40,6 +40,14 @@ window.eventBus = window.eventBus || {
 
 const socket = new WebSocket("ws://localhost:8000/ws/ui");
 
+socket.onerror = (err) => {
+  console.warn("LadyLinux WS error:", err);
+};
+
+socket.onclose = () => {
+  console.info("LadyLinux WS closed");
+};
+
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
 

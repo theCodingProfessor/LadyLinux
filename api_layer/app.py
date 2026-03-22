@@ -1,10 +1,10 @@
 from datetime import datetime
+from pathlib import Path
 
 import json
 import requests
-import subprocess
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import StreamingResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -12,6 +12,9 @@ from pydantic import BaseModel
 from api_layer.firewall_core import get_firewall_status_json
 from api_layer.routes.system import router as system_router
 from api_layer.routes.theme import router as theme_router
+from api_layer.routes.ws import router as ws_router
+from api_layer.utils.command_runner import run_command
+from api_layer.utils.validators import validate_service_name
 from rag_layer import retrieve, build_context_block, ensure_collection, seed
 
 import logging
@@ -22,6 +25,7 @@ log = logging.getLogger("api_layer.app")
 app = FastAPI()
 app.include_router(system_router)
 app.include_router(theme_router)
+app.include_router(ws_router)
 
 
 # ── Startup: initialise Qdrant collection and seed in background ─────
@@ -54,6 +58,7 @@ def _seed_background():
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
+THEMES_JSON_PATH = Path("static/themes.json")
 
 LOG_FILE = "/var/log/ladylinux/actions.log"
 
@@ -85,6 +90,11 @@ def users_page(request: Request):
 @app.get("/os")
 def os_page(request: Request):
     return templates.TemplateResponse("os.html", {"request": request})
+
+
+@app.get("/themes.json")
+async def themes_json():
+    return FileResponse(THEMES_JSON_PATH)
 
 
 class PromptRequest(BaseModel):
@@ -268,10 +278,18 @@ def log_action(action, target, status):
 @app.post("/disable_service")
 def disable_service(target: str):
     try:
-        subprocess.run(["systemctl", "disable", target], check=True)
-        subprocess.run(["systemctl", "stop", target], check=True)
-        log_action("disable_service", target, "success")
-        return {"status": "ok", "message": f"{target} disabled on boot."}
-    except Exception as e:
-        log_action("disable_service", target, "failed")
-        raise HTTPException(status_code=500, detail=str(e))
+        name = validate_service_name(target)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    stop_result = run_command(["systemctl", "stop", name])
+    if not stop_result.ok:
+        log_action("disable_service", name, "failed")
+        raise HTTPException(status_code=500, detail=stop_result.stderr)
+
+    result = run_command(["systemctl", "disable", name])
+    log_action("disable_service", name, "success" if result.ok else "failed")
+    if not result.ok:
+        raise HTTPException(status_code=500, detail=result.stderr)
+
+    return {"status": "ok", "message": f"{name} disabled on boot."}

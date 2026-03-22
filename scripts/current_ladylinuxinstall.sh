@@ -76,7 +76,7 @@ fi
 
 # --- Clone or update LadyLinux repository ---
 echo "[5/10] Setting up LadyLinux repository..."
-BRANCH="${LADYLINUX_BRANCH:-Capstone_Dev_01}"
+BRANCH="${LADYLINUX_BRANCH:-darrius}"
 echo "  → Using branch: $BRANCH"
 
 if [ -d "/opt/ladylinux" ]; then
