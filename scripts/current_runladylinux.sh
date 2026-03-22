@@ -13,12 +13,12 @@ if ! systemctl is-active --quiet ollama; then
 fi
 
 # --- Start FastAPI backend if not already running ---
-if ! pgrep -f "uvicorn api_layer:app" > /dev/null; then
+if ! pgrep -f "uvicorn api_layer.app:app" > /dev/null; then
     echo "Starting LadyLinux API server..."
     sudo -u ladylinux bash -c "
         export PATH=\$HOME/.local/bin:\$PATH
         cd /opt/ladylinux/app
-        nohup ../venv/bin/uvicorn api_layer:app \
+        nohup ../venv/bin/uvicorn api_layer.app:app \
             --host 0.0.0.0 \
             --port 8000 \
             > /tmp/ladylinux.log 2>&1 &

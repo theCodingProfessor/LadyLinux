@@ -108,7 +108,7 @@ echo "Starting LLM service - please visit https://localhost:8000 to interact wit
 sudo -u ladylinux bash -c "
     export PATH=\$HOME/.local/bin:\$PATH
     cd /opt/ladylinux/app
-    ../venv/bin/uvicorn api_layer:app --reload --host 0.0.0.0 --port 8000
+../venv/bin/uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000
 " &
 
 echo "Mistral ready to run, running..."

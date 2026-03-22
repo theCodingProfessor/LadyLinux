@@ -43,9 +43,8 @@ EnvironmentFile=-/etc/ladylinux/ladylinux.env
 Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 
 # ---- Application launch ----
-# Adjust the module path below if your FastAPI app entry point changes.
-# Example assumes: app_layer.py defines `app = FastAPI(...)`
-ExecStart=/opt/ladylinux/venv/bin/uvicorn app_layer:app \
+# FastAPI app entrypoint lives in api_layer/app.py as `app`.
+ExecStart=/opt/ladylinux/venv/bin/uvicorn api_layer.app:app \
     --host ${LADYLINUX_HOST:-0.0.0.0} \
     --port ${LADYLINUX_PORT:-8000}
 

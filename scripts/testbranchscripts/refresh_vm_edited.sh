@@ -91,7 +91,7 @@ service_loaded() {
 
 stop_fallback_process() {
   local pids=""
-  pids="$(pgrep -f "/opt/ladylinux/venv/bin/python -m uvicorn api_layer:app --host 0.0.0.0 --port $API_PORT" 2>/dev/null || true)"
+  pids="$(pgrep -f "/opt/ladylinux/venv/bin/python -m uvicorn api_layer.app:app --host 0.0.0.0 --port $API_PORT" 2>/dev/null || true)"
   if [[ -n "$pids" ]]; then
     log "Stopping existing fallback uvicorn process on port $API_PORT"
     while read -r pid; do
@@ -120,7 +120,7 @@ start_fallback_api() {
   touch "$FALLBACK_LOG_FILE"
   chown "$SERVICE_USER":"$SERVICE_USER" "$FALLBACK_LOG_FILE" 2>/dev/null || true
 
-  run_as_service bash -lc "cd '$APP_DIR' && nohup '$VENV_DIR/bin/python' -m uvicorn api_layer:app --host 0.0.0.0 --port $API_PORT >> '$FALLBACK_LOG_FILE' 2>&1 < /dev/null &"
+  run_as_service bash -lc "cd '$APP_DIR' && nohup '$VENV_DIR/bin/python' -m uvicorn api_layer.app:app --host 0.0.0.0 --port $API_PORT >> '$FALLBACK_LOG_FILE' 2>&1 < /dev/null &"
 }
 
 service_start() {
@@ -137,7 +137,7 @@ service_start() {
 service_status() {
   if ! service_loaded; then
     warn "Service $SERVICE_NAME is not loaded. Reporting fallback uvicorn status instead."
-    pgrep -af "/opt/ladylinux/venv/bin/python -m uvicorn api_layer:app --host 0.0.0.0 --port $API_PORT" || true
+    pgrep -af "/opt/ladylinux/venv/bin/python -m uvicorn api_layer.app:app --host 0.0.0.0 --port $API_PORT" || true
     return 0
   fi
 
