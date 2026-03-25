@@ -2,114 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Lady Linux – Firewall</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lady Linux - Firewall</title>
+  <script>
+    document.documentElement.setAttribute("data-ui-ready", "false");
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/static/css/style.css" rel="stylesheet">
 </head>
-<body>
+<body data-page="firewall">
+  {% include "nav.html" %}
 
-<main class="app-shell">
-  <section class="app-surface">
+  {% include "controls.html" %}
+  {% include "lady_panel.html" %}
 
-    <!-- Hero -->
-    <header class="hero">
-      <h1>Firewall</h1>
-      <p class="subtitle">
-        Network rules and security settings
-      </p>
-    </header>
-
-    <!-- Navigation Pill -->
-    <nav class="nav-pill">
-      <a href="/" class="nav-item">Home</a>
-      <a href="/system" class="nav-item">System</a>
-      <a href="/users" class="nav-item">Users</a>
-      <a href="/firewall" class="nav-item active">Firewall</a>
-      <a href="/os" class="nav-item">OS</a>
-    </nav>
-
-    <!-- Main Panels -->
-    <section class="panel-grid">
-      <!-- Firewall Assistant -->
-      <div class="panel">
-        <h3>Firewall Assistant</h3>
-        <p class="subtitle">
-          Ask a custom question or launch a guided inspection.
-        </p>
-        <form id="firewallForm">
-          <label for="firewallPrompt">Your question:</label>
-          <input
-            type="text"
-            id="firewallPrompt"
-            name="firewallPrompt"
-            class="ai-input"
-            value="What are the settings for my firewall on this Linux system?"
-          />
-          <input type="hidden" id="firewallAction" value="custom" />
-          <button type="submit" class="ai-button">Ask</button>
-        </form>
-        <span class="ai-status" id="firewallStatus">
-          Live firewall data will be captured and vectorized before retrieval.
-        </span>
+  <main class="container pb-4">
+    {% include "context_nav.html" %}
+    <div class="row g-4">
+      <div class="col-12 col-lg-4">
+        <!-- Firewall Status -->
+        <section class="card ll-dashboard-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h1 class="h5 mb-0">Firewall Status</h1>
+              <span class="badge text-bg-secondary" id="firewallPageStatusValue">Unknown</span>
+            </div>
+            <p class="text-muted" id="firewallPageStatusMeta">Awaiting assistant action.</p>
+            <div id="firewallPageResponse" class="response-area p-3">Use the assistant dock to check or change firewall state.</div>
+          </div>
+        </section>
       </div>
 
-      <div class="panel">
-        <h3>Guided Inspections</h3>
-        <button
-          type="button"
-          class="action-btn"
-          data-firewall-action="inspect_status"
-          data-prompt="Summarize the firewall backend, status, logging, and default policies."
-        >Inspect overall status</button>
-        <button
-          type="button"
-          class="action-btn"
-          data-firewall-action="inspect_ports"
-          data-prompt="Inspect the firewall rules and identify open ports, services, or source ranges."
-        >Inspect ports and exposure</button>
-        <button
-          type="button"
-          class="action-btn"
-          data-firewall-action="inspect_settings"
-          data-prompt="Inspect the firewall settings, defaults, and logging configuration."
-        >Inspect settings</button>
-        <button
-          type="button"
-          class="action-btn"
-          data-firewall-action="inspect_rules"
-          data-prompt="Review the firewall rules one by one and explain what each rule allows or blocks."
-        >Inspect rules</button>
-        <button
-          type="button"
-          class="action-btn"
-          data-firewall-action="inspect_logs"
-          data-prompt="Inspect firewall logging and report any missing logs or unsupported backends."
-        >Inspect logging signals</button>
+      <div class="col-12 col-lg-8">
+        <!-- Rules Table -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Rules Table</h2>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Source</th>
+                    <th>Destination</th>
+                    <th>Port</th>
+                    <th>Action</th>
+                    <th>Controls</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>192.168.1.0/24</td>
+                    <td>10.0.0.10</td>
+                    <td>22</td>
+                    <td><span class="badge text-bg-success">Allow</span></td>
+                    <td><button class="btn btn-sm btn-outline-secondary" type="button">Edit</button></td>
+                  </tr>
+                  <tr>
+                    <td>Any</td>
+                    <td>Server</td>
+                    <td>3389</td>
+                    <td><span class="badge text-bg-danger">Deny</span></td>
+                    <td><button class="btn btn-sm btn-outline-secondary" type="button">Edit</button></td>
+                  </tr>
+                  <tr>
+                    <td>10.10.10.0/24</td>
+                    <td>Database</td>
+                    <td>5432</td>
+                    <td><span class="badge text-bg-success">Allow</span></td>
+                    <td><button class="btn btn-sm btn-outline-secondary" type="button">Edit</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- JSON snapshot id retained for existing action script updates -->
+            <pre id="firewallPageJSON" class="response-area p-3 mb-0">{
+  "status": "unknown",
+  "detail": "No firewall action has been run yet."
+}</pre>
+          </div>
+        </section>
       </div>
 
-      <!-- Response -->
-      <div class="panel">
-        <h3>Response</h3>
-        <div id="firewallResponse" class="response-box"></div>
+      <div class="col-12">
+        <!-- Recent Security Events -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Recent Security Events</h2>
+            <ul class="activity-log mb-0">
+              <li><span class="activity-entry"><i class="bi bi-shield-check"></i> Firewall rule added</span></li>
+              <li><span class="activity-entry"><i class="bi bi-exclamation-triangle"></i> Blocked inbound request on port 3389</span></li>
+              <li><span class="activity-entry"><i class="bi bi-file-lock2"></i> Config file updated by admin</span></li>
+            </ul>
+          </div>
+        </section>
       </div>
+    </div>
+  </main>
 
-      <div class="panel">
-        <h3>Evidence & Vectorization</h3>
-        <pre id="firewallSources" class="code-block">No firewall question has been submitted yet.</pre>
-      </div>
-    </section>
-
-    <!-- JSON Output -->
-    <section class="panel-grid">
-      <div class="panel">
-        <h3>Firewall JSON Output</h3>
-        <pre id="firewallJSON" class="code-block"></pre>
-      </div>
-    </section>
-
-  </section>
-</main>
-
-<script src="/static/js/chat.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/design_engine.js"></script>
+  <script src="/static/js/themes.js"></script>
+  <script src="/static/js/global.js"></script>
+  <script type="module" src="/static/js/ui_event_bus.js"></script>
+  <script src="/static/js/actions.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/chat.js"></script>
+  <script src="/static/js/ladyWidget.js"></script>
 </body>
 </html>
