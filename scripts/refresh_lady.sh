@@ -157,7 +157,18 @@ service_start() {
   fi
 
   log "Starting service: $SERVICE_NAME"
-  systemctl start "$SERVICE_NAME" || die "Failed to start $SERVICE_NAME"
+  if ! systemctl start "$SERVICE_NAME"; then
+    warn "Service failed to start — dumping diagnostics:"
+    echo ""
+    echo "─── systemctl status ───────────────────────────────────────────────────"
+    systemctl status "$SERVICE_NAME" --no-pager --full 2>&1 || true
+    echo ""
+    echo "─── journalctl (last 60 lines) ─────────────────────────────────────────"
+    journalctl -xeu "$SERVICE_NAME" --no-pager -n 60 2>&1 || true
+    echo "────────────────────────────────────────────────────────────────────────"
+    echo ""
+    die "Failed to start $SERVICE_NAME — see diagnostics above"
+  fi
 }
 
 service_status() {
@@ -198,10 +209,12 @@ git_sync() {
     run_as_service git checkout -f "$BRANCH" 2>/dev/null || run_as_service git checkout -b "$BRANCH" "origin/$BRANCH"
   fi
 
-  # Hard align to remote (removes local drift)
+  # Hard align to remote (removes local drift).
+  # --exclude=venv/ prevents git clean from wiping the Python virtual
+  # environment, which lives inside the repo root but is not tracked.
   log "  Hard-aligning to origin/$BRANCH..."
   run_as_service git reset --hard "origin/$BRANCH"
-  run_as_service git clean -fd
+  run_as_service git clean -fd --exclude=venv/ --exclude=venv
 
   local commit
   commit="$(run_as_service git rev-parse --short HEAD)"
@@ -424,4 +437,38 @@ main() {
   log "======================================================================"
 }
 
+# --- Refresh Workflow is Complete ---
+echo ""
+echo "═══════════════════════════════════════════════════════════════════════"
+echo "  🎉 LadyLinux Refresh Complete!"
+echo "═══════════════════════════════════════════════════════════════════════"
+echo ""
+echo "The LadyLinux API service is now running!"
+echo ""
+echo "📍 Quick Access:"
+echo "  • Web Interface:  http://localhost:8000"
+echo "  • API Endpoint:   http://localhost:8000/docs"
+echo ""
+echo "🔧 Service Management:"
+echo "  • Check status:   sudo systemctl status ladylinux-api"
+echo "  • Stop service:   sudo systemctl stop ladylinux-api"
+echo "  • Start service:  sudo systemctl start ladylinux-api"
+echo "  • Restart:        sudo systemctl restart ladylinux-api"
+echo "  • View logs:      journalctl -u ladylinux-api -f"
+echo ""
+echo "  To re-run the refresh script, elevate permissions"
+echo "  > sudo chmod +x refresh_lady.sh"
+echo ""
+echo "📚 Documentation:"
+echo "  • Quick Reference: docs/SCRIPTS_QUICK_REFERENCE.md"
+echo "  • Full Guide:      docs/SCRIPTS_INSTALLATION_AND_REFRESH.md"
+echo "  • Quick Start:     QUICK_START_CHECKLIST.md"
+echo ""
+echo "🐍 Run Manually:"
+echo "  cd /opt/ladylinux"
+echo "  source venv/bin/activate"
+echo "  uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000"
+echo ""
+echo "═══════════════════════════════════════════════════════════════════════"
+echo ""
 main "$@"
