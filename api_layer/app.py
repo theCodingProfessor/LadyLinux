@@ -186,20 +186,46 @@ def _parse_ollama_response_text(response: requests.Response) -> str:
 
 
 def _source_entries(results: list[dict]) -> list[dict]:
+    def _as_hashable_text(value) -> str:
+        if isinstance(value, (dict, list, tuple, set)):
+            try:
+                return json.dumps(value, sort_keys=True)
+            except TypeError:
+                return str(value)
+        return str(value)
+
+    def _as_int(value, default: int = 0) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return default
+
+    def _as_score(value) -> float:
+        try:
+            return round(float(value), 4)
+        except (TypeError, ValueError):
+            return 0.0
+
     seen = set()
     sources = []
     for result in results:
-        key = (result["source_path"], result["line_start"], result["line_end"])
+        source_path = _as_hashable_text(result.get("source_path", ""))
+        line_start = _as_int(result.get("line_start", 0))
+        line_end = _as_int(result.get("line_end", 0))
+        domain = _as_hashable_text(result.get("domain", "general"))
+        score = _as_score(result.get("score", 0.0))
+
+        key = (source_path, line_start, line_end)
         if key in seen:
             continue
         seen.add(key)
         sources.append(
             {
-                "source_path": result["source_path"],
-                "line_start": result["line_start"],
-                "line_end": result["line_end"],
-                "domain": result["domain"],
-                "score": round(result["score"], 4),
+                "source_path": source_path,
+                "line_start": line_start,
+                "line_end": line_end,
+                "domain": domain,
+                "score": score,
             }
         )
     return sources
