@@ -285,33 +285,150 @@ function initFirewallAssistant() {
     if (!firewallForm) return;
 
     const firewallPrompt = document.getElementById("firewallPrompt");
+    const firewallAction = document.getElementById("firewallAction");
     const firewallResponse = document.getElementById("firewallResponse");
+    const firewallJson = document.getElementById("firewallJSON");
+    const firewallSources = document.getElementById("firewallSources");
+    const firewallStatus = document.getElementById("firewallStatus");
+    const quickActions = document.querySelectorAll("[data-firewall-action]");
 
-    firewallForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
+    const renderFirewallAnswer = (prompt, data) => {
+        if (!firewallResponse) return;
 
-        const prompt = (firewallPrompt?.value || "").trim();
+        const lines = [
+            `You: ${prompt}`,
+            "",
+            "Lady Linux:",
+            data?.output || "No response was returned."
+        ];
+
+        if (data?.llm_error) {
+            lines.push("", `Model status: ${data.llm_error}`);
+        }
+
+        firewallResponse.textContent = lines.join("\n");
+    };
+
+    const renderFirewallSources = (data) => {
+        if (!firewallSources) return;
+
+        const lines = [];
+        const sources = data?.sources || [];
+        const vectorization = data?.vectorization || {};
+
+        if (sources.length) {
+            lines.push("Retrieved firewall evidence:");
+            sources.forEach((source) => {
+                lines.push(
+                    `- ${source.source_path} (lines ${source.line_start}-${source.line_end}, score ${source.score})`
+                );
+            });
+        } else {
+            lines.push("No firewall evidence chunks were retrieved from the vector store.");
+        }
+
+        lines.push("");
+        lines.push(`Runtime snapshot vectorized: ${vectorization.vectorized ? "yes" : "no"}`);
+        lines.push(`Chunks stored: ${vectorization.chunks_stored || 0}`);
+
+        if ((vectorization.source_paths || []).length) {
+            lines.push("Snapshot sources:");
+            vectorization.source_paths.forEach((path) => lines.push(`- ${path}`));
+        }
+
+        if ((vectorization.errors || []).length) {
+            lines.push("Errors:");
+            vectorization.errors.forEach((error) => lines.push(`- ${error}`));
+        }
+
+        firewallSources.textContent = lines.join("\n");
+    };
+
+    const renderFirewallJson = (data) => {
+        if (firewallJson && data?.firewall_json) {
+            firewallJson.textContent = JSON.stringify(data.firewall_json, null, 2);
+        }
+    };
+
+    const setLoadingState = (prompt) => {
+        if (firewallResponse) {
+            firewallResponse.textContent = `You: ${prompt}\n\nLoading firewall evidence and querying the local model...`;
+        }
+        if (firewallSources) {
+            firewallSources.textContent = "Collecting runtime firewall snapshot and vector-store evidence...";
+        }
+        if (firewallStatus) {
+            firewallStatus.textContent = "Inspecting firewall runtime state...";
+        }
+    };
+
+    const submitFirewallPrompt = async (prompt, action) => {
         if (!prompt) return;
 
-        if (firewallResponse) {
-            firewallResponse.textContent = `You: ${prompt}\n\nLoading firewall data...`;
-        }
+        setLoadingState(prompt);
 
         try {
             const res = await fetch("/ask_firewall", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt })
+                body: JSON.stringify({ prompt, action })
             });
 
-            const text = await res.text();
-            if (firewallResponse) {
-                firewallResponse.textContent = text;
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data?.detail || `HTTP ${res.status}`);
+            }
+
+            renderFirewallAnswer(prompt, data);
+            renderFirewallSources(data);
+            renderFirewallJson(data);
+
+            if (firewallStatus) {
+                firewallStatus.textContent = data?.vectorization?.vectorized
+                    ? "Firewall snapshot captured and added to the RAG context."
+                    : "Firewall snapshot captured, but vectorization fell back to direct runtime context.";
             }
         } catch (err) {
             if (firewallResponse) {
                 firewallResponse.textContent = `Lady Linux: Error - ${err.message}`;
             }
+            if (firewallSources) {
+                firewallSources.textContent = "Unable to retrieve firewall evidence.";
+            }
+            if (firewallStatus) {
+                firewallStatus.textContent = "Firewall inspection failed.";
+            }
+        }
+    };
+
+    quickActions.forEach((button) => {
+        button.addEventListener("click", async () => {
+            const prompt = (button.getAttribute("data-prompt") || "").trim();
+            const action = button.getAttribute("data-firewall-action") || "custom";
+
+            if (firewallPrompt) {
+                firewallPrompt.value = prompt;
+            }
+            if (firewallAction) {
+                firewallAction.value = action;
+            }
+
+            await submitFirewallPrompt(prompt, action);
+        });
+    });
+
+    firewallForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const prompt = (firewallPrompt?.value || "").trim();
+        const action = (firewallAction?.value || "custom").trim() || "custom";
+        if (!prompt) return;
+
+        await submitFirewallPrompt(prompt, action);
+
+        if (firewallAction) {
+            firewallAction.value = "custom";
         }
     });
 }

@@ -30,7 +30,9 @@ These already had the correct `/static/js/chat.js` path and were not changed.
 
 ## Verification
 All 5 active template files now correctly reference:
+
 ```html
+
 <script src="/static/js/chat.js"></script>
 ```
 
