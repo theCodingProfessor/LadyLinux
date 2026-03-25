@@ -56,6 +56,21 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
 
+
+def _render_template(request: Request, name: str, context: dict | None = None):
+    """Render Jinja templates across old/new Starlette TemplateResponse signatures."""
+    merged_context = {"request": request, **(context or {})}
+    try:
+        # Newer Starlette/FastAPI: request is a separate argument.
+        return templates.TemplateResponse(
+            request=request,
+            name=name,
+            context=merged_context,
+        )
+    except TypeError:
+        # Older Starlette/FastAPI: (name, context) signature.
+        return templates.TemplateResponse(name, merged_context)
+
 LOG_FILE = "/var/log/ladylinux/actions.log"
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -64,29 +79,29 @@ OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"
 
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return _render_template(request, "index.html")
 
 
 @app.get("/firewall")
 def firewall_page(request: Request):
-    return templates.TemplateResponse("firewall.html", {"request": request})
+    return _render_template(request, "firewall.html")
 
 
 @app.get("/system")
 def system_page(request: Request):
-    return templates.TemplateResponse("system.html", {"request": request})
+    return _render_template(request, "system.html")
 
 
 @app.post("/users")
 @app.get("/users")
 def users_page(request: Request):
-    return templates.TemplateResponse("users.html", {"request": request})
+    return _render_template(request, "users.html")
 
 
 @app.post("/os")
 @app.get("/os")
 def os_page(request: Request):
-    return templates.TemplateResponse("os.html", {"request": request})
+    return _render_template(request, "os.html")
 
 
 class PromptRequest(BaseModel):
