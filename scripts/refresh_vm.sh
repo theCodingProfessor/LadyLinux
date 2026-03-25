@@ -3,7 +3,7 @@
 # LadyLinux VM Refresh Script
 # File: scripts/refresh_vm.sh
 # Author: Sean Connelly
-# Version: 0.21
+# Version: 0.30
 #
 # Purpose:
 #   Refresh the LadyLinux Application Layer on a running system from GitHub.
@@ -11,11 +11,12 @@
 #   or remove persistent application state.
 #
 # Primary actions:
-#   1) Stop service
-#   2) Hard-align repo to origin/<branch>
-#   3) (Re)build Python venv and install dependencies
-#   4) Restart service
-#   5) Print commit + service status
+#   1) Ensure service user + repo exist (bootstrap if missing)
+#   2) Stop service (if present)
+#   3) Hard-align repo to origin/<branch>
+#   4) (Re)build Python venv only when needed (or broken)
+#   5) Sync systemd unit file from repo and daemon-reload
+#   6) Restart service and print summary
 #
 # Usage:
 #   sudo ./scripts/refresh_vm.sh [branch]
@@ -45,6 +46,8 @@ BRANCH="${1:-Capstone_Dev_01}"
 
 APP_DIR=""
 APP_DIR_CANDIDATES=("/opt/ladylinux/app" "/opt/ladylinux")
+DEFAULT_APP_DIR="/opt/ladylinux"
+REPO_URL="${REPO_URL:-https://github.com/theCodingProfessor/LadyLinux.git}"
 VENV_DIR="/opt/ladylinux/venv"
 ENV_FILE="/etc/ladylinux/ladylinux.env"
 
@@ -57,6 +60,7 @@ PIP_BIN="$VENV_DIR/bin/pip"
 # If true: always rebuild the venv each run (most deterministic).
 # If false: rebuild only when dependency file fingerprint changes.
 ALWAYS_REBUILD_VENV="${ALWAYS_REBUILD_VENV:-false}"
+BOOTSTRAP_IF_MISSING="${BOOTSTRAP_IF_MISSING:-true}"
 
 # Dependency file(s) to fingerprint. Adjust if you use pyproject.toml/poetry later.
 DEPS_FILES=("requirements.txt" "pyproject.toml" "poetry.lock")
@@ -87,12 +91,51 @@ detect_app_dir() {
     fi
   done
 
+  if [[ "$BOOTSTRAP_IF_MISSING" == "true" ]]; then
+    APP_DIR="$DEFAULT_APP_DIR"
+    warn "No existing repo found. Will bootstrap into: $APP_DIR"
+    return 0
+  fi
+
   die "Could not find a LadyLinux git repo. Checked: ${APP_DIR_CANDIDATES[*]}" 2
 }
 
 assert_paths() {
-  [[ -d "$APP_DIR" ]] || die "APP_DIR not found: $APP_DIR (is LadyLinux cloned there?)" 2
+  [[ -d "$APP_DIR" ]] || die "APP_DIR not found: $APP_DIR" 2
   [[ -d "$APP_DIR/.git" ]] || die "APP_DIR is not a git repo: $APP_DIR" 2
+}
+
+ensure_service_user() {
+  if id "$SERVICE_USER" >/dev/null 2>&1; then
+    return 0
+  fi
+
+  log "Service user '$SERVICE_USER' not found. Creating system user..."
+  useradd -r -m -d "/home/$SERVICE_USER" -s /usr/sbin/nologin "$SERVICE_USER" \
+    || die "Failed to create service user '$SERVICE_USER'" 1
+}
+
+bootstrap_repo_if_missing() {
+  if [[ -d "$APP_DIR/.git" ]]; then
+    return 0
+  fi
+
+  [[ "$BOOTSTRAP_IF_MISSING" == "true" ]] || die "Repo missing and bootstrap disabled" 2
+
+  log "Bootstrapping repository at $APP_DIR (branch: $BRANCH)"
+  mkdir -p "$(dirname "$APP_DIR")"
+
+  if [[ -d "$APP_DIR" && -n "$(ls -A "$APP_DIR" 2>/dev/null || true)" ]]; then
+    die "Bootstrap target directory is not empty: $APP_DIR" 1
+  fi
+
+  if [[ ! -d "$APP_DIR" ]]; then
+    mkdir -p "$APP_DIR"
+  fi
+
+  chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR" >/dev/null 2>&1 || true
+  run_as_service git clone --branch "$BRANCH" "$REPO_URL" "$APP_DIR" \
+    || die "Failed to clone repository into $APP_DIR" 1
 }
 
 service_stop() {
@@ -196,6 +239,11 @@ venv_rebuild_needed() {
     return 0
   fi
 
+  # If venv exists but pip is broken/missing, rebuild.
+  if [[ ! -x "$VENV_DIR/bin/pip" ]]; then
+    return 0
+  fi
+
   local new_fp old_fp
   new_fp="$(fingerprint_deps)"
   old_fp=""
@@ -269,6 +317,26 @@ build_venv() {
   log "Venv built successfully."
 }
 
+sync_systemd_unit() {
+  local unit_src="$APP_DIR/ladylinux-api.service"
+  local unit_dst="/etc/systemd/system/$SERVICE_NAME"
+
+  if [[ ! -f "$unit_src" ]]; then
+    warn "Service file not found in repo: $unit_src"
+    return 0
+  fi
+
+  if [[ ! -f "$unit_dst" ]] || ! cmp -s "$unit_src" "$unit_dst"; then
+    log "Syncing systemd unit file: $SERVICE_NAME"
+    cp "$unit_src" "$unit_dst" || die "Failed to copy service unit" 1
+    systemctl daemon-reload || die "Failed to reload systemd daemon" 1
+  else
+    log "Systemd unit already up to date."
+  fi
+
+  systemctl enable "$SERVICE_NAME" >/dev/null 2>&1 || true
+}
+
 prep_application() {
   # Optional hook: run migrations, validations, compile steps, etc.
   # Keep it safe and fast. Runs as the service user.
@@ -300,7 +368,11 @@ main() {
   require_cmd systemctl
   require_cmd sha256sum
 
+  ensure_service_user
+
   detect_app_dir
+
+  bootstrap_repo_if_missing
 
   log "======================================================================"
   log "LadyLinux Refresh Script"
@@ -338,6 +410,7 @@ main() {
   fi
 
   prep_application
+  sync_systemd_unit
   service_start
 
   echo ""
