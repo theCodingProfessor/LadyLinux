@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lady Linux - Logs</title>
+  <script>
+    document.documentElement.setAttribute("data-ui-ready", "false");
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="/static/css/style.css" rel="stylesheet">
+  <style>
+    .log-output {
+      font-family: monospace;
+      font-size: 0.78rem;
+      background: var(--bg-main);
+      border-radius: 0 0 var(--radius-medium) var(--radius-medium);
+      overflow-y: auto;
+      height: calc(100vh - 310px);
+      min-height: 300px;
+    }
+    .log-line {
+      padding: 0.15rem 0.85rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+      line-height: 1.5;
+    }
+    .log-line:hover { background: var(--bg-surface); }
+    .log-error { color: #f87171; }
+    .log-warn  { color: #fbbf24; }
+    .log-info  { color: var(--text-muted); }
+    .log-line.ll-hidden { display: none; }
+
+    .source-item {
+      display: block;
+      padding: 0.35rem 0.6rem;
+      border-radius: var(--radius-small, 4px);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.83rem;
+      border: none;
+      background: none;
+      text-align: left;
+      width: 100%;
+      transition: background 0.12s;
+    }
+    .source-item:hover  { background: var(--bg-surface); color: var(--text-main); }
+    .source-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+
+    .src-header {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      padding: 0.55rem 0.6rem 0.2rem;
+    }
+  </style>
+</head>
+<body data-page="logs">
+  {% include "nav.html" %}
+
+  {% include "controls.html" %}
+  {% include "lady_panel.html" %}
+
+  <main class="container pb-5">
+    {% include "context_nav.html" %}
+
+    <!-- Page header -->
+    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+      <div>
+        <h1 class="h4 mb-0">Logs</h1>
+        <p class="text-muted mb-0" style="font-size:0.85rem">System journal, application logs, and log files</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <select class="form-select form-select-sm" id="linesSelect" style="width:auto">
+          <option value="50">50 lines</option>
+          <option value="100" selected>100 lines</option>
+          <option value="200">200 lines</option>
+          <option value="500">500 lines</option>
+        </select>
+        <div class="form-check form-switch mb-0 d-flex align-items-center gap-1">
+          <input class="form-check-input" type="checkbox" id="autoScrollToggle" checked>
+          <label class="form-check-label small text-muted" for="autoScrollToggle">Auto-scroll</label>
+        </div>
+        <button class="btn btn-outline-secondary btn-sm" id="copyBtn" title="Copy visible lines to clipboard">
+          <i class="bi bi-clipboard"></i>
+        </button>
+        <button class="btn btn-outline-secondary btn-sm" id="refreshBtn">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="mb-3">
+      <div class="input-group input-group-sm" style="max-width:420px">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" id="logSearch" placeholder="Filter lines…" autocomplete="off">
+        <button class="btn btn-outline-secondary" id="clearSearchBtn" type="button">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="row g-3">
+
+      <!-- Source panel -->
+      <div class="col-lg-3">
+        <div class="card ll-dashboard-card">
+          <div class="card-body p-2">
+            <div class="src-header">Built-in</div>
+            <button class="source-item active" data-source="journal" data-param="" data-label="Journal">
+              <i class="bi bi-journal-text me-2"></i>Journal
+            </button>
+            <button class="source-item" data-source="ladylinux" data-param="" data-label="LadyLinux Actions">
+              <i class="bi bi-cpu me-2"></i>LadyLinux Actions
+            </button>
+            <div class="src-header mt-2">Log Files</div>
+            <div id="fileList">
+              <div class="text-muted px-2 py-2" style="font-size:0.8rem">
+                <span class="spinner-border spinner-border-sm me-1"></span>Loading…
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Log output panel -->
+      <div class="col-lg-9">
+        <div class="card ll-dashboard-card overflow-hidden">
+          <div class="d-flex align-items-center justify-content-between px-3 py-2"
+               style="border-bottom:1px solid var(--border-color)">
+            <span class="text-muted small fw-medium" id="logSourceLabel">Journal</span>
+            <span class="text-muted small" id="logLineCount">—</span>
+          </div>
+          <div class="log-output" id="logOutput">
+            <div class="log-line text-muted">
+              <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/design_engine.js"></script>
+  <script src="/static/js/themes.js"></script>
+  <script src="/static/js/global.js"></script>
+  <script type="module" src="/static/js/ui_event_bus.js"></script>
+  <script src="/static/js/actions.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="/static/js/chat.js"></script>
+  <script src="/static/js/ladyWidget.js"></script>
+
+  <script>
+  (function () {
+    "use strict";
+
+    let currentSource = { type: "journal", param: "", label: "Journal" };
+
+    /* ── Level classifier ── */
+    function lineClass(text) {
+      if (/error/i.test(text))  return "log-error";
+      if (/warn/i.test(text))   return "log-warn";
+      if (/\binfo\b/i.test(text)) return "log-info";
+      return "";
+    }
+
+    /* ── Render lines into output panel ── */
+    function renderLines(lines) {
+      const out    = document.getElementById("logOutput");
+      const filter = document.getElementById("logSearch").value.toLowerCase();
+      /* newest-first: reverse the array (journalctl/tail return oldest first) */
+      const rows   = [...lines].reverse();
+
+      if (!rows.length) {
+        out.innerHTML = `<div class="log-line text-muted">No log entries found.</div>`;
+        document.getElementById("logLineCount").textContent = "0 lines";
+        return;
+      }
+
+      out.innerHTML = rows.map(line => {
+        const cls     = lineClass(line);
+        const hidden  = filter && !line.toLowerCase().includes(filter) ? " ll-hidden" : "";
+        const escaped = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        return `<div class="log-line${cls ? " " + cls : ""}${hidden}">${escaped}</div>`;
+      }).join("");
+
+      updateCount();
+
+      if (document.getElementById("autoScrollToggle").checked) {
+        out.scrollTop = 0; /* newest-first → scroll to top */
+      }
+    }
+
+    function updateCount() {
+      const all     = document.querySelectorAll("#logOutput .log-line").length;
+      const visible = document.querySelectorAll("#logOutput .log-line:not(.ll-hidden)").length;
+      document.getElementById("logLineCount").textContent = `${visible} / ${all} lines`;
+    }
+
+    /* ── Fetch and display current source ── */
+    async function loadSource() {
+      const out   = document.getElementById("logOutput");
+      const lines = document.getElementById("linesSelect").value;
+      out.innerHTML = `<div class="log-line text-muted">
+        <span class="spinner-border spinner-border-sm me-2"></span>Loading…</div>`;
+      document.getElementById("logLineCount").textContent = "—";
+
+      try {
+        let url;
+        if (currentSource.type === "journal") {
+          const p = new URLSearchParams({ lines });
+          if (currentSource.param) p.set("unit", currentSource.param);
+          url = `/api/logs/journal?${p}`;
+        } else if (currentSource.type === "ladylinux") {
+          url = `/api/logs/ladylinux?lines=${lines}`;
+        } else {
+          url = `/api/logs/file?${new URLSearchParams({ path: currentSource.param, lines })}`;
+        }
+        const res  = await fetch(url);
+        const data = await res.json();
+        renderLines(data.lines || []);
+      } catch (err) {
+        out.innerHTML = `<div class="log-line log-error">
+          <i class="bi bi-exclamation-triangle me-1"></i>Failed to load logs</div>`;
+        console.error("loadSource:", err);
+      }
+    }
+
+    /* ── Populate file list in sidebar ── */
+    async function loadFileList() {
+      const container = document.getElementById("fileList");
+      try {
+        const res   = await fetch("/api/logs/files");
+        const data  = await res.json();
+        const files = data.files || [];
+        if (!files.length) {
+          container.innerHTML =
+            `<div class="text-muted px-2 py-2" style="font-size:0.8rem">No readable files</div>`;
+          return;
+        }
+        container.innerHTML = files.map(f =>
+          `<button class="source-item" data-source="file"
+                   data-param="/var/log/${f}" data-label="${f}">
+             <i class="bi bi-file-text me-2"></i>${f}
+           </button>`
+        ).join("");
+        container.querySelectorAll(".source-item").forEach(btn =>
+          btn.addEventListener("click", () => selectSource(btn))
+        );
+      } catch {
+        container.innerHTML =
+          `<div class="text-muted px-2 py-2" style="font-size:0.8rem">Could not list files</div>`;
+      }
+    }
+
+    /* ── Source selection ── */
+    function selectSource(btn) {
+      document.querySelectorAll(".source-item").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentSource = {
+        type:  btn.dataset.source,
+        param: btn.dataset.param || "",
+        label: btn.dataset.label || btn.textContent.trim(),
+      };
+      document.getElementById("logSourceLabel").textContent = currentSource.label;
+      loadSource();
+    }
+
+    /* ── Client-side filter ── */
+    function applyFilter() {
+      const filter = document.getElementById("logSearch").value.toLowerCase();
+      document.querySelectorAll("#logOutput .log-line").forEach(el => {
+        el.classList.toggle("ll-hidden", !!(filter && !el.textContent.toLowerCase().includes(filter)));
+      });
+      updateCount();
+    }
+
+    /* ── Event wiring ── */
+    document.querySelectorAll(".source-item[data-source]").forEach(btn =>
+      btn.addEventListener("click", () => selectSource(btn))
+    );
+
+    document.getElementById("refreshBtn").addEventListener("click", loadSource);
+    document.getElementById("linesSelect").addEventListener("change", loadSource);
+
+    document.getElementById("logSearch").addEventListener("input", applyFilter);
+    document.getElementById("clearSearchBtn").addEventListener("click", () => {
+      document.getElementById("logSearch").value = "";
+      applyFilter();
+    });
+
+    document.getElementById("copyBtn").addEventListener("click", () => {
+      const text = [...document.querySelectorAll("#logOutput .log-line:not(.ll-hidden)")]
+        .map(el => el.textContent).join("\n");
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById("copyBtn");
+        btn.innerHTML = `<i class="bi bi-check-lg text-success"></i>`;
+        setTimeout(() => { btn.innerHTML = `<i class="bi bi-clipboard"></i>`; }, 1500);
+      });
+    });
+
+    /* ── Init ── */
+    loadFileList();
+    loadSource();
+
+  }());
+  </script>
+</body>
+</html>

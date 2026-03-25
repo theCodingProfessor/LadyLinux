@@ -44,7 +44,11 @@ def _get_client() -> QdrantClient:
             log.info("Initialising Qdrant client in **in-memory** mode")
             _client = QdrantClient(":memory:")
         else:
-            log.info("Connecting to Qdrant server at %s:%s", QDRANT_HOST, QDRANT_PORT)
+            log.info(
+                "Connecting to Qdrant server at %s:%s",
+                QDRANT_HOST,
+                QDRANT_PORT,
+            )
             _client = QdrantClient(host=QDRANT_HOST, port=QDRANT_PORT)
     return _client
 
@@ -52,8 +56,11 @@ def _get_client() -> QdrantClient:
 # ── Deterministic point ID ───────────────────────────────────────────
 
 def _chunk_id(source_path: str, offset: int, text: str) -> str:
-    """Generate a deterministic UUID from the chunk's identity so re-ingesting
-    the same chunk is an idempotent upsert rather than a duplicate."""
+    """Generate a deterministic UUID for a chunk identity.
+
+    Re-ingesting the same chunk becomes an idempotent upsert rather than a
+    duplicate insert.
+    """
     raw = f"{source_path}::{offset}::{text[:128]}"
     return str(uuid.UUID(hashlib.md5(raw.encode()).hexdigest()))
 
@@ -66,7 +73,10 @@ def ensure_collection() -> None:
 
     existing = [c.name for c in client.get_collections().collections]
     if COLLECTION_NAME in existing:
-        log.info("Collection '%s' already exists — skipping creation", COLLECTION_NAME)
+        log.info(
+            "Collection '%s' already exists — skipping creation",
+            COLLECTION_NAME,
+        )
         return
 
     client.create_collection(
@@ -94,18 +104,32 @@ def upsert_chunks(chunks: list[dict], vectors: list[list[float]]) -> int:
     """
     if len(chunks) != len(vectors):
         raise ValueError(
-            f"chunks ({len(chunks)}) and vectors ({len(vectors)}) must be the same length"
+            "chunks "
+            f"({len(chunks)}) and vectors ({len(vectors)}) must be the same length"
         )
 
     client = _get_client()
 
     points = []
     for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
-        point_id = _chunk_id(
-            chunk["source_path"],
-            chunk.get("line_start", idx),
-            chunk["text"],
-        )
+        provided_id = chunk.get("chunk_id")
+        point_id = None
+        if provided_id:
+            try:
+                point_id = str(uuid.UUID(str(provided_id)))
+            except (TypeError, ValueError):
+                log.warning(
+                    "Invalid chunk_id '%s' for %s; using deterministic UUID fallback",
+                    provided_id,
+                    chunk.get("source_path", "unknown-source"),
+                )
+
+        if not point_id:
+            point_id = _chunk_id(
+                chunk["source_path"],
+                chunk.get("line_start", idx),
+                chunk["text"],
+            )
         points.append(
             PointStruct(
                 id=point_id,
@@ -147,12 +171,21 @@ def search(
             must=[FieldCondition(key="domain", match=MatchValue(value=domain))]
         )
 
-    hits = client.search(
-        collection_name=COLLECTION_NAME,
-        query_vector=query_vector,
-        query_filter=query_filter,
-        limit=top_k,
-    )
+    if hasattr(client, "search"):
+        hits = client.search(
+            collection_name=COLLECTION_NAME,
+            query_vector=query_vector,
+            query_filter=query_filter,
+            limit=top_k,
+        )
+    else:
+        query_result = client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_vector,
+            query_filter=query_filter,
+            limit=top_k,
+        )
+        hits = getattr(query_result, "points", query_result)
 
     results = []
     for hit in hits:
