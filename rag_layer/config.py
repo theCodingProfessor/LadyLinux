@@ -18,7 +18,7 @@ COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "ladylinux")
 
 # ── Embedding model (Ollama) ─────────────────────────────────────────
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
-OLLAMA_EMBED_URL = f"{OLLAMA_BASE_URL}/api/embeddings"
+OLLAMA_EMBED_URL = f"{OLLAMA_BASE_URL}/api/embed"
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 VECTOR_DIM = int(os.getenv("VECTOR_DIM", "768"))           # nomic-embed-text → 768
 

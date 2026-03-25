@@ -8,3 +8,4 @@ requests>=2.31
 # RAG layer
 qdrant-client>=1.9
 watchdog>=4.0
+

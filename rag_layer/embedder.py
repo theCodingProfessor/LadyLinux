@@ -2,7 +2,7 @@
 Lady Linux Capstone Project - RAG Layer
 File: embedder.py
 Description: Takes text passages and converts them into numerical vector
-             embeddings by calling Ollama's /api/embeddings endpoint, returning
+             embeddings by calling Ollama's /api/embed endpoint, returning
              a list of float vectors aligned with the input texts.
 """
 
@@ -32,7 +32,7 @@ def _embed_single(text: str) -> list[float]:
 
     Raises on non-200 responses after exhausting retries.
     """
-    payload = {"model": EMBEDDING_MODEL, "prompt": text}
+    payload = {"model": EMBEDDING_MODEL, "input": text}
 
     last_exc: Exception | None = None
     for attempt in range(1, _MAX_RETRIES + 1):
@@ -43,7 +43,11 @@ def _embed_single(text: str) -> list[float]:
                 timeout=_REQUEST_TIMEOUT,
             )
             resp.raise_for_status()
-            vector = resp.json().get("embedding", [])
+            data = resp.json()
+
+            # /api/embed returns {"embeddings": [[...]]}
+            embeddings = data.get("embeddings", [])
+            vector = embeddings[0] if embeddings else []
 
             if len(vector) != VECTOR_DIM:
                 log.warning(
