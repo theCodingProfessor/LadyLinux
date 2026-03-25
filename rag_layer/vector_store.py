@@ -112,11 +112,24 @@ def upsert_chunks(chunks: list[dict], vectors: list[list[float]]) -> int:
 
     points = []
     for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
-        point_id = chunk.get("chunk_id") or _chunk_id(
-            chunk["source_path"],
-            chunk.get("line_start", idx),
-            chunk["text"],
-        )
+        provided_id = chunk.get("chunk_id")
+        point_id = None
+        if provided_id:
+            try:
+                point_id = str(uuid.UUID(str(provided_id)))
+            except (TypeError, ValueError):
+                log.warning(
+                    "Invalid chunk_id '%s' for %s; using deterministic UUID fallback",
+                    provided_id,
+                    chunk.get("source_path", "unknown-source"),
+                )
+
+        if not point_id:
+            point_id = _chunk_id(
+                chunk["source_path"],
+                chunk.get("line_start", idx),
+                chunk["text"],
+            )
         points.append(
             PointStruct(
                 id=point_id,

@@ -254,6 +254,19 @@ def _is_ollama_available(timeout: float = 1.5) -> bool:
         return False
 
 
+def _firewall_data_blocked_by_permissions(snapshot: dict) -> bool:
+    errors = [str(e).lower() for e in snapshot.get("errors", [])]
+    if not errors:
+        return False
+
+    blocked_markers = (
+        "you need to be root",
+        "permission denied",
+        "operation not permitted",
+    )
+    return any(marker in err for err in errors for marker in blocked_markers)
+
+
 @app.post("/ask_rag")
 async def ask_rag(req: RagRequest):
     """Retrieve relevant OS context from Qdrant, inject it into a Mistral
@@ -331,6 +344,34 @@ async def ask_firewall(req: FirewallRequest):
         )
 
     firewall_json = get_firewall_status_json()
+    if _firewall_data_blocked_by_permissions(firewall_json):
+        return JSONResponse(
+            content={
+                "output": (
+                    "Firewall commands are present, but the API service user "
+                    "does not have permission to read runtime firewall state. "
+                    "Run the service with read permission for UFW/iptables/nft "
+                    "(or a tightly scoped sudoers rule) and retry."
+                ),
+                "action": action,
+                "firewall_json": firewall_json,
+                "sources": [],
+                "vectorization": {
+                    "vectorized": False,
+                    "chunks_stored": 0,
+                    "source_paths": [
+                        "/runtime/firewall/summary.txt",
+                        "/runtime/firewall/rules.txt",
+                        "/runtime/firewall/status.json",
+                    ],
+                    "errors": [
+                        "Firewall inspection blocked by system permissions.",
+                    ],
+                },
+                "llm_error": "Skipped LLM call because firewall data access is blocked.",
+            }
+        )
+
     ollama_available = _is_ollama_available()
 
     vectorization = {
@@ -397,7 +438,7 @@ async def ask_firewall(req: FirewallRequest):
                 OLLAMA_URL,
                 json={"model": "mistral:latest", "prompt": full_prompt},
                 stream=True,
-                timeout=60,
+                timeout=(10, 180),
             )
             resp.raise_for_status()
             output = _parse_ollama_response_text(resp)
