@@ -112,6 +112,14 @@ def upsert_chunks(chunks: list[dict], vectors: list[list[float]]) -> int:
 
     points = []
     for idx, (chunk, vector) in enumerate(zip(chunks, vectors)):
+        if not isinstance(vector, list) or len(vector) != VECTOR_DIM:
+            actual_len = len(vector) if isinstance(vector, list) else "non-list"
+            raise ValueError(
+                "Invalid embedding vector for "
+                f"{chunk.get('source_path', 'unknown-source')} "
+                f"(expected {VECTOR_DIM} floats, got {actual_len})"
+            )
+
         provided_id = chunk.get("chunk_id")
         point_id = None
         if provided_id:

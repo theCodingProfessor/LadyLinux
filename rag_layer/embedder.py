@@ -24,14 +24,71 @@ log = logging.getLogger("rag_layer.embedder")
 _MAX_RETRIES = 3
 _RETRY_DELAY = 2          # seconds between retries
 _REQUEST_TIMEOUT = 30     # seconds per HTTP call
+_LEGACY_OLLAMA_EMBED_URL = f"{OLLAMA_BASE_URL}/api/embeddings"
 _EMBED_ENDPOINTS = (
-    (OLLAMA_EMBED_URL, "prompt"),
-    (f"{OLLAMA_BASE_URL}/api/embed", "input"),
+    (_LEGACY_OLLAMA_EMBED_URL, "prompt"),
+    (OLLAMA_EMBED_URL, "input"),
 )
 _endpoint_cache: tuple[str, str] | bool | None = None
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
+
+
+class EmbeddingResponseError(ValueError):
+    """Raised when Ollama returns malformed or empty embedding data."""
+
+
+def _coerce_vector(raw_vector, *, url: str) -> list[float]:
+    if not isinstance(raw_vector, list):
+        raise EmbeddingResponseError(
+            f"Embedding payload from {url} was not a list."
+        )
+
+    if not raw_vector:
+        raise EmbeddingResponseError(
+            f"Embedding payload from {url} was empty."
+        )
+
+    try:
+        vector = [float(value) for value in raw_vector]
+    except (TypeError, ValueError) as exc:
+        raise EmbeddingResponseError(
+            f"Embedding payload from {url} contained non-numeric values."
+        ) from exc
+
+    if len(vector) != VECTOR_DIM:
+        log.warning(
+            "Unexpected vector dim %d (expected %d) — padding/truncating",
+            len(vector),
+            VECTOR_DIM,
+        )
+        vector = (vector + [0.0] * VECTOR_DIM)[:VECTOR_DIM]
+
+    return vector
+
+
+def _extract_vector(body: dict, *, url: str) -> list[float]:
+    if not isinstance(body, dict):
+        raise EmbeddingResponseError(
+            f"Embedding response from {url} was not valid JSON object data."
+        )
+
+    if "embedding" in body:
+        return _coerce_vector(body["embedding"], url=url)
+
+    if "embeddings" in body:
+        embeddings = body["embeddings"]
+        if not isinstance(embeddings, list) or not embeddings:
+            raise EmbeddingResponseError(
+                f"Embedding response from {url} did not include any embeddings."
+            )
+        return _coerce_vector(embeddings[0], url=url)
+
+    raise EmbeddingResponseError(
+        f"Embedding response from {url} did not include 'embedding' or 'embeddings'."
+    )
+
 
 def _embed_single(text: str) -> list[float]:
     """Call Ollama for a single text and return the raw embedding vector.
@@ -42,7 +99,7 @@ def _embed_single(text: str) -> list[float]:
 
     if _endpoint_cache is False:
         raise ConnectionError(
-            "Ollama embedding APIs are unavailable on this server. "
+            "Ollama embedding APIs are unavailable or returning invalid payloads. "
             "Skipping embedding until support is available."
         )
 
@@ -78,19 +135,9 @@ def _embed_single(text: str) -> list[float]:
                 resp.raise_for_status()
 
                 body = resp.json()
-                vector = body.get("embedding", [])
-                if not vector and body.get("embeddings"):
-                    vector = body["embeddings"][0]
+                vector = _extract_vector(body, url=url)
 
                 _endpoint_cache = (url, text_key)
-
-                if len(vector) != VECTOR_DIM:
-                    log.warning(
-                        "Unexpected vector dim %d (expected %d) — padding/truncating",
-                        len(vector),
-                        VECTOR_DIM,
-                    )
-                    vector = (vector + [0.0] * VECTOR_DIM)[:VECTOR_DIM]
 
                 return vector
 
@@ -104,7 +151,7 @@ def _embed_single(text: str) -> list[float]:
                     url,
                     exc,
                 )
-                break
+                continue
             except requests.RequestException as exc:
                 last_exc = exc
                 all_404 = False
@@ -115,7 +162,20 @@ def _embed_single(text: str) -> list[float]:
                     url,
                     exc,
                 )
-                break
+                continue
+            except (EmbeddingResponseError, ValueError) as exc:
+                last_exc = exc
+                all_404 = False
+                if _endpoint_cache == (url, text_key):
+                    _endpoint_cache = None
+                log.warning(
+                    "Ollama embed attempt %d/%d returned invalid data at %s: %s",
+                    attempt,
+                    _MAX_RETRIES,
+                    url,
+                    exc,
+                )
+                continue
 
         if all_404:
             _endpoint_cache = False
@@ -123,8 +183,13 @@ def _embed_single(text: str) -> list[float]:
                 "Ollama embedding APIs returned 404 for all known endpoints."
             )
 
+        endpoint_candidates = list(_EMBED_ENDPOINTS)
+
         if attempt < _MAX_RETRIES:
             time.sleep(_RETRY_DELAY)
+
+    if isinstance(last_exc, EmbeddingResponseError):
+        _endpoint_cache = False
 
     raise ConnectionError(
         f"Ollama embedding failed after {_MAX_RETRIES} attempts: {last_exc}"
@@ -156,7 +221,12 @@ def embed_texts(texts: list[str]) -> list[list[float]]:
 
     for idx, text in enumerate(texts, 1):
         log.debug("Embedding chunk %d/%d (%d chars)", idx, total, len(text))
-        vectors.append(_embed_single(text))
+        try:
+            vectors.append(_embed_single(text))
+        except Exception as exc:  # noqa: BLE001
+            raise ConnectionError(
+                f"Failed to embed chunk {idx}/{total} ({len(text)} chars): {exc}"
+            ) from exc
 
     log.info("Embedded %d chunk(s) via %s", total, EMBEDDING_MODEL)
     return vectors
