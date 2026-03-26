@@ -430,8 +430,6 @@ main() {
   print_summary
   echo ""
 
-  service_status
-
   log "======================================================================"
   log "Refresh complete. ✓"
   log "======================================================================"
@@ -466,6 +464,8 @@ main() {
   log "  source venv/bin/activate"
   log "  uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000"
   log ""
+
+  service_status
 }
 
 # --- Refresh Workflow is Complete ---
