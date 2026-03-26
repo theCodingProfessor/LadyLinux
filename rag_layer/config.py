@@ -36,18 +36,54 @@ MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(1 * 1024 * 1024)))  # 1 MB
 # Only files whose path starts with an ALLOWED entry *and* does NOT
 # start with a DENIED entry will be ingested.
 ALLOWED_PATHS: list[str] = [
+    # ── Firewall & Network ──
     "/etc/ufw/",
-    "/etc/ssh/sshd_config",
-    "/etc/hostname",
-    "/etc/hosts",
-    "/etc/passwd",
-    "/etc/group",
+    "/etc/iptables/",
+    "/etc/nftables/",
+    "/var/log/ufw.log",
+
+    # ── Network Configuration ──
     "/etc/network/",
     "/etc/netplan/",
+    "/etc/hostname",
+    "/etc/hosts",
+    "/etc/resolv.conf",
+
+    # ── SSH Configuration ──
+    "/etc/ssh/sshd_config",
+
+    # ── System Configuration ──
     "/etc/systemd/",
+    "/etc/modprobe.d/",
+    "/etc/sysctl.conf",
+    "/etc/sysctl.d/",
+
+    # ── User & Group Management ──
+    "/etc/passwd",
+    "/etc/group",
+
+    # ── System Logs ──
     "/var/log/syslog",
     "/var/log/auth.log",
-    "/var/log/ufw.log",
+    "/var/log/messages",
+    "/var/log/secure",
+    "/var/log/kern.log",
+    "/var/log/dmesg",
+    "/var/log/fail2ban.log",
+
+    # ── Package Management ──
+    "/var/log/apt/",
+    "/var/log/yum.log",
+    "/var/log/pacman.log",
+
+    # ── Application Logs ──
+    "/var/log/nginx/",
+    "/var/log/apache2/",
+    "/var/log/supervisor/",
+
+    # ── Firewall Statistics ──
+    "/proc/net/iptables_names",
+    "/proc/net/nf_conntrack",
 ]
 
 DENIED_PATHS: list[str] = [
@@ -60,18 +96,49 @@ DENIED_PATHS: list[str] = [
 # ── Domain tagging (used by payload filtering in Qdrant) ─────────────
 # Maps path prefixes to a human-readable domain label.
 DOMAIN_MAP: dict[str, str] = {
-    "/etc/ufw/":       "firewall",
-    "/var/log/ufw":    "firewall",
-    "/etc/ssh/":       "os",
-    "/etc/hostname":   "os",
-    "/etc/hosts":      "os",
-    "/etc/network/":   "os",
-    "/etc/netplan/":   "os",
-    "/etc/systemd/":   "os",
-    "/var/log/syslog": "os",
-    "/var/log/auth":   "users",
-    "/etc/passwd":     "users",
-    "/etc/group":      "users",
+    # Firewall domain
+    "/etc/ufw/":            "firewall",
+    "/etc/iptables/":       "firewall",
+    "/etc/nftables/":       "firewall",
+    "/var/log/ufw.log":     "firewall",
+    "/proc/net/iptables":   "firewall",
+    "/proc/net/nf_conntrack": "firewall",
+
+    # Network domain
+    "/etc/network/":        "network",
+    "/etc/netplan/":        "network",
+    "/etc/hostname":        "network",
+    "/etc/hosts":           "network",
+    "/etc/resolv.conf":     "network",
+
+    # SSH domain
+    "/etc/ssh/sshd_config": "ssh",
+
+    # OS domain
+    "/etc/systemd/":        "os",
+    "/etc/modprobe.d/":     "os",
+    "/etc/sysctl":          "os",
+    "/var/log/syslog":      "os",
+    "/var/log/kern.log":    "os",
+    "/var/log/messages":    "os",
+    "/var/log/dmesg":       "os",
+    "/var/log/secure":      "os",
+
+    # Users domain
+    "/var/log/auth.log":    "users",
+    "/var/log/fail2ban":    "users",
+    "/etc/passwd":          "users",
+    "/etc/group":           "users",
+
+    # Package management domain
+    "/var/log/apt/":        "packages",
+    "/var/log/yum.log":     "packages",
+    "/var/log/pacman.log":  "packages",
+
+    # Application domain
+    "/var/log/nginx/":      "applications",
+    "/var/log/apache2/":    "applications",
+    "/var/log/supervisor/": "applications",
 }
 
 
