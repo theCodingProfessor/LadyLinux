@@ -279,6 +279,7 @@ if [ -f "/opt/ladylinux/ladylinux-api.service" ]; then
     sudo systemctl enable ladylinux-api.service
 
     echo "  → Starting LadyLinux API service..."
+    sudo systemctl reset-failed ladylinux-api.service >/dev/null 2>&1 || true
     sudo systemctl start ladylinux-api.service
 
     # Give service a moment to start

@@ -156,6 +156,8 @@ service_start() {
     return 0
   fi
 
+  systemctl reset-failed "$SERVICE_NAME" >/dev/null 2>&1 || true
+
   log "Starting service: $SERVICE_NAME"
   if ! systemctl start "$SERVICE_NAME"; then
     warn "Service failed to start — dumping diagnostics:"

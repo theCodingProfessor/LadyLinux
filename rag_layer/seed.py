@@ -67,9 +67,15 @@ def seed(force: bool = False) -> dict:
     """
     ensure_collection()
     tracker = FileTracker()
+    log.info("Seed tracker file: %s", tracker.tracker_file)
 
     files = _expand_paths()
     log.info("Seed: found %d candidate file(s)", len(files))
+    if not files:
+        log.warning(
+            "No allow-listed files were found on this host. "
+            "Check rag_layer/config.py ALLOWED_PATHS for OS-specific paths."
+        )
 
     stats = {
         "files_found": len(files),

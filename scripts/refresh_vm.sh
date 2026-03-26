@@ -156,8 +156,21 @@ service_start() {
     return 0
   fi
 
+  systemctl reset-failed "$SERVICE_NAME" >/dev/null 2>&1 || true
+
   log "Starting service: $SERVICE_NAME"
-  systemctl start "$SERVICE_NAME" || die "Failed to start $SERVICE_NAME"
+  if ! systemctl start "$SERVICE_NAME"; then
+    warn "Service failed to start — dumping diagnostics:"
+    echo ""
+    echo "─── systemctl status ───────────────────────────────────────────────────"
+    systemctl status "$SERVICE_NAME" --no-pager --full 2>&1 || true
+    echo ""
+    echo "─── journalctl (last 60 lines) ─────────────────────────────────────────"
+    journalctl -xeu "$SERVICE_NAME" --no-pager -n 60 2>&1 || true
+    echo "────────────────────────────────────────────────────────────────────────"
+    echo ""
+    die "Failed to start $SERVICE_NAME — see diagnostics above"
+  fi
 }
 
 service_status() {

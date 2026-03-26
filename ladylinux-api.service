@@ -36,18 +36,21 @@ Group=ladylinux
 # Working directory is the cloned repo
 WorkingDirectory=/opt/ladylinux
 
-# Load environment variables (ports, paths, modes, etc.)
-EnvironmentFile=-/etc/ladylinux/ladylinux.env
-
 # Explicit PATH so systemd does not rely on shell defaults
 Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="LADYLINUX_HOST=0.0.0.0"
+Environment="LADYLINUX_PORT=8000"
+
+# Load environment variables (ports, paths, modes, etc.).
+# Values from the env file override the defaults above.
+EnvironmentFile=-/etc/ladylinux/ladylinux.env
 
 # ---- Application launch ----
 # Adjust the module path below if your FastAPI app entry point changes.
 # After refactoring: api_layer/app.py defines `app = FastAPI(...)`
 ExecStart=/opt/ladylinux/venv/bin/uvicorn api_layer.app:app \
-    --host ${LADYLINUX_HOST:-0.0.0.0} \
-    --port ${LADYLINUX_PORT:-8000}
+    --host ${LADYLINUX_HOST} \
+    --port ${LADYLINUX_PORT}
 
 # ---- Restart policy ----
 Restart=on-failure

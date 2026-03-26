@@ -17,13 +17,15 @@ import hashlib
 import json
 import logging
 import os
-from pathlib import Path
 
 log = logging.getLogger("rag_layer.file_tracker")
 
 # ── Default tracker file location ────────────────────────────────────
 _TRACKER_DIR = os.path.expanduser("~/.ladylinux")
-_TRACKER_FILE = os.path.join(_TRACKER_DIR, "embedded_files.json")
+_TRACKER_FILE = os.getenv(
+    "LADYLINUX_TRACKER_FILE",
+    os.path.join(_TRACKER_DIR, "embedded_files.json"),
+)
 
 
 class FileTracker:
