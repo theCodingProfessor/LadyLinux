@@ -87,6 +87,11 @@ def firewall_page(request: Request):
     return _render_template(request, "firewall.html")
 
 
+@app.get("/fw_old")
+def fw_old(request: Request):
+    return _render_template(request, "fw_old.html")
+
+
 @app.get("/system")
 def system_page(request: Request):
     return _render_template(request, "system.html")
@@ -182,6 +187,9 @@ _FIREWALL_ACTION_GUIDANCE = {
 }
 
 
+_DEFAULT_NO_EVIDENCE_MESSAGE = "No relevant evidence was found in the vector store."
+
+
 def _parse_ollama_response_text(response: requests.Response) -> str:
     output = ""
     for line in response.iter_lines():
@@ -246,12 +254,37 @@ def _source_entries(results: list[dict]) -> list[dict]:
     return sources
 
 
-def _is_ollama_available(timeout: float = 1.5) -> bool:
+def _retrieve_results(query: str, *, top_k: int | None = None, domain: str | None = None) -> tuple[list[dict], str | None]:
+    """Run vector retrieval and return any non-fatal retrieval error as text."""
     try:
-        response = requests.get(OLLAMA_TAGS_URL, timeout=timeout)
-        return response.ok
-    except requests.RequestException:
-        return False
+        return retrieve(query, top_k=top_k, domain=domain), None
+    except Exception as exc:  # noqa: BLE001
+        log.warning("RAG retrieval failed (domain=%s): %s", domain, exc)
+        return [], str(exc)
+
+
+def _build_rag_prompt(
+    user_prompt: str,
+    results: list[dict],
+    *,
+    extra_instruction: str | None = None,
+    fallback_context: str | None = None,
+) -> str:
+    context_block = build_context_block(results)
+    prompt_parts = [_RAG_SYSTEM_INSTRUCTION.strip()]
+
+    if extra_instruction:
+        prompt_parts.append(extra_instruction.strip())
+
+    if context_block:
+        prompt_parts.append(context_block)
+    elif fallback_context:
+        prompt_parts.append(fallback_context.strip())
+    else:
+        prompt_parts.append(_DEFAULT_NO_EVIDENCE_MESSAGE)
+
+    prompt_parts.append(f"User question: {user_prompt}")
+    return "\n\n".join(prompt_parts)
 
 
 def _firewall_data_blocked_by_permissions(snapshot: dict) -> bool:
@@ -273,27 +306,14 @@ async def ask_rag(req: RagRequest):
     prompt, and stream the grounded response back to the client."""
 
     # 1. Retrieve evidence chunks (graceful degradation if embedding/Qdrant fails)
-    results: list[dict] = []
-    try:
-        results = retrieve(req.prompt, top_k=req.top_k, domain=req.domain)
-    except Exception as exc:
-        log.warning("RAG retrieval failed (falling back to plain LLM): %s", exc)
-
-    context_block = build_context_block(results)
+    results, _retrieval_error = _retrieve_results(
+        req.prompt,
+        top_k=req.top_k,
+        domain=req.domain,
+    )
 
     # 2. Build the augmented prompt
-    if context_block:
-        full_prompt = (
-            f"{_RAG_SYSTEM_INSTRUCTION}\n"
-            f"{context_block}\n\n"
-            f"User question: {req.prompt}\n"
-        )
-    else:
-        full_prompt = (
-            f"{_RAG_SYSTEM_INSTRUCTION}\n"
-            f"No relevant evidence was found in the vector store.\n\n"
-            f"User question: {req.prompt}\n"
-        )
+    full_prompt = _build_rag_prompt(req.prompt, results)
 
     # 3. Stream Mistral response
     def stream():
@@ -372,89 +392,58 @@ async def ask_firewall(req: FirewallRequest):
             }
         )
 
-    ollama_available = _is_ollama_available()
-
-    vectorization = {
-        "vectorized": False,
-        "chunks_stored": 0,
-        "source_paths": [],
-        "errors": [],
-    }
-    if ollama_available:
-        vectorization = ensure_firewall_snapshot_vectorized(firewall_json)
-    else:
-        vectorization["errors"].append(
-            "Ollama is unavailable, so runtime firewall evidence was not embedded."
-        )
+    vectorization = ensure_firewall_snapshot_vectorized(firewall_json)
 
     retrieval_query = prompt
     if action != "custom":
         retrieval_query = f"{prompt}\nFocus area: {action.replace('_', ' ')}"
 
-    results: list[dict] = []
-    retrieval_error = None
-    if ollama_available:
-        try:
-            results = retrieve(retrieval_query, top_k=6, domain="firewall")
-        except Exception as exc:
-            retrieval_error = str(exc)
-            log.warning("Firewall retrieval failed: %s", exc)
-    else:
-        retrieval_error = "Ollama is unavailable, so firewall retrieval was skipped."
-
-    context_block = build_context_block(results)
+    results, retrieval_error = _retrieve_results(
+        retrieval_query,
+        top_k=6,
+        domain="firewall",
+    )
     action_guidance = _FIREWALL_ACTION_GUIDANCE.get(
         action,
         _FIREWALL_ACTION_GUIDANCE["custom"],
     )
     live_snapshot_json = json.dumps(firewall_json, indent=2)
-
-    full_prompt = (
-        f"{_RAG_SYSTEM_INSTRUCTION}\n"
-        "You are specifically helping the user inspect this Linux system's "
-        "firewall. Be concrete, mention the backend in use, and clearly "
-        "separate facts from assumptions.\n"
-        f"{action_guidance}\n\n"
+    fallback_context = (
+        "No firewall evidence was retrieved from the vector store. "
+        "Use the runtime snapshot as fallback context.\n\n"
+        f"LIVE_FIREWALL_SNAPSHOT_JSON:\n{live_snapshot_json}"
     )
-
-    if context_block:
-        full_prompt += f"{context_block}\n\n"
-    else:
-        full_prompt += (
-            "No firewall evidence was retrieved from the vector store. "
-            "Use the live firewall snapshot below as fallback context.\n\n"
-        )
-
-    full_prompt += (
-        f"LIVE_FIREWALL_SNAPSHOT_JSON:\n{live_snapshot_json}\n\n"
-        f"User question: {prompt}\n"
+    full_prompt = _build_rag_prompt(
+        prompt,
+        results,
+        extra_instruction=(
+            "You are specifically helping the user inspect this Linux system's "
+            "firewall. Be concrete, mention the backend in use, and clearly "
+            "separate facts from assumptions.\n"
+            f"{action_guidance}"
+        ),
+        fallback_context=fallback_context,
     )
 
     llm_error = None
     output = ""
-    if ollama_available:
-        try:
-            resp = requests.post(
-                OLLAMA_URL,
-                json={"model": "mistral:latest", "prompt": full_prompt},
-                stream=True,
-                timeout=(10, 180),
-            )
-            resp.raise_for_status()
-            output = _parse_ollama_response_text(resp)
-        except requests.ConnectionError:
-            llm_error = (
-                f"Could not connect to Ollama at {OLLAMA_URL}. "
-                "Make sure Ollama is running and the mistral model is available."
-            )
-        except Exception as exc:  # noqa: BLE001
-            llm_error = str(exc)
-    else:
+    try:
+        resp = requests.post(
+            OLLAMA_URL,
+            json={"model": "mistral:latest", "prompt": full_prompt},
+            stream=True,
+            timeout=(10, 180),
+        )
+        resp.raise_for_status()
+        output = _parse_ollama_response_text(resp)
+    except requests.ConnectionError:
         llm_error = (
             f"Could not connect to Ollama at {OLLAMA_URL}. "
             "Runtime firewall data was captured, but LLM analysis is unavailable "
             "until Ollama is running."
         )
+    except Exception as exc:  # noqa: BLE001
+        llm_error = str(exc)
 
     if not output:
         output = (

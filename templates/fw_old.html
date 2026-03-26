@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux – Firewall</title>
+  <link href="/static/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>Firewall</h1>
+      <p class="subtitle">
+        Network rules and security settings
+      </p>
+    </header>
+
+    <!-- Navigation Pill -->
+    <nav class="nav-pill">
+      <a href="/" class="nav-item">Home</a>
+      <a href="/system" class="nav-item">System</a>
+      <a href="/users" class="nav-item">Users</a>
+      <a href="/firewall" class="nav-item active">Firewall</a>
+      <a href="/os" class="nav-item">OS</a>
+    </nav>
+
+    <!-- Main Panels -->
+    <section class="panel-grid">
+      <!-- Firewall Assistant -->
+      <div class="panel">
+        <h3>Firewall Assistant</h3>
+        <p class="subtitle">
+          Ask a custom question or launch a guided inspection.
+        </p>
+        <form id="firewallForm">
+          <label for="firewallPrompt">Your question:</label>
+          <input
+@@ -41,29 +44,72 @@
+            class="ai-input"
+            value="What are the settings for my firewall on this Linux system?"
+          />
+          <input type="hidden" id="firewallAction" value="custom" />
+          <button type="submit" class="ai-button">Ask</button>
+        </form>
+        <span class="ai-status" id="firewallStatus">
+          Live firewall data will be captured and vectorized before retrieval.
+        </span>
+      </div>
+
+      <div class="panel">
+        <h3>Guided Inspections</h3>
+        <button
+          type="button"
+          class="action-btn"
+          data-firewall-action="inspect_status"
+          data-prompt="Summarize the firewall backend, status, logging, and default policies."
+        >Inspect overall status</button>
+        <button
+          type="button"
+          class="action-btn"
+          data-firewall-action="inspect_ports"
+          data-prompt="Inspect the firewall rules and identify open ports, services, or source ranges."
+        >Inspect ports and exposure</button>
+        <button
+          type="button"
+          class="action-btn"
+          data-firewall-action="inspect_settings"
+          data-prompt="Inspect the firewall settings, defaults, and logging configuration."
+        >Inspect settings</button>
+        <button
+          type="button"
+          class="action-btn"
+          data-firewall-action="inspect_rules"
+          data-prompt="Review the firewall rules one by one and explain what each rule allows or blocks."
+        >Inspect rules</button>
+        <button
+          type="button"
+          class="action-btn"
+          data-firewall-action="inspect_logs"
+          data-prompt="Inspect firewall logging and report any missing logs or unsupported backends."
+        >Inspect logging signals</button>
+      </div>
+
+      <!-- Response -->
+      <div class="panel">
+        <h3>Response</h3>
+        <div id="firewallResponse" class="response-box"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Evidence & Vectorization</h3>
+        <pre id="firewallSources" class="code-block">No firewall question has been submitted yet.</pre>
+      </div>
+    </section>
+
+    <!-- JSON Output -->
+    <section class="panel-grid">
+      <div class="panel">
+        <h3>Firewall JSON Output</h3>
+        <pre id="firewallJSON" class="code-block"></pre>
+      </div>
+    </section>
+
+  </section>
+</main>
+
+<script src="/static/js/chat.js"></script>
+
+</body>
+</html>
