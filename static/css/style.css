@@ -591,6 +591,22 @@ html[data-high-contrast="true"] .response-area {
   padding-bottom: 10px;
 }
 
+.lady-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lady-expand-toggle {
+  border: 1px solid var(--border-color);
+  background: transparent;
+  color: inherit;
+  border-radius: var(--radius-small, var(--ui-radius-small));
+  font-size: 0.8rem;
+  line-height: 1.1;
+  padding: 0.35rem 0.55rem;
+}
+
 .lady-close {
   border: none;
   background: transparent;
@@ -613,6 +629,29 @@ html[data-high-contrast="true"] .response-area {
   flex: 1;
   padding: 0;
   overflow-y: auto;
+}
+
+.lady-panel.expanded {
+  top: clamp(4.5rem, 8vh, 6.5rem);
+  right: clamp(1rem, 2vw, 2rem);
+  bottom: clamp(1rem, 2vh, 2rem);
+  left: clamp(1rem, 4vw, 4rem);
+  width: auto;
+  height: auto;
+  max-height: none;
+}
+
+.lady-panel.expanded #lady-response {
+  padding-right: 0.25rem;
+}
+
+@media (max-width: 991.98px) {
+  .lady-panel.expanded {
+    top: 0.75rem;
+    right: 0.75rem;
+    bottom: 0.75rem;
+    left: 0.75rem;
+  }
 }
 
 .lady-input {

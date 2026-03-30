@@ -36,20 +36,77 @@ document.addEventListener("DOMContentLoaded", () => {
   const ladyBtn = document.getElementById("ladyBtn");
   const ladyPanel = document.getElementById("ladyPanel");
   const ladyClose = document.getElementById("ladyClose");
+  const ladyExpandToggle = document.getElementById("ladyExpandToggle");
   const ladyRefreshMetrics = document.getElementById("ladyRefreshMetrics");
   const ladyToggleTheme = document.getElementById("ladyToggleTheme");
 
+  const panelModeStorageKey = "lady-panel-mode";
+
+  function setPanelExpanded(isExpanded) {
+    if (!ladyPanel) return;
+
+    ladyPanel.classList.toggle("expanded", isExpanded);
+
+    if (ladyExpandToggle) {
+      ladyExpandToggle.textContent = isExpanded ? "Minimize" : "Expand";
+      ladyExpandToggle.setAttribute("aria-label", isExpanded ? "Minimize Lady panel" : "Expand Lady panel");
+      ladyExpandToggle.setAttribute("aria-pressed", isExpanded ? "true" : "false");
+      ladyExpandToggle.title = isExpanded ? "Minimize" : "Expand";
+    }
+
+    try {
+      window.localStorage.setItem(panelModeStorageKey, isExpanded ? "expanded" : "minimized");
+    } catch (err) {
+      console.debug("Unable to store Lady panel mode:", err);
+    }
+  }
+
+  function setPanelOpen(isOpen) {
+    if (!ladyPanel) return;
+
+    ladyPanel.classList.toggle("hidden", !isOpen);
+    ladyPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
+
+    if (ladyBtn) {
+      ladyBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+  }
+
+  if (ladyPanel) {
+    const savedMode = window.localStorage.getItem(panelModeStorageKey);
+    setPanelExpanded(savedMode === "expanded");
+  }
+
   if (ladyBtn && ladyPanel) {
     ladyBtn.addEventListener("click", () => {
-      const isHidden = ladyPanel.classList.toggle("hidden");
-      ladyPanel.setAttribute("aria-hidden", isHidden ? "true" : "false");
+      const shouldOpen = ladyPanel.classList.contains("hidden");
+      setPanelOpen(shouldOpen);
     });
   }
 
   if (ladyClose && ladyPanel) {
     ladyClose.addEventListener("click", () => {
-      ladyPanel.classList.add("hidden");
-      ladyPanel.setAttribute("aria-hidden", "true");
+      setPanelOpen(false);
+    });
+  }
+
+  if (ladyExpandToggle && ladyPanel) {
+    ladyExpandToggle.addEventListener("click", () => {
+      const isExpanded = ladyPanel.classList.contains("expanded");
+      setPanelExpanded(!isExpanded);
+    });
+  }
+
+  if (ladyPanel) {
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || ladyPanel.classList.contains("hidden")) return;
+
+      if (ladyPanel.classList.contains("expanded")) {
+        setPanelExpanded(false);
+        return;
+      }
+
+      setPanelOpen(false);
     });
   }
 
