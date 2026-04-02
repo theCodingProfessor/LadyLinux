@@ -58,15 +58,16 @@
       </div>
 
       <div class="col-12">
-        <!-- 2) System Overview -->
+        <!-- 2) System Overview — wired to /api/system/metrics via dashboard.js -->
         <section class="row g-3">
           <div class="col-12 col-md-4">
             <article class="card ll-dashboard-card ll-metric-card h-100">
               <div class="card-body">
-                <h2 class="h6 text-muted">CPU Usage</h2>
-                <p id="cpuLoad" class="display-6 fw-semibold mb-3">--%</p>
+                <h2 class="h6 text-muted mb-1">CPU</h2>
+                <p id="cpuLoad" class="display-6 fw-semibold mb-1">--</p>
+                <p id="cpuMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- utilization</p>
                 <div class="progress ll-metric-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="cpuProgress" class="progress-bar" style="width: 0%"></div>
+                  <div id="cpuProgress" class="progress-bar" style="width:0%"></div>
                 </div>
               </div>
             </article>
@@ -74,10 +75,11 @@
           <div class="col-12 col-md-4">
             <article class="card ll-dashboard-card ll-metric-card h-100">
               <div class="card-body">
-                <h2 class="h6 text-muted">Memory Usage</h2>
-                <p id="memoryUsage" class="display-6 fw-semibold mb-3">--%</p>
+                <h2 class="h6 text-muted mb-1">Memory</h2>
+                <p id="memoryUsage" class="display-6 fw-semibold mb-1">--</p>
+                <p id="memoryMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- utilized</p>
                 <div class="progress ll-metric-bar" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="memoryProgress" class="progress-bar" style="width: 0%"></div>
+                  <div id="memoryProgress" class="progress-bar" style="width:0%"></div>
                 </div>
               </div>
             </article>
@@ -85,10 +87,11 @@
           <div class="col-12 col-md-4">
             <article class="card ll-dashboard-card ll-metric-card h-100">
               <div class="card-body">
-                <h2 class="h6 text-muted">Disk Space</h2>
-                <p id="diskUsage" class="display-6 fw-semibold mb-3">--%</p>
+                <h2 class="h6 text-muted mb-1">Disk</h2>
+                <p id="diskUsage" class="display-6 fw-semibold mb-1">--</p>
+                <p id="diskMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- used</p>
                 <div class="progress ll-metric-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="diskProgress" class="progress-bar" style="width: 0%"></div>
+                  <div id="diskProgress" class="progress-bar" style="width:0%"></div>
                 </div>
               </div>
             </article>

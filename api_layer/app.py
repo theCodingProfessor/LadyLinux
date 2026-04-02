@@ -13,6 +13,7 @@ from api_layer.firewall_core import (
     ensure_firewall_snapshot_vectorized,
     get_firewall_status_json,
 )
+from api_layer.os_core import get_metrics
 from rag_layer import retrieve, build_context_block, ensure_collection, seed
 
 import logging
@@ -107,6 +108,15 @@ def users_page(request: Request):
 @app.get("/os")
 def os_page(request: Request):
     return _render_template(request, "os.html")
+
+
+@app.get("/api/system/metrics")
+def system_metrics_endpoint():
+    """Live telemetry snapshot polled by static/js/system_metrics.js."""
+    try:
+        return get_metrics()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 class PromptRequest(BaseModel):
