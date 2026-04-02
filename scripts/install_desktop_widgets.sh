@@ -17,7 +17,17 @@ NC='\033[0m' # No Color
 
 # Configuration
 SCRIPT_DIR="/opt/ladylinux/scripts"
-DESKTOP_DIR="$HOME/Desktop"
+
+if [ -n "${SUDO_USER:-}" ]; then
+    REAL_USER="$SUDO_USER"
+    REAL_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+else
+    REAL_USER="$(whoami)"
+    REAL_HOME="$HOME"
+fi
+
+DESKTOP_DIR="$REAL_HOME/Desktop"
+
 DESKTOP_FILES=("LadyLinux-Start.desktop" "LadyLinux-Stop.desktop")
 
 # Function to print colored output
@@ -73,6 +83,7 @@ for desktop_file in "${DESKTOP_FILES[@]}"; do
 
     cp "$SCRIPT_DIR/$desktop_file" "$DESKTOP_DIR/"
     chmod +x "$DESKTOP_DIR/$desktop_file"
+    chown "$REAL_USER":"$REAL_USER" "$DESKTOP_DIR"
     print_status "$desktop_file installed and executable"
 done
 echo ""
