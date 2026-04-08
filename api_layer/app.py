@@ -325,38 +325,12 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
         )
 
     firewall_json = get_firewall_status_json()
-    if _firewall_data_blocked_by_permissions(firewall_json):
-        return JSONResponse(
-            content={
-                "output": (
-                    "Firewall commands are present, but the API service user "
-                    "does not have permission to read runtime firewall state. "
-                    "Run the service with read permission for UFW/iptables/nft "
-                    "(or a tightly scoped sudoers rule) and retry."
-                ),
-                "domain": "firewall",
-                "action": action,
-                "firewall_json": firewall_json,
-                "sources": [],
-                "vectorization": {
-                    "vectorized": False,
-                    "chunks_stored": 0,
-                    "source_paths": [
-                        "/runtime/firewall/summary.txt",
-                        "/runtime/firewall/rules.txt",
-                        "/runtime/firewall/status.json",
-                    ],
-                    "errors": [
-                        "Firewall inspection blocked by system permissions.",
-                    ],
-                },
-                "llm_error": "Skipped LLM call because firewall data access is blocked.",
-                "retrieval": {
-                    "domain": "firewall",
-                    "fallback_used": False,
-                    "result_count": 0,
-                },
-            }
+
+    # Check for permission errors but don't block RAG retrieval
+    has_permission_errors = _firewall_data_blocked_by_permissions(firewall_json)
+    if has_permission_errors:
+        log.warning(
+            "Firewall live data blocked by permissions; proceeding with RAG retrieval from vector store"
         )
 
     vectorization = ensure_firewall_snapshot_vectorized(firewall_json)
@@ -371,14 +345,23 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
         top_k=k,
         domain="firewall",
     )
+
+    log.info(
+        "Firewall RAG retrieval: domain=firewall, result_count=%d, query_len=%d",
+        len(results),
+        len(retrieval_query),
+    )
+
     fallback_used = False
     if not results and _ALLOW_FIREWALL_DOMAIN_FALLBACK:
         fallback_used = True
+        log.info("Firewall RAG: zero domain-specific results, attempting fallback to domain=None")
         fallback_results, fallback_error = _retrieve_results(
             retrieval_query,
             top_k=k,
             domain=None,
         )
+        log.info("Firewall RAG fallback: fallback_result_count=%d", len(fallback_results))
         if fallback_results:
             results = fallback_results
         if fallback_error:
@@ -391,10 +374,19 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
         _FIREWALL_ACTION_GUIDANCE["custom"],
     )
     live_snapshot_json = json.dumps(firewall_json, indent=2)
+
+    # Add permission warning to fallback context if needed
+    permission_note = ""
+    if has_permission_errors:
+        permission_note = (
+            "\n[NOTE: Live firewall data collection blocked by system permissions. "
+            "Evidence below is retrieved from vector store of previously captured firewall state.]"
+        )
+
     fallback_context = (
         "No firewall evidence was retrieved from the vector store. "
         "Use the runtime snapshot as fallback context.\n\n"
-        f"LIVE_FIREWALL_SNAPSHOT_JSON:\n{live_snapshot_json}"
+        f"LIVE_FIREWALL_SNAPSHOT_JSON:\n{live_snapshot_json}{permission_note}"
     )
     full_prompt = _build_rag_prompt(
         prompt,
@@ -430,11 +422,11 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
 
     if not output:
         output = (
-            llm_error
-            or (
-                "No model output was returned. Review the firewall JSON and "
-                "retrieved evidence for troubleshooting."
-            )
+          llm_error
+          or (
+              "No model output was returned. Review the firewall JSON and "
+              "retrieved evidence for troubleshooting."
+          )
         )
 
     if retrieval_error:
@@ -456,7 +448,6 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
             },
         }
     )
-
 
 @app.post("/ask_rag")
 async def ask_rag(req: RagRequest):
