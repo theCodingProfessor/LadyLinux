@@ -332,7 +332,7 @@ async def ask_rag(req: RagRequest):
                 OLLAMA_URL,
                 json={"model": "mistral:latest", "prompt": full_prompt},
                 stream=True,
-                timeout=60,
+                timeout=600,
             )
             resp.raise_for_status()
             for line in resp.iter_lines():
