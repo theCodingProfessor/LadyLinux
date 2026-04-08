@@ -407,7 +407,7 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
             OLLAMA_URL,
             json={"model": "mistral:latest", "prompt": full_prompt},
             stream=True,
-            timeout=(10, 180),
+            timeout=(10, 600),
         )
         resp.raise_for_status()
         output = _parse_ollama_response_text(resp)
