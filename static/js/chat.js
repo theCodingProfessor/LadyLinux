@@ -368,10 +368,15 @@ function initFirewallAssistant() {
         setLoadingState(prompt);
 
         try {
-            const res = await fetch("/ask_firewall", {
+            const res = await fetch("/ask_rag", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ prompt, action })
+                body: JSON.stringify({
+                    prompt,
+                    domain: "firewall",
+                    action,
+                    top_k: 6
+                })
             });
 
             const data = await res.json();
@@ -385,9 +390,13 @@ function initFirewallAssistant() {
             renderFirewallJson(data);
 
             if (firewallStatus) {
+                const fallbackUsed = Boolean(data?.retrieval?.fallback_used);
                 firewallStatus.textContent = data?.vectorization?.vectorized
                     ? "Firewall snapshot captured and added to the RAG context."
                     : "Firewall snapshot captured, but vectorization fell back to direct runtime context.";
+                if (fallbackUsed) {
+                    firewallStatus.textContent += " Retrieval fallback to broader evidence was used.";
+                }
             }
         } catch (err) {
             if (firewallResponse) {

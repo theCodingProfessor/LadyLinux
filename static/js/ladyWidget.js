@@ -35,6 +35,12 @@ async function sendPromptToRag(prompt) {
     throw new Error(`HTTP ${response.status}`);
   }
 
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const data = await response.json();
+    return data?.output || JSON.stringify(data);
+  }
+
   if (!response.body) {
     return await response.text();
   }

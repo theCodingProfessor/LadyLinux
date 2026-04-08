@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import json
+import os
 import requests
 import subprocess
 from fastapi import FastAPI, HTTPException, Request
@@ -152,8 +153,9 @@ def ask_llm_get(prompt: str):
 
 class RagRequest(BaseModel):
     prompt: str
-    domain: str | None = None          # optional: "firewall", "os", "users"
-    top_k: int | None = None           # optional: override config.TOP_K
+    domain: str | None = None  # optional: "firewall", "os", "users"
+    top_k: int | None = None  # optional: override config.TOP_K
+    action: str | None = None  # optional firewall action hint
 
 
 class FirewallRequest(BaseModel):
@@ -198,6 +200,9 @@ _FIREWALL_ACTION_GUIDANCE = {
 
 
 _DEFAULT_NO_EVIDENCE_MESSAGE = "No relevant evidence was found in the vector store."
+_ALLOW_FIREWALL_DOMAIN_FALLBACK = (
+    os.getenv("FIREWALL_RAG_FALLBACK_ANY", "true").strip().lower() == "true"
+)
 
 
 def _parse_ollama_response_text(response: requests.Response) -> str:
@@ -310,63 +315,9 @@ def _firewall_data_blocked_by_permissions(snapshot: dict) -> bool:
     return any(marker in err for err in errors for marker in blocked_markers)
 
 
-@app.post("/ask_rag")
-async def ask_rag(req: RagRequest):
-    """Retrieve relevant OS context from Qdrant, inject it into a Mistral
-    prompt, and stream the grounded response back to the client."""
-
-    # 1. Retrieve evidence chunks (graceful degradation if embedding/Qdrant fails)
-    results, _retrieval_error = _retrieve_results(
-        req.prompt,
-        top_k=req.top_k,
-        domain=req.domain,
-    )
-
-    # 2. Build the augmented prompt
-    full_prompt = _build_rag_prompt(req.prompt, results)
-
-    # 3. Stream Mistral response
-    def stream():
-        try:
-            resp = requests.post(
-                OLLAMA_URL,
-                json={"model": "mistral:latest", "prompt": full_prompt},
-                stream=True,
-                timeout=600,
-            )
-            resp.raise_for_status()
-            for line in resp.iter_lines():
-                if line:
-                    chunk = json.loads(line)
-                    yield chunk.get("response", "")
-
-            # 4. Append source attribution after the model's answer
-            if results:
-                yield "\n\n---\n📎 Sources:\n"
-                seen = set()
-                for r in results:
-                    src = f"  • {r['source_path']} (lines {r['line_start']}–{r['line_end']})"
-                    if src not in seen:
-                        seen.add(src)
-                        yield src + "\n"
-
-        except requests.ConnectionError:
-            yield (
-                "\n⚠️ Could not connect to Ollama at "
-                f"{OLLAMA_URL}.\n"
-                "Make sure Ollama is running (`ollama serve`) and the "
-                "mistral model is pulled (`ollama pull mistral`)."
-            )
-        except Exception as exc:
-            yield f"\n[RAG stream error: {exc}]"
-
-    return StreamingResponse(stream(), media_type="text/plain")
-
-
-@app.post("/ask_firewall")
-async def ask_firewall(req: FirewallRequest):
-    prompt = req.prompt.strip()
-    action = (req.action or "custom").strip() or "custom"
+def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | None = None):
+    prompt = prompt.strip()
+    action = (action or "custom").strip() or "custom"
     if not prompt:
         raise HTTPException(
             status_code=400,
@@ -383,6 +334,7 @@ async def ask_firewall(req: FirewallRequest):
                     "Run the service with read permission for UFW/iptables/nft "
                     "(or a tightly scoped sudoers rule) and retry."
                 ),
+                "domain": "firewall",
                 "action": action,
                 "firewall_json": firewall_json,
                 "sources": [],
@@ -399,6 +351,11 @@ async def ask_firewall(req: FirewallRequest):
                     ],
                 },
                 "llm_error": "Skipped LLM call because firewall data access is blocked.",
+                "retrieval": {
+                    "domain": "firewall",
+                    "fallback_used": False,
+                    "result_count": 0,
+                },
             }
         )
 
@@ -408,11 +365,27 @@ async def ask_firewall(req: FirewallRequest):
     if action != "custom":
         retrieval_query = f"{prompt}\nFocus area: {action.replace('_', ' ')}"
 
+    k = top_k if top_k is not None else 6
     results, retrieval_error = _retrieve_results(
         retrieval_query,
-        top_k=6,
+        top_k=k,
         domain="firewall",
     )
+    fallback_used = False
+    if not results and _ALLOW_FIREWALL_DOMAIN_FALLBACK:
+        fallback_used = True
+        fallback_results, fallback_error = _retrieve_results(
+            retrieval_query,
+            top_k=k,
+            domain=None,
+        )
+        if fallback_results:
+            results = fallback_results
+        if fallback_error:
+            vectorization.setdefault("errors", []).append(
+                f"fallback_retrieval: {fallback_error}"
+            )
+
     action_guidance = _FIREWALL_ACTION_GUIDANCE.get(
         action,
         _FIREWALL_ACTION_GUIDANCE["custom"],
@@ -470,13 +443,83 @@ async def ask_firewall(req: FirewallRequest):
     return JSONResponse(
         content={
             "output": output,
+            "domain": "firewall",
             "action": action,
             "firewall_json": firewall_json,
             "sources": _source_entries(results),
             "vectorization": vectorization,
             "llm_error": llm_error,
+            "retrieval": {
+                "domain": "firewall",
+                "fallback_used": fallback_used,
+                "result_count": len(results),
+            },
         }
     )
+
+
+@app.post("/ask_rag")
+async def ask_rag(req: RagRequest):
+    """Retrieve relevant OS context from Qdrant, inject it into a Mistral
+    prompt, and stream the grounded response back to the client."""
+
+    if (req.domain or "").strip().lower() == "firewall":
+        return _run_firewall_rag(req.prompt, action=req.action, top_k=req.top_k)
+
+    # 1. Retrieve evidence chunks (graceful degradation if embedding/Qdrant fails)
+    results, _retrieval_error = _retrieve_results(
+        req.prompt,
+        top_k=req.top_k,
+        domain=req.domain,
+    )
+
+    # 2. Build the augmented prompt
+    full_prompt = _build_rag_prompt(req.prompt, results)
+
+    # 3. Stream Mistral response
+    def stream():
+        try:
+            resp = requests.post(
+                OLLAMA_URL,
+                json={"model": "mistral:latest", "prompt": full_prompt},
+                stream=True,
+                timeout=600,
+            )
+            resp.raise_for_status()
+            for line in resp.iter_lines():
+                if line:
+                    chunk = json.loads(line)
+                    yield chunk.get("response", "")
+
+            # 4. Append source attribution after the model's answer
+            if results:
+                yield "\n\n---\n📎 Sources:\n"
+                seen = set()
+                for r in results:
+                    src = f"  • {r['source_path']} (lines {r['line_start']}–{r['line_end']})"
+                    if src not in seen:
+                        seen.add(src)
+                        yield src + "\n"
+
+        except requests.ConnectionError:
+            yield (
+                "\n⚠️ Could not connect to Ollama at "
+                f"{OLLAMA_URL}.\n"
+                "Make sure Ollama is running (`ollama serve`) and the "
+                "mistral model is pulled (`ollama pull mistral`)."
+            )
+        except Exception as exc:
+            yield f"\n[RAG stream error: {exc}]"
+
+    return StreamingResponse(stream(), media_type="text/plain")
+
+
+@app.post("/ask_firewall")
+async def ask_firewall(req: FirewallRequest):
+    log.warning(
+        "Deprecated endpoint /ask_firewall called; forwarding to unified /ask_rag flow"
+    )
+    return _run_firewall_rag(req.prompt, action=req.action, top_k=6)
 
 
 @app.get("/firewall_status")
