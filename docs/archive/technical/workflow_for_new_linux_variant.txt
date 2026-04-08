@@ -1,0 +1,58 @@
+
+
+Host Machine Setup 
+  Define OS Goals 
+  Select, Download, Verify OS Model
+VM Machine Configuration
+  Create new VM from the OS iso
+
+
+========================  full workflow =====================
+
+Host Machine Setup 
+Create a Custom OS (from a Linux Variant) 
+
+1) Define the Goals of the OS
+2) Select the OS to model from (download and verify) 
+Linux Mint 22.2 "Zara" (Cinnamon Desktop)
+https://www.linuxmint.com/edition.php?id=322
+
+Get ISO (Harvard School of Engineering) 
+https://mirrors.seas.harvard.edu/linuxmint/stable/22.2/linuxmint-22.2-cinnamon-64bit.iso 
+
+Verify the Integrity of the ISO
+https://linuxmint-installation-guide.readthedocs.io/en/latest/verify.html
+https://mirrors.kernel.org/linuxmint/stable/22.2/sha256sum.txt.gpg
+https://mirrors.kernel.org/linuxmint/stable/22.2/sha256sum.txt
+
+See workflow_verify_iso.txt
+
+* * * 
+All Steps that follow use a virtual machine
+* * * 
+
+Create a New Virtual Machine using the selected Linux OS
+
+Build a VM (using VM Workstation Pro) and run the OS as a VM
+Recommendation (balanced for MVP testing):
+  Keep Ubuntu 64-bit as the VM type.
+  Disk: 40 GB (don’t go lower).
+  RAM: 12-16 GB (recommended), production 8-12 GB.
+  CPU: 4–6 cores x processors (use 8 cores only if needed).
+  Networking: NAT (switch later if you need external clients).
+
+This setup provides a good balance of performance and host system stability, especially since VMware Workstation will share your laptop’s physical resources.
+
+* * * 
+Run the VM to verify it works 
+Install the Linux Mint OS (don't make updates to the Live Disk)
+
+* * * 
+
+Update the machine:
+
+> sudo apt update && sudo apt upgrade -y
+
+* * * 
+Strip out Unneeded Packages: 
+

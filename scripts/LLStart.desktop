@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LadyLinux Start
+Comment=Launch the LadyLinux LLM system
+Exec=bash -lc 'if [ ! -x /opt/ladylinux/app/scripts/run_ll.sh ]; then chmod +x /opt/ladylinux/app/scripts/run_ll.sh; fi; exec /opt/ladylinux/app/scripts/run_ll.sh'
+Icon=system-run
+Terminal=true
+Categories=Utility;System;
+Keywords=ladylinux;start;launch;
+X-Desktop-File-Install-Version=0.26

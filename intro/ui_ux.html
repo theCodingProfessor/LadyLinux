@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lady Linux Intro - UI / UX</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/styles.css" rel="stylesheet">
+</head>
+<body>
+  <header class="intro-topbar">
+    <div class="shell-inner d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="brand-chip">
+        <span class="brand-dot"></span>
+        <strong>Lady Linux Intro</strong>
+        <span>Frontend structure and browser-side data flow</span>
+      </div>
+      <nav class="doc-nav">
+        <a class="doc-link" data-doc-link href="index.html">Overview</a>
+        <a class="doc-link" data-doc-link href="ui_ux.html">UI / UX</a>
+        <a class="doc-link" data-doc-link href="rag_layer.html">RAG Layer</a>
+        <a class="doc-link" data-doc-link href="services.html">Services</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="intro-shell">
+    <section class="hero-panel">
+      <div class="eyebrow">Frontend Explanation</div>
+      <h1 class="hero-title">The UI is server-rendered first, then upgraded by focused vanilla JS modules.</h1>
+      <p class="hero-copy">
+        The templates define structure and placeholders, while JavaScript handles data fetching, optimistic UI updates, theme application, sorting, filtering, tab-specific loading, and assistant streaming. There is no client framework hiding the wiring.
+      </p>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Page Map</h2>
+          <p class="body-copy mb-0">The project uses shared includes, then gives each page its own content and behavior instead of one universal mega-template.</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <article class="doc-card">
+          <h3>Home dashboard</h3>
+          <p class="body-copy">`templates/index.html` presents the broad overview: AI console, live metric cards, suggested actions, recent activity, and module-entry cards.</p>
+          <div class="chip-row">
+            <span class="soft-chip">Quick glance</span>
+            <span class="soft-chip">High-frequency metrics</span>
+            <span class="soft-chip">Assistant entrypoint</span>
+          </div>
+        </article>
+        <article class="doc-card">
+          <h3>System control center</h3>
+          <p class="body-copy">`templates/os.html` splits deeper inspection into tabs: metrics, services, storage, appearance, and settings. That separation keeps the most active data visible while allowing slower panels to load on demand.</p>
+          <div class="chip-row">
+            <span class="soft-chip">Tab-specific loading</span>
+            <span class="soft-chip">Skeleton placeholders</span>
+            <span class="soft-chip">Health banner</span>
+          </div>
+        </article>
+        <article class="doc-card">
+          <h3>Network, users, logs</h3>
+          <p class="body-copy">The remaining pages each pick a specialized interaction pattern: tabbed network/firewall views, a master-detail users page, and a terminal-style logs page.</p>
+          <div class="chip-row">
+            <span class="soft-chip">Dedicated workflows</span>
+            <span class="soft-chip">Minimal cross-page coupling</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Why Sections Are Separated</h2>
+          <p class="body-copy mb-0">The code points to practical reasons for the layout rather than abstract design theory.</p>
+        </div>
+      </div>
+      <ul class="key-list">
+        <li>
+          <strong>Fast-moving and slow-moving data are split.</strong>
+          Metrics are polled globally in `static/js/system_metrics.js`, while storage partitions, system settings, and log-file lists are fetched only when their page or tab needs them.
+        </li>
+        <li>
+          <strong>Operational views match the job to be done.</strong>
+          The System page is an inspection and control surface, the Network page is a network/firewall workbench, the Users page is a master-detail admin view, and the Logs page is optimized for scanning lines rather than editing data.
+        </li>
+        <li>
+          <strong>Shared chrome stays shared.</strong>
+          `nav.html`, `controls.html`, `lady_panel.html`, and `context_nav.html` keep navigation, fullscreen controls, and the floating Lady panel consistent across pages.
+        </li>
+      </ul>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Data Flow</h2>
+          <p class="body-copy mb-0">This is the common browser path repeated throughout the frontend.</p>
+        </div>
+      </div>
+      <div class="architecture-flow">
+        <div class="flow-lane">
+          <div class="flow-track">
+            <div class="flow-node">
+              <strong>UI interaction</strong>
+              A form submit, tab activation, refresh button, theme click, or page load starts the process.
+            </div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-node">
+              <strong>`fetch()` call</strong>
+              Plain browser fetch is used everywhere. There is no client data layer or RPC wrapper.
+            </div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-node">
+              <strong>FastAPI endpoint</strong>
+              A route in `api_layer/routes/*` or `api_layer/app.py` returns JSON, a template, or NDJSON tokens.
+            </div>
+            <div class="flow-arrow">-></div>
+            <div class="flow-node">
+              <strong>Render/update</strong>
+              DOM text, tables, progress bars, theme CSS variables, and activity feeds are updated directly.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Mocked UI Components</h2>
+          <p class="body-copy mb-0">These are simplified static reconstructions of the patterns present in the templates.</p>
+        </div>
+        <div class="toggle-bar" data-mock-controls="uiDemoBoard">
+          <button class="toggle-btn is-active" data-mock-state="loading" type="button">Loading State</button>
+          <button class="toggle-btn" data-mock-state="loaded" type="button">Loaded State</button>
+        </div>
+      </div>
+
+      <div class="doc-card mock-state-panel" id="uiDemoBoard" data-state="loading">
+        <div class="grid-2">
+          <div class="mini-mock">
+            <div class="mini-mock__head">
+              <div>
+                <strong>Dashboard metrics cards</strong>
+                <div class="small-copy">Inspired by `templates/index.html` and `templates/os.html`</div>
+              </div>
+              <span class="soft-chip">Cards + progress bars</span>
+            </div>
+            <div class="mini-mock__body">
+              <div data-mock-state-panel="loading">
+                <div class="mock-metric-row">
+                  <div class="mock-metric">
+                    <span class="mock-caption">CPU</span>
+                    <div class="skeleton-line" style="width: 60%; margin-top: 0.6rem;"></div>
+                    <div class="skeleton-line" style="width: 100%;"></div>
+                  </div>
+                  <div class="mock-metric">
+                    <span class="mock-caption">Memory</span>
+                    <div class="skeleton-line" style="width: 58%; margin-top: 0.6rem;"></div>
+                    <div class="skeleton-line" style="width: 100%;"></div>
+                  </div>
+                  <div class="mock-metric">
+                    <span class="mock-caption">Disk</span>
+                    <div class="skeleton-line" style="width: 52%; margin-top: 0.6rem;"></div>
+                    <div class="skeleton-line" style="width: 100%;"></div>
+                  </div>
+                </div>
+              </div>
+              <div data-mock-state-panel="loaded">
+                <div class="mock-metric-row">
+                  <div class="mock-metric">
+                    <label>CPU Usage</label>
+                    <strong>23%</strong>
+                    <div class="progress-shell"><span style="width: 23%;"></span></div>
+                  </div>
+                  <div class="mock-metric">
+                    <label>Memory Usage</label>
+                    <strong>61%</strong>
+                    <div class="progress-shell"><span style="width: 61%;"></span></div>
+                  </div>
+                  <div class="mock-metric">
+                    <label>Disk Usage</label>
+                    <strong>48%</strong>
+                    <div class="progress-shell"><span style="width: 48%;"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mini-mock">
+            <div class="mini-mock__head">
+              <div>
+                <strong>Services table</strong>
+                <div class="small-copy">Inspired by `templates/os.html` and `static/js/main.js`</div>
+              </div>
+              <span class="soft-chip">Filter + sort + refresh</span>
+            </div>
+            <div class="mini-mock__body">
+              <div data-mock-state-panel="loading">
+                <div class="skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton-line" style="width: 100%;"></div>
+                <div class="skeleton-line" style="width: 100%;"></div>
+              </div>
+              <div data-mock-state-panel="loaded">
+                <table class="mock-table">
+                  <thead>
+                    <tr>
+                      <th>Service</th>
+                      <th>Status</th>
+                      <th>Uptime</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>nginx</td>
+                      <td><span class="mock-service-pill">running</span></td>
+                      <td>3d 5h</td>
+                      <td>Restart</td>
+                    </tr>
+                    <tr>
+                      <td>ollama</td>
+                      <td><span class="mock-service-pill">running</span></td>
+                      <td>11h 8m</td>
+                      <td>Restart</td>
+                    </tr>
+                    <tr>
+                      <td>ladylinux-api</td>
+                      <td><span class="mock-service-pill">running</span></td>
+                      <td>2h 14m</td>
+                      <td>Restart</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Live Updates and Event Flow</h2>
+          <p class="body-copy mb-0">The frontend uses two layers of eventing because the project has both browser-side fan-out and backend-pushed theme changes.</p>
+        </div>
+      </div>
+      <div class="explanation-pair">
+        <div class="doc-card">
+          <h3>Local event bus</h3>
+          <p class="body-copy">`static/js/ui_event_bus.js` defines a tiny subscribe/emit API and stores subscribers in a `Map`. `system_metrics.js` emits `metrics:update`, and page-specific modules like `dashboard.js` and `os_metrics.js` subscribe to that stream so one poll can feed multiple widgets.</p>
+          <div class="mono-block">
+<pre class="source-code">UI load
+  -> system_metrics.js polls /api/system/metrics
+  -> normalize payload once
+  -> emit("metrics:update", data)
+  -> dashboard.js / os_metrics.js render cards and graphs</pre>
+          </div>
+        </div>
+        <div class="doc-card">
+          <h3>Backend push for themes</h3>
+          <p class="body-copy">The same `ui_event_bus.js` file also opens a websocket to `/ws/ui`. That path is backend-driven: `theme_service.apply_theme()` persists theme state, publishes a `theme_change` event on `core/event_bus.py`, and the socket listener applies CSS variables on the client.</p>
+          <div class="mono-block">
+<pre class="source-code">theme click
+  -> POST /api/theme/theme/{name}/apply
+  -> config/theme_state.json updated
+  -> backend event_bus.publish(...)
+  -> /ws/ui pushes theme_change
+  -> client applies CSS vars</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="doc-card">
+        <h2>Loading States That Show Up in Code</h2>
+        <ul class="key-list">
+          <li>
+            <strong>Skeletons on the System page.</strong>
+            `templates/os.html` ships dedicated `.metric-skeleton` placeholders and `static/js/os_metrics.js` removes them once the first real metrics payload lands.
+          </li>
+          <li>
+            <strong>Spinner rows on data-heavy pages.</strong>
+            Network, users, and logs all initialize their table bodies or content areas with loading rows before async fetches replace them.
+          </li>
+          <li>
+            <strong>`data-ui-ready` guards against flash-of-unstyled-content.</strong>
+            Multiple templates set `data-ui-ready="false"` before the design and theme scripts run, then the JS initialization path flips the UI into the ready state.
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

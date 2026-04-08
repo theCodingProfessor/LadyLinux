@@ -1,0 +1,184 @@
+# LadyLinux – Clean Install & Update Workflow (Fresh Machine)
+
+This guide is for contributors who have a **fresh Linux machine** and want to
+install and run the **latest LadyLinux development version** correctly.
+
+This workflow assumes:
+- A standard Linux desktop (tested on :contentReference[oaicite:0]{index=0} Cinnamon)
+- No prior LadyLinux installation
+- No manual system configuration beyond what is documented here
+
+---
+
+## 1. System Prerequisites (One-Time)
+
+Update the system and install required base tools:
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y git python3 python3-venv curl
+Note
+
+We intentionally do not install FastAPI or Uvicorn via apt
+
+All Python dependencies are managed inside a project virtual environment
+
+2. Clone the LadyLinux Repository (User Space)
+Clone the repository into your home directory (or any workspace directory):
+
+git clone https://github.com/theCodingProfessor/LadyLinux.git
+cd LadyLinux
+⚠️ Do not clone directly into /opt
+The install script handles correct placement later.
+
+3. Run the Installer (Creates Runtime Layout)
+Make the scripts executable:
+
+chmod +x scripts/install_ladylinux.sh
+chmod +x scripts/refresh_vm.sh
+Run the installer with layout repair enabled:
+
+sudo ./scripts/install_ladylinux.sh --clone --branch main --repair-layout
+This step will:
+
+Create runtime directories:
+
+/opt/ladylinux/
+
+/var/lib/ladylinux/
+
+/etc/ladylinux/
+
+Create the ladylinux system user and group
+
+Clone the repo into /opt/ladylinux/app (correctly)
+
+Create /etc/ladylinux/ladylinux.env (if missing)
+
+Set safe ownership and permissions
+
+Automatically fix common “nested repo” mistakes
+
+4. Install & Refresh the Application Layer
+Run the refresh script:
+
+sudo ./scripts/refresh_vm.sh main --repair-layout
+This step will:
+
+Detect the correct repo root
+
+Pull the latest code from GitHub
+
+Build or update the Python virtual environment
+
+Auto-install the systemd service if missing
+
+Start the LadyLinux API as a managed service
+
+At this point, you do not manually run uvicorn.
+
+5. Verify the Service Is Running
+Check service status:
+
+systemctl status ladylinux-api.service --no-pager
+View logs if needed:
+
+journalctl -u ladylinux-api.service -n 100 --no-pager
+If the service is active, LadyLinux is running correctly.
+
+6. (Optional) Install Ollama for Local LLM Runtime
+If you want to run local LLMs via Ollama:
+
+curl -fsSL https://ollama.com/install.sh | sh
+sudo systemctl enable ollama
+sudo systemctl start ollama
+Pull and test a model:
+
+ollama pull mistral
+ollama run mistral
+Models are stored outside Git and persist across updates.
+
+7. Updating LadyLinux (Daily Development)
+After the initial install, never rerun the installer.
+
+To update the application:
+
+sudo /opt/ladylinux/app/scripts/refresh_vm.sh main
+This safely updates:
+
+code
+
+dependencies
+
+service state
+
+Without touching:
+
+the OS
+
+models
+
+configuration
+
+persistent data
+
+8. What NOT To Do (Common Mistakes)
+❌ Do not run:
+
+uvicorn interface_layer:app --reload
+❌ Do not run git commands inside /opt/ladylinux/app
+
+❌ Do not install FastAPI/Uvicorn with apt
+
+❌ Do not use sudo to “fix” permission problems manually
+
+All lifecycle actions should go through:
+
+install_ladylinux.sh (once)
+
+refresh_vm.sh (many times)
+
+9. Mental Model (Important)
+Layer	How It’s Managed
+Base OS	Installed once
+Runtime directories	Created once
+App code	Refreshed from GitHub
+Python deps	Rebuilt as needed
+Service lifecycle	Managed by systemd
+Models & data	Persistent
+10. Summary (TL;DR)
+# One-time
+git clone https://github.com/theCodingProfessor/LadyLinux.git
+cd LadyLinux
+sudo ./scripts/install_ladylinux.sh --clone --branch main --repair-layout
+
+# Daily use
+sudo ./scripts/refresh_vm.sh main
+If you follow this workflow exactly, you will avoid:
+
+nested repo issues
+
+sudo ownership problems
+
+missing systemd services
+
+inconsistent Python environments
+
+End of Workflow
+
+
+---
+
+### Why this version works (and the old one didn’t)
+
+- Removes manual `uvicorn` execution
+- Removes system-Python package installs
+- Enforces a single source of truth for runtime state
+- Makes the scripts *self-healing*
+- Matches how real production systems are managed
+
+If you want next steps, I can:
+- convert this into a **one-page onboarding handout**
+- add a **“doctor” command** to auto-diagnose broken installs
+- or align this exactly with a future CI/CD pipeline

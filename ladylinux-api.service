@@ -1,0 +1,74 @@
+#===============================================================================
+# LadyLinux API Service
+# File: ladylinux-api.service
+#
+# Purpose:
+#   Run the LadyLinux FastAPI application as a managed system service.
+#
+# Assumptions:
+#   - Application code is located at /opt/ladylinux/app
+#   - Python virtual environment exists at /opt/ladylinux/venv
+#   - Environment configuration is defined in /etc/ladylinux/ladylinux.env
+#   - Service runs as the dedicated "ladylinux" system user
+#
+# Managed by: scripts/refresh_git.sh
+# Repo:       https://github.com/Brown-DJ/LadyLinux_test
+#===============================================================================
+
+[Unit]
+Description=LadyLinux FastAPI Server
+Documentation=https://github.com/Brown-DJ/LadyLinux_test
+# FIX 2: must start after Ollama is live, not just the network
+After=network-online.target ladylinux-llm.service
+Wants=network-online.target
+Requires=ladylinux-llm.service
+
+# After 5 crashes in 60s systemd stops retrying — log it clearly
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+
+User=ladylinux
+Group=ladylinux
+
+WorkingDirectory=/opt/ladylinux/app
+
+# Load env vars — the leading - means missing file is not an error
+EnvironmentFile=-/etc/ladylinux/ladylinux.env
+
+# Explicit PATH so systemd does not rely on shell defaults
+Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="DISPLAY=:0"
+Environment="XDG_RUNTIME_DIR=/run/user/1000"
+Environment="DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus"
+Environment="XDG_CURRENT_DESKTOP=X-Cinnamon"
+
+# FIX 1: correct module path — matches what the installer and refresh_git.sh expect.
+# Original had api_layer.utils.app:app which does not exist and caused the restart loop.
+ExecStart=/opt/ladylinux/venv/bin/uvicorn api_layer:app \
+    --host ${LADYLINUX_HOST:-0.0.0.0} \
+    --port ${LADYLINUX_PORT:-8000} \
+    --proxy-headers \
+    --forwarded-allow-ips="*"
+
+Restart=on-failure
+RestartSec=5
+KillMode=process
+
+# FIX 3: ProtectHome=true blocks /home/ladylinux (.gitconfig lives there).
+# Downgrade to read-only so git config written by refresh_git.sh is accessible
+# at runtime without fully exposing home directories.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/var/lib/ladylinux /opt/ladylinux
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ladylinux-api
+
+[Install]
+WantedBy=multi-user.target

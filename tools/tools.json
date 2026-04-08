@@ -1,0 +1,265 @@
+{
+  "tools": [
+    {
+      "name": "system_services",
+      "description": "List systemd services and status. Optional filter: 'all' | 'running' | 'active' | 'dead' | 'failed'",
+      "method": "GET",
+      "endpoint": "/api/system/services",
+      "parameters": {
+        "filter": "string"
+      }
+    },
+    {
+      "name": "system_service",
+      "description": "Get details for one systemd service",
+      "method": "GET",
+      "endpoint": "/api/system/service/{name}",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_service_restart",
+      "description": "Restart one systemd service",
+      "method": "POST",
+      "endpoint": "/api/system/service/{name}/restart",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_service_start",
+      "description": "Start one systemd service",
+      "method": "POST",
+      "endpoint": "/api/system/service/{name}/start",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_service_stop",
+      "description": "Stop one systemd service",
+      "method": "POST",
+      "endpoint": "/api/system/service/{name}/stop",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_service_enable",
+      "description": "Enable one systemd service at boot",
+      "method": "POST",
+      "endpoint": "/api/system/service/{name}/enable",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_service_disable",
+      "description": "Disable one systemd service at boot",
+      "method": "POST",
+      "endpoint": "/api/system/service/{name}/disable",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "check_process",
+      "description": "Check if a process or application is running by name using pgrep. Use for GUI apps, executables, and non-systemd processes like gnome-calculator, firefox, vlc, python.",
+      "method": "GET",
+      "endpoint": "/api/system/process/{name}",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "kill_process",
+      "description": "Kill a running process by name using pkill. Use for GUI apps and non-systemd executables. Do NOT use for systemd services — use system_service_stop for those.",
+      "method": "POST",
+      "endpoint": "/api/system/process/{name}/kill",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "launch_app",
+      "description": "Launch a GUI application or executable by name. Use for desktop apps like gnome-calculator, firefox, nemo, vlc. Do NOT use for systemd services — use system_service_start for those.",
+      "method": "POST",
+      "endpoint": "/api/system/app/{name}/launch",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "firewall_status",
+      "description": "Get firewall status",
+      "method": "GET",
+      "endpoint": "/api/firewall/status",
+      "parameters": {}
+    },
+    {
+      "name": "firewall_rule",
+      "description": "Get one firewall rule by rule id",
+      "method": "GET",
+      "endpoint": "/api/firewall/rule/{rule_id}",
+      "parameters": {
+        "rule_id": "string"
+      }
+    },
+    {
+      "name": "firewall_reload",
+      "description": "Reload firewall rules",
+      "method": "POST",
+      "endpoint": "/api/firewall/reload",
+      "parameters": {}
+    },
+    {
+      "name": "system_users",
+      "description": "List system users",
+      "method": "GET",
+      "endpoint": "/api/system/users",
+      "parameters": {}
+    },
+    {
+      "name": "system_user",
+      "description": "Get one system user",
+      "method": "GET",
+      "endpoint": "/api/system/user/{name}",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "system_user_refresh",
+      "description": "Refresh user state",
+      "method": "POST",
+      "endpoint": "/api/system/user/{name}/refresh",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "network_interfaces",
+      "description": "List network interfaces",
+      "method": "GET",
+      "endpoint": "/api/network/interfaces",
+      "parameters": {}
+    },
+    {
+      "name": "network_interface",
+      "description": "Get one network interface",
+      "method": "GET",
+      "endpoint": "/api/network/interface/{name}",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "network_interface_restart",
+      "description": "Restart network interface",
+      "method": "POST",
+      "endpoint": "/api/network/interface/{name}/restart",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "theme_themes",
+      "description": "List available themes",
+      "method": "GET",
+      "endpoint": "/api/theme/themes",
+      "parameters": {}
+    },
+    {
+      "name": "theme_theme",
+      "description": "Get one theme",
+      "method": "GET",
+      "endpoint": "/api/theme/theme/{name}",
+      "parameters": {
+        "name": "string"
+      }
+    },
+    {
+      "name": "set_theme",
+      "description": "Apply one theme through the deterministic theme service",
+      "method": "POST",
+      "endpoint": "/api/theme/theme/{theme}/apply",
+      "parameters": {
+        "theme": "string"
+      }
+    },
+    {
+      "name": "theme_apply",
+      "description": "Apply one theme",
+      "method": "POST",
+      "endpoint": "/api/theme/theme/{theme}/apply",
+      "parameters": {
+        "theme": "string"
+      }
+    },
+    {
+      "name": "system_status",
+      "description": "Get CPU, memory, disk, and uptime",
+      "method": "GET",
+      "endpoint": "/api/system/status",
+      "parameters": {}
+    },
+    {
+      "name": "get_disk_partitions",
+      "description": "List all disk partitions with device, mountpoint, filesystem type, total/used/free bytes, and percent used",
+      "method": "GET",
+      "endpoint": "/api/storage/partitions",
+      "parameters": {}
+    },
+    {
+      "name": "get_system_settings",
+      "description": "Get the system hostname",
+      "method": "GET",
+      "endpoint": "/api/system/hostname",
+      "parameters": {}
+    },
+    {
+      "name": "get_logs",
+      "description": "Get recent system journal logs. Optional lines parameter (1-500, default 100)",
+      "method": "GET",
+      "endpoint": "/api/logs/recent",
+      "parameters": {
+        "lines": "integer"
+      }
+    },
+    {
+      "name": "get_error_logs",
+      "description": "Get recent system error logs filtered to error/warning level",
+      "method": "GET",
+      "endpoint": "/api/logs/errors",
+      "parameters": {
+        "lines": "integer"
+      }
+    },
+    {
+      "name": "search_packages",
+      "description": "Search apt packages by name or keyword. Returns matching packages and descriptions",
+      "method": "GET",
+      "endpoint": "/api/packages/search",
+      "parameters": {
+        "q": "string"
+      }
+    },
+    {
+      "name": "installed_packages",
+      "description": "Check whether a specific package is installed. Pass package name as q",
+      "method": "GET",
+      "endpoint": "/api/packages/installed",
+      "parameters": {
+        "q": "string"
+      }
+    },
+    {
+      "name": "get_network_status",
+      "description": "List all network interfaces with IP addresses, state, and connection info",
+      "method": "GET",
+      "endpoint": "/api/network/interfaces",
+      "parameters": {}
+    }
+  ]
+}
