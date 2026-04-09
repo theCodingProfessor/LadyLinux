@@ -16,7 +16,7 @@ from core.rag.domain_router import detect_domain_from_path
 #   "memory" - in-process, wiped on restart (dev/test only)
 #   "local"  - embedded on-disk persistence via qdrant-client (default for prod)
 #   "server" - remote Qdrant server (Docker / dedicated instance)
-QDRANT_MODE = os.getenv("QDRANT_MODE", "memory")  # "memory" | "local" | "server"
+QDRANT_MODE = os.getenv("QDRANT_MODE", "memory")  # Default to memory (no permissions needed)
 QDRANT_HOST = os.getenv("QDRANT_HOST", "localhost")
 QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
 QDRANT_PATH = os.getenv("QDRANT_PATH", "/var/lib/ladylinux/qdrant")

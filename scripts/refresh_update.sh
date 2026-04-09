@@ -42,7 +42,7 @@ set -Eeuo pipefail
 
 #----------------------------- Configuration -----------------------------------
 
-BRANCH="${1:-darrius}"
+BRANCH="${1:-update}"
 
 APP_DIR=""
 APP_DIR_CANDIDATES=("/opt/ladylinux/app" "/opt/ladylinux")

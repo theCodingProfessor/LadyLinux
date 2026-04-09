@@ -48,7 +48,24 @@ def _get_client() -> QdrantClient:
         if QDRANT_MODE == "memory":
             log.info("Initialising Qdrant client in **in-memory** mode")
             _client = QdrantClient(":memory:")
+        elif QDRANT_MODE == "local":
+            try:
+                # Create directory if it doesn't exist
+                import os
+                qdrant_dir = QDRANT_PATH
+                os.makedirs(qdrant_dir, exist_ok=True)
+                log.info("Initialising Qdrant client in **local** mode at %s", qdrant_dir)
+                _client = QdrantClient(path=qdrant_dir)
+            except (PermissionError, OSError) as e:
+                log.warning(
+                    "Cannot create local Qdrant directory at %s (%s), falling back to in-memory",
+                    QDRANT_PATH,
+                    e,
+                )
+                log.info("Initialising Qdrant client in **in-memory** mode (fallback)")
+                _client = QdrantClient(":memory:")
         else:
+            # Server mode
             log.info(
                 "Connecting to Qdrant server at %s:%s",
                 QDRANT_HOST,
