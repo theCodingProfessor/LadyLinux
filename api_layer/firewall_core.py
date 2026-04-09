@@ -307,8 +307,12 @@ def build_firewall_rag_documents(firewall_json=None):
 
 
 def ensure_firewall_snapshot_vectorized(firewall_json=None):
+    import time
+
     snapshot = firewall_json or get_firewall_status_json()
     documents = build_firewall_rag_documents(snapshot)
+
+    log.info("Firewall vectorization: building %d documents", len(documents))
 
     try:
         from rag_layer import ensure_collection
@@ -316,8 +320,27 @@ def ensure_firewall_snapshot_vectorized(firewall_json=None):
         from rag_layer.vector_store import upsert_chunks
 
         ensure_collection()
+
+        log.info("Firewall vectorization: embedding %d document texts", len(documents))
+        embed_start = time.time()
         vectors = embed_texts([doc["text"] for doc in documents])
+        embed_elapsed = time.time() - embed_start
+        log.info(
+            "Firewall vectorization: embedding took %.2fs, got %d vectors",
+            embed_elapsed,
+            len(vectors),
+        )
+
+        log.info("Firewall vectorization: upserting %d chunks to Qdrant", len(documents))
+        upsert_start = time.time()
         stored = upsert_chunks(documents, vectors)
+        upsert_elapsed = time.time() - upsert_start
+        log.info(
+            "Firewall vectorization: upsert took %.2fs, stored %d chunks",
+            upsert_elapsed,
+            stored,
+        )
+
         return {
             "vectorized": True,
             "chunks_stored": stored,
@@ -325,7 +348,7 @@ def ensure_firewall_snapshot_vectorized(firewall_json=None):
             "errors": [],
         }
     except Exception as exc:  # noqa: BLE001
-        log.warning("Firewall snapshot vectorization failed: %s", exc)
+        log.error("Firewall snapshot vectorization failed: %s", exc, exc_info=True)
         return {
             "vectorized": False,
             "chunks_stored": 0,

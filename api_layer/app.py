@@ -333,7 +333,18 @@ def _run_firewall_rag(prompt: str, *, action: str | None = None, top_k: int | No
             "Firewall live data blocked by permissions; proceeding with RAG retrieval from vector store"
         )
 
+    log.info("Starting firewall snapshot vectorization...")
+    import time
+    vectorization_start = time.time()
     vectorization = ensure_firewall_snapshot_vectorized(firewall_json)
+    vectorization_elapsed = time.time() - vectorization_start
+    log.info(
+        "Firewall vectorization completed in %.2fs: vectorized=%s, chunks_stored=%d, errors=%s",
+        vectorization_elapsed,
+        vectorization.get("vectorized"),
+        vectorization.get("chunks_stored", 0),
+        vectorization.get("errors", []),
+    )
 
     retrieval_query = prompt
     if action != "custom":
