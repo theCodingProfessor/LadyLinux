@@ -2,17 +2,49 @@
 
 #===============================================================================
 # LadyLinux Installation Script
-# File: current_ladylinuxinstall.sh
+# File: start_lady.sh
 #
 # Purpose:
 #   Idempotent installation script that checks existing system state before
 #   installing components. Safe to run multiple times.
 #
 # Usage:
-#   sudo ./current_ladylinuxinstall.sh
+#   sudo ./start_lady.sh
 #===============================================================================
 
 set -euo pipefail
+
+#----- Configuration Variables (consistent with install_ladylinux.sh) -----
+
+BASE_DIR="/opt/ladylinux"
+APP_DIR="$BASE_DIR/app"
+VENV_DIR="$BASE_DIR/venv"
+MODELS_DIR="$BASE_DIR/models"
+
+ETC_DIR="/etc/ladylinux"
+ENV_FILE="$ETC_DIR/ladylinux.env"
+
+LOG_DIR="/var/log/ladylinux"
+SUDOERS_FILE="/etc/sudoers.d/ladylinux-firewall"
+
+SERVICE_USER="ladylinux"
+SERVICE_GROUP="ladylinux"
+SERVICE_NAME="ladylinux-api.service"
+
+#----- Helper Functions -----
+
+log()  { printf "[install] %s\n" "$*"; }
+warn() { printf "[install][WARN] %s\n" "$*" >&2; }
+
+mkdir_safe() {
+  local d="$1"
+  if [[ -d "$d" ]]; then
+    log "Directory exists: $d"
+  else
+    log "Creating directory: $d"
+    mkdir -p "$d"
+  fi
+}
 
 echo "═══════════════════════════════════════════════════════════════════════"
 echo "  Welcome to the LadyLinux Installation Wizard"
@@ -263,9 +295,41 @@ if [ "$RESTORE_SHELL" = true ]; then
     sudo usermod -s /usr/sbin/nologin ladylinux
 fi
 
+# --- Ensure log directory exists ---
+echo ""
+echo "[11/11] Ensuring logging infrastructure..."
+
+mkdir_safe "$LOG_DIR"
+
+# Set ownership to ladylinux user if they exist
+if id "$SERVICE_USER" >/dev/null 2>&1; then
+    echo "  → Setting log directory permissions..."
+    sudo chown "$SERVICE_USER:$SERVICE_GROUP" "$LOG_DIR" >/dev/null 2>&1 || true
+    sudo chmod 0755 "$LOG_DIR" || true
+fi
+echo "  → Log directory ready: $LOG_DIR"
+
+# --- Validate firewall sudoers rule ---
+echo ""
+echo "[12/12] Validating security configuration..."
+
+if [ -f "$SUDOERS_FILE" ]; then
+    echo "  → Checking firewall sudoers rule..."
+    if sudo visudo -c -f "$SUDOERS_FILE" >/dev/null 2>&1; then
+        echo "  → Sudoers rule is valid. ✓"
+    else
+        echo "  → Warning: Sudoers rule syntax invalid: $SUDOERS_FILE"
+        echo "  → Firewall queries may fail with permission errors."
+        echo "  → Consider re-running this script to fix."
+    fi
+else
+    echo "  → Note: Firewall sudoers rule not found yet."
+    echo "  → It will be set up when you run the full installation."
+fi
+
 # --- Set up systemd service ---
 echo ""
-echo "[11/11] Setting up systemd service..."
+echo "[13/13] Setting up systemd service..."
 
 # Check if service file exists in repo
 if [ -f "/opt/ladylinux/ladylinux-api.service" ]; then

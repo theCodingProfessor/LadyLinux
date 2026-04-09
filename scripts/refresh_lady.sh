@@ -50,9 +50,12 @@ DEFAULT_APP_DIR="/opt/ladylinux"
 REPO_URL="${REPO_URL:-https://github.com/theCodingProfessor/LadyLinux.git}"
 VENV_DIR="/opt/ladylinux/venv"
 ENV_FILE="/etc/ladylinux/ladylinux.env"
+LOG_DIR="/var/log/ladylinux"
+SUDOERS_FILE="/etc/sudoers.d/ladylinux-firewall"
 
 SERVICE_NAME="ladylinux-api.service"
 SERVICE_USER="ladylinux"
+SERVICE_GROUP="ladylinux"
 
 PYTHON_BIN="python3"
 PIP_BIN="$VENV_DIR/bin/pip"
@@ -360,6 +363,38 @@ prep_application() {
   # run_as_service "$VENV_DIR/bin/python" -m ladylinux.migrate || die "Migration failed"
 }
 
+ensure_log_directory() {
+  # Create /var/log/ladylinux with proper permissions
+  log "Ensuring log directory: $LOG_DIR"
+  mkdir -p "$LOG_DIR" || die "Failed to create log directory: $LOG_DIR" 1
+
+  # Set ownership to service user if they exist
+  if id "$SERVICE_USER" >/dev/null 2>&1; then
+    chown "$SERVICE_USER":"$SERVICE_GROUP" "$LOG_DIR" >/dev/null 2>&1 || true
+  fi
+
+  chmod 0755 "$LOG_DIR" || die "Failed to set permissions on log directory" 1
+  log "  Log directory ready: $LOG_DIR"
+}
+
+validate_firewall_sudoers() {
+  # Validate sudoers rule syntax (non-fatal; just warn if invalid)
+  if [[ -f "$SUDOERS_FILE" ]]; then
+    log "Validating firewall sudoers rule: $SUDOERS_FILE"
+    if visudo -c -f "$SUDOERS_FILE" >/dev/null 2>&1; then
+      log "  Sudoers rule is valid."
+    else
+      warn "Sudoers rule syntax invalid: $SUDOERS_FILE"
+      warn "  Firewall commands will not have passwordless sudo access."
+      warn "  Consider re-running install_ladylinux.sh --clone to fix."
+    fi
+  else
+    warn "Firewall sudoers rule not found: $SUDOERS_FILE"
+    warn "  Firewall queries may fail with permission errors."
+    warn "  Run install_ladylinux.sh --clone to install sudoers rule."
+  fi
+}
+
 print_summary() {
   pushd "$APP_DIR" >/dev/null
   local commit
@@ -412,6 +447,9 @@ main() {
   else
     warn "Service user '$SERVICE_USER' not found. Skipping ownership adjustments."
   fi
+
+  ensure_log_directory
+  validate_firewall_sudoers
 
   service_stop
   git_sync
