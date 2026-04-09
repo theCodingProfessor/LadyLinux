@@ -309,6 +309,17 @@ if id "$SERVICE_USER" >/dev/null 2>&1; then
 fi
 echo "  → Log directory ready: $LOG_DIR"
 
+# --- Ensure tracker directory exists (for RAG file tracking) ---
+echo "  → Ensuring RAG tracker directory: /var/lib/ladylinux"
+mkdir_safe "/var/lib/ladylinux"
+
+if id "$SERVICE_USER" >/dev/null 2>&1; then
+    echo "  → Setting tracker directory permissions..."
+    sudo chown "$SERVICE_USER:$SERVICE_GROUP" "/var/lib/ladylinux" >/dev/null 2>&1 || true
+    sudo chmod 0755 "/var/lib/ladylinux" || true
+fi
+echo "  → Tracker directory ready: /var/lib/ladylinux"
+
 # --- Validate firewall sudoers rule ---
 echo ""
 echo "[12/12] Validating security configuration..."

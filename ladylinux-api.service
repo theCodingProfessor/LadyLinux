@@ -40,6 +40,7 @@ WorkingDirectory=/opt/ladylinux
 Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
 Environment="LADYLINUX_HOST=0.0.0.0"
 Environment="LADYLINUX_PORT=8000"
+Environment="LADYLINUX_TRACKER_DIR=/var/lib/ladylinux"
 
 # Load environment variables (ports, paths, modes, etc.).
 # Values from the env file override the defaults above.

@@ -21,7 +21,8 @@ import os
 log = logging.getLogger("rag_layer.file_tracker")
 
 # ── Default tracker file location ────────────────────────────────────
-_TRACKER_DIR = os.path.expanduser("~/.ladylinux")
+# Use /var/lib/ladylinux for service state (standard location, proper permissions)
+_TRACKER_DIR = os.getenv("LADYLINUX_TRACKER_DIR", "/var/lib/ladylinux")
 _TRACKER_FILE = os.getenv(
     "LADYLINUX_TRACKER_FILE",
     os.path.join(_TRACKER_DIR, "embedded_files.json"),
