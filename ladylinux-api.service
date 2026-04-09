@@ -45,6 +45,12 @@ Environment="LADYLINUX_PORT=8000"
 # Values from the env file override the defaults above.
 EnvironmentFile=-/etc/ladylinux/ladylinux.env
 
+# ---- Pre-start setup ----
+# Ensure log directory exists and has correct permissions
+ExecStartPre=/usr/bin/mkdir -p /var/log/ladylinux
+ExecStartPre=/usr/bin/chown ladylinux:ladylinux /var/log/ladylinux
+ExecStartPre=/usr/bin/chmod 0755 /var/log/ladylinux
+
 # ---- Application launch ----
 # Adjust the module path below if your FastAPI app entry point changes.
 # After refactoring: api_layer/app.py defines `app = FastAPI(...)`
@@ -61,7 +67,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=/var/lib/ladylinux /opt/ladylinux
+ReadWritePaths=/var/lib/ladylinux /opt/ladylinux /var/log/ladylinux
 
 # ---- Logging ----
 # Logs are available via:

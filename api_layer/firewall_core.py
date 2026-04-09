@@ -26,9 +26,17 @@ def _resolve_command(candidates):
 
 
 def _run_command(command):
+    """Run a firewall command with sudo privileges (via passwordless sudoers rule).
+    
+    Prepends 'sudo' to enable the 'ladylinux' user to access firewall state
+    without requiring a password (configured via /etc/sudoers.d/ladylinux-firewall).
+    """
+    # Prepend sudo to firewall commands for privilege escalation
+    sudo_command = ["sudo"] + command
+    
     try:
         result = subprocess.run(
-            command,
+            sudo_command,
             capture_output=True,
             text=True,
             timeout=15,
@@ -38,7 +46,7 @@ def _run_command(command):
             "stdout": (result.stdout or "").strip(),
             "stderr": (result.stderr or "").strip(),
             "returncode": result.returncode,
-            "command": command,
+            "command": sudo_command,
         }
     except FileNotFoundError:
         return {
@@ -46,15 +54,15 @@ def _run_command(command):
             "stdout": "",
             "stderr": f"Command not found: {command[0]}",
             "returncode": 127,
-            "command": command,
+            "command": sudo_command,
         }
     except subprocess.TimeoutExpired:
         return {
             "ok": False,
             "stdout": "",
-            "stderr": f"Command timed out: {' '.join(command)}",
+            "stderr": f"Command timed out: {' '.join(sudo_command)}",
             "returncode": 124,
-            "command": command,
+            "command": sudo_command,
         }
 
 

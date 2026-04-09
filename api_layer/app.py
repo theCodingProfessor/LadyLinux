@@ -18,7 +18,46 @@ from api_layer.os_core import get_metrics
 from rag_layer import retrieve, build_context_block, ensure_collection, seed
 
 import logging
+import logging.handlers
 import threading
+
+# ── Configure Python logging to /var/log/ladylinux/ ───────────────────────
+_LOG_DIR = "/var/log/ladylinux"
+_LOG_FILE = f"{_LOG_DIR}/ladylinux.log"
+
+try:
+    os.makedirs(_LOG_DIR, exist_ok=True)
+except Exception as e:
+    print(f"[WARN] Could not create log directory {_LOG_DIR}: {e}")
+
+# Set up rotating file handler (10 MB per file, keep 5 backups)
+try:
+    rotating_handler = logging.handlers.RotatingFileHandler(
+        _LOG_FILE,
+        maxBytes=10 * 1024 * 1024,  # 10 MB
+        backupCount=5,
+    )
+    rotating_handler.setFormatter(
+        logging.Formatter(
+            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    )
+except Exception as e:
+    print(f"[WARN] Could not set up rotating file handler: {e}")
+    rotating_handler = None
+
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+# Add file handler to root logger if it was created successfully
+if rotating_handler:
+    logging.getLogger().addHandler(rotating_handler)
+
 
 log = logging.getLogger("api_layer.app")
 
@@ -53,7 +92,6 @@ def _seed_background():
         log.error("Background seed failed: %s", exc)
 
 
-
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 templates = Jinja2Templates(directory="templates")
@@ -73,7 +111,11 @@ def _render_template(request: Request, name: str, context: dict | None = None):
         # Older Starlette/FastAPI: (name, context) signature.
         return templates.TemplateResponse(name, merged_context)
 
+# Log file for actions audit trail (actions.log)
 LOG_FILE = "/var/log/ladylinux/actions.log"
+
+# Confirm logging is enabled
+log.info("LadyLinux API started; logging to %s", _LOG_FILE)
 
 OLLAMA_URL = "http://localhost:11434/api/generate"
 OLLAMA_TAGS_URL = "http://localhost:11434/api/tags"

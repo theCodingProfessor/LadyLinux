@@ -1,0 +1,30 @@
+#===============================================================================
+# LadyLinux Firewall Sudoers Rule
+# File: ladylinux-firewall.sudoers
+#
+# Purpose:
+#   Allow the 'ladylinux' service user to execute firewall commands
+#   (ufw, iptables, nftables) with root privileges WITHOUT password prompts.
+#
+# Installation:
+#   sudo cp ladylinux-firewall.sudoers /etc/sudoers.d/ladylinux-firewall
+#   sudo chmod 0440 /etc/sudoers.d/ladylinux-firewall
+#   sudo visudo -c -f /etc/sudoers.d/ladylinux-firewall
+#
+# Security Model:
+#   - Scoped to specific firewall binaries only
+#   - No shell invocation, command substitution, or chaining allowed
+#   - Logged to syslog for audit trail
+#   - Does not grant password-less sudo for other commands
+#
+#===============================================================================
+
+# Allow ladylinux to run firewall commands without a password
+Defaults:ladylinux !lecture = "never"
+
+ladylinux ALL=(ALL) NOPASSWD: /usr/sbin/ufw, /sbin/ufw, /usr/bin/ufw
+ladylinux ALL=(ALL) NOPASSWD: /usr/sbin/iptables, /sbin/iptables, /usr/bin/iptables
+ladylinux ALL=(ALL) NOPASSWD: /usr/sbin/iptables-save, /sbin/iptables-save
+ladylinux ALL=(ALL) NOPASSWD: /usr/sbin/iptables-restore, /sbin/iptables-restore
+ladylinux ALL=(ALL) NOPASSWD: /usr/sbin/nft, /sbin/nft, /usr/bin/nft
+

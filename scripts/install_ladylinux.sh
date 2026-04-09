@@ -65,6 +65,11 @@ DATA_DIR="$VAR_DIR/data"
 CACHE_DIR="$VAR_DIR/cache"
 LOGS_DIR="$VAR_DIR/logs"
 
+LOG_DIR="/var/log/ladylinux"
+
+SUDOERS_FILE="/etc/sudoers.d/ladylinux-firewall"
+SUDOERS_SOURCE_FILE=""  # Will be set later if repo is cloned
+
 #------------------------------ Helpers ----------------------------------------
 
 log()  { printf "[install] %s\n" "$*"; }
@@ -193,6 +198,12 @@ set_ownership_perms() {
   run chmod 0755 "$VAR_DIR" || true
   run chmod 0750 "$DATA_DIR" "$CACHE_DIR" "$LOGS_DIR" || true
 
+  # /var/log/ladylinux: writable by ladylinux user for log rotation
+  run chmod 0755 "$LOG_DIR" || true
+  if id "$SERVICE_USER" >/dev/null 2>&1; then
+    run chown "$SERVICE_USER":"$SERVICE_GROUP" "$LOG_DIR" >/dev/null 2>&1 || true
+  fi
+
   # /etc/ladylinux should be root-owned, readable by ladylinux (group), not world-readable
   mkdir_safe "$ETC_DIR"
   if getent group "$SERVICE_GROUP" >/dev/null 2>&1; then
@@ -246,7 +257,39 @@ EOF
   chmod 0640 "$ENV_FILE"
 }
 
-clone_repo_if_requested() {
+setup_firewall_sudoers() {
+  # Install passwordless sudoers rule for firewall commands.
+  # This allows the 'ladylinux' user to run ufw, iptables, nftables
+  # with elevated privileges without a password prompt (required for
+  # the service to query firewall state when running as non-root).
+
+  if [[ ! -f "$SUDOERS_SOURCE_FILE" ]]; then
+    log "Sudoers source not found; skipping firewall sudoers setup"
+    return 0
+  fi
+
+  log "Installing firewall sudoers rule: $SUDOERS_FILE"
+  if [[ "$DRY_RUN" == "true" ]]; then
+    log "DRY-RUN: would copy $SUDOERS_SOURCE_FILE to $SUDOERS_FILE and validate"
+    return 0
+  fi
+
+  # Copy sudoers file from repo
+  run cp "$SUDOERS_SOURCE_FILE" "$SUDOERS_FILE"
+
+  # Set secure permissions (0440: readable by owner and group, no write)
+  run chmod 0440 "$SUDOERS_FILE"
+
+  # Validate sudoers file syntax using visudo -c
+  if ! visudo -c -f "$SUDOERS_FILE" 2>/dev/null; then
+    warn "Sudoers file validation failed; removing $SUDOERS_FILE"
+    run rm -f "$SUDOERS_FILE"
+    return 1
+  fi
+
+  log "Firewall sudoers rule installed and validated: $SUDOERS_FILE"
+  return 0
+}
   if [[ "$DO_CLONE" != "true" ]]; then
     log "Repo clone not requested (use --clone to enable)."
     return 0
@@ -283,10 +326,12 @@ print_summary() {
   log "    containers:$CONTAINERS_DIR"
   log "  Config:      $ETC_DIR"
   log "    env:       $ENV_FILE"
+  log "  Logs:        $LOG_DIR"
   log "  State:       $VAR_DIR"
   log "    data:      $DATA_DIR"
   log "    cache:     $CACHE_DIR"
   log "    logs:      $LOGS_DIR"
+  log "  Security:    $SUDOERS_FILE (firewall sudoers)"
   log "  Service user: $SERVICE_USER (created: $DO_USER)"
   log "  Repo clone:   $DO_CLONE (repo: $REPO_URL, branch: $BRANCH)"
 }
@@ -319,11 +364,19 @@ main() {
   mkdir_safe "$CACHE_DIR"
   mkdir_safe "$LOGS_DIR"
 
+  mkdir_safe "$LOG_DIR"
+
   mkdir_safe "$ETC_DIR"
   create_env_file_template
 
   set_ownership_perms
   clone_repo_if_requested
+
+  # After cloning, set the sudoers source path and install
+  if [[ "$DO_CLONE" == "true" ]]; then
+    SUDOERS_SOURCE_FILE="$APP_DIR/ladylinux-firewall.sudoers"
+  fi
+  setup_firewall_sudoers
 
   print_summary
   log "Install bootstrap complete."
