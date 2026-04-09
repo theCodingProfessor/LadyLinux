@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lady Linux Intro - System Overview</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/styles.css" rel="stylesheet">
+</head>
+<body>
+  <header class="intro-topbar">
+    <div class="shell-inner d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="brand-chip">
+        <span class="brand-dot"></span>
+        <strong>Lady Linux Intro</strong>
+        <span>Static architecture walkthrough built from the scanned codebase</span>
+      </div>
+      <nav class="doc-nav">
+        <a class="doc-link" data-doc-link href="index.html">Overview</a>
+        <a class="doc-link" data-doc-link href="ui_ux.html">UI / UX</a>
+        <a class="doc-link" data-doc-link href="rag_layer.html">RAG Layer</a>
+        <a class="doc-link" data-doc-link href="services.html">Services</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="intro-shell">
+    <section class="hero-panel">
+      <div class="eyebrow">Observed Architecture</div>
+      <h1 class="hero-title">UI -> API -> Services -> System, with a separate assistant pipeline layered across it.</h1>
+      <p class="hero-copy">
+        This interface documents what is actually present in the FastAPI app, the Jinja2 templates, the vanilla JavaScript modules, and the assistant runtime code. It does not convert the original templates. It explains the structure those files already implement.
+      </p>
+      <div class="chip-row mt-4">
+        <span class="stat-chip"><strong data-route-total>0</strong> detected routes</span>
+        <span class="stat-chip"><strong data-frontend-total>0</strong> routes called directly from the scanned frontend</span>
+        <span class="stat-chip"><strong data-group-total="Services">0</strong> service-control endpoints</span>
+        <span class="stat-chip"><strong data-group-total="Themes">0</strong> theme endpoints</span>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Two Major Request Paths</h2>
+          <p class="body-copy mb-0">The codebase exposes one regular dashboard/data path and one assistant path. They share service modules, but they do not start in the same place.</p>
+        </div>
+        <div class="toggle-bar" data-view-group="overview-flow">
+          <button class="toggle-btn is-active" data-view-toggle="dashboard" type="button">Dashboard Path</button>
+          <button class="toggle-btn" data-view-toggle="assistant" type="button">Assistant Path</button>
+        </div>
+      </div>
+
+      <div class="doc-card is-active" data-view-panel-group="overview-flow" data-view-panel="dashboard">
+        <div class="architecture-flow">
+          <div class="flow-lane">
+            <div class="flow-title">
+              <h3>Page modules and data panels</h3>
+              <span class="soft-chip">templates + static/js</span>
+            </div>
+            <div class="flow-track">
+              <div class="flow-node">
+                <strong>Jinja page shell</strong>
+                Shared includes such as `nav.html`, `controls.html`, and `lady_panel.html` wrap module-specific page bodies.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>Vanilla JS fetch layer</strong>
+                Files like `system_metrics.js`, `main.js`, and the inline scripts in `os.html`, `network.html`, `users.html`, and `logs.html` call backend endpoints.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>FastAPI route modules</strong>
+                `api_layer/routes/*` contains thin endpoint wrappers grouped by area.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>Service layer</strong>
+                `api_layer/services/*` runs psutil sampling, file reads, theme persistence, or command execution through `run_command()`.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="doc-card" data-view-panel-group="overview-flow" data-view-panel="assistant">
+        <div class="architecture-flow">
+          <div class="flow-lane">
+            <div class="flow-title">
+              <h3>Prompt transport and decision logic</h3>
+              <span class="soft-chip">api_layer/app.py + core/*</span>
+            </div>
+            <div class="flow-track">
+              <div class="flow-node">
+                <strong>Prompt entry</strong>
+                The current frontend posts to `/api/prompt` or `/api/prompt/stream`.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>Command kernel first</strong>
+                `run_command_kernel()` checks deterministic tool-like prompts before retrieval or chat.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>Prompt router</strong>
+                `classify_prompt()` chooses `system`, `rag`, or `chat`.
+              </div>
+              <div class="flow-arrow">-></div>
+              <div class="flow-node">
+                <strong>Tool, RAG, or chat handler</strong>
+                The request is executed through the tool router, retrieval pipeline, or plain LLM chat path.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Observed Building Blocks</h2>
+          <p class="body-copy mb-0">These cards summarize what the scan found without inventing hidden layers.</p>
+        </div>
+      </div>
+      <div class="grid-4">
+        <article class="doc-card">
+          <h3>Frontend shell</h3>
+          <p class="body-copy">Pages are server-rendered with Jinja2 templates, but most live behavior is delegated to vanilla JavaScript modules and page-local scripts.</p>
+          <div class="chip-row">
+            <span class="soft-chip">`templates/index.html`</span>
+            <span class="soft-chip">`templates/os.html`</span>
+            <span class="soft-chip">`static/js/main.js`</span>
+          </div>
+        </article>
+        <article class="doc-card">
+          <h3>Shared live updates</h3>
+          <p class="body-copy">A shared polling engine reads `/api/system/metrics`, normalizes the payload once, then emits `metrics:update` so multiple pages can render from the same stream.</p>
+          <div class="chip-row">
+            <span class="soft-chip">`static/js/system_metrics.js`</span>
+            <span class="soft-chip">`static/js/ui_event_bus.js`</span>
+          </div>
+        </article>
+        <article class="doc-card">
+          <h3>Route composition</h3>
+          <p class="body-copy">Most endpoints live in modular routers under `api_layer/routes`, while the assistant transport and some backward-compatible aliases remain in `api_layer/app.py`.</p>
+          <div class="chip-row">
+            <span class="soft-chip">`api_layer/routes/*`</span>
+            <span class="soft-chip">`api_layer/app.py`</span>
+          </div>
+        </article>
+        <article class="doc-card">
+          <h3>System-facing services</h3>
+          <p class="body-copy">The service layer mixes psutil, file reads, theme-state persistence, subprocess calls, and in one case a websocket-aware event bus for UI theme pushes.</p>
+          <div class="chip-row">
+            <span class="soft-chip">`api_layer/services/*`</span>
+            <span class="soft-chip">`core/event_bus.py`</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-head">
+        <div>
+          <h2>Documentation Sections</h2>
+          <p class="body-copy mb-0">Follow the same path a maintainer would use when orienting themselves inside the project.</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <a class="doc-card text-decoration-none" href="ui_ux.html">
+          <h3>UI / UX Structure</h3>
+          <p class="body-copy">How the dashboard, system page, network page, users page, and logs page are partitioned, and how browser-side rendering flows through fetch calls and event streams.</p>
+        </a>
+        <a class="doc-card text-decoration-none" href="rag_layer.html">
+          <h3>Assistant and RAG Flow</h3>
+          <p class="body-copy">What happens when a prompt enters the backend, where deterministic commands stop early, where retrieval starts, and where plain chat takes over.</p>
+        </a>
+        <a class="doc-card text-decoration-none" href="services.html">
+          <h3>Endpoint to Service Map</h3>
+          <p class="body-copy">A searchable catalog of the observed routes, the file that defines each one, its linked service or core layer, and where the frontend calls it.</p>
+        </a>
+      </div>
+    </section>
+
+    <section class="section-block">
+      <div class="doc-card">
+        <h2>Why This Architecture Reads Clearly</h2>
+        <ul class="key-list">
+          <li>
+            <strong>Feature pages stay human-sized.</strong>
+            The template layer uses shared includes for navigation and controls, then hands each page its own JS hooks and area-specific sections.
+          </li>
+          <li>
+            <strong>The assistant path is explicit.</strong>
+            Instead of hiding prompt logic inside one giant service, the code separates command matching, tool routing, retrieval, and chat response generation.
+          </li>
+          <li>
+            <strong>System work is centralized.</strong>
+            Subprocess execution is funneled through `api_layer/utils/command_runner.py`, so allowed binaries and result formatting stay in one place.
+          </li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=LadyLinux Stop
+Comment=Stop the LadyLinux LLM system
+Exec=bash /opt/ladylinux/app/scripts/stop_ll.sh
+Icon=system-shutdown
+Terminal=true
+Categories=Utility;System;
+Keywords=ladylinux;stop;shutdown;
+X-Desktop-File-Install-Version=0.26

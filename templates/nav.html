@@ -1,0 +1,107 @@
+<!-- templates/nav.html -->
+<nav class="navbar navbar-expand-lg ll-topbar mb-4">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <span class="ll-logo" aria-hidden="true">LL</span>
+      <span class="fw-semibold">Lady Linux</span>
+    </a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#llMainNav" aria-controls="llMainNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="llMainNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+
+        <!-- ── Dark/Light mode quick toggle ── -->
+        <!-- Cycles between 'terminal' (dark) and 'softcore' (light); uses existing applyTheme pipeline -->
+        <li class="nav-item">
+          <button
+            id="navThemeToggle"
+            class="btn btn-link nav-link ll-nav-icon-btn"
+            type="button"
+            aria-label="Toggle dark/light mode"
+            title="Toggle dark/light mode"
+          >
+            <!-- Icon swapped by JS based on active theme state -->
+            <i class="bi bi-moon-stars-fill" id="navThemeIcon"></i>
+          </button>
+        </li>
+
+        <!-- ── Notifications with dropdown ── -->
+        <li class="nav-item dropdown">
+          <button
+            id="navNotifBtn"
+            class="btn btn-link nav-link ll-nav-icon-btn position-relative"
+            type="button"
+            data-bs-toggle="dropdown"
+            data-bs-offset="0,8"
+            data-bs-auto-close="true"
+            aria-expanded="false"
+            aria-label="Notifications"
+            title="Notifications"
+          >
+            <i class="bi bi-bell"></i>
+            <!-- Unread badge — hidden when count is 0; managed by JS -->
+            <span
+              id="navNotifBadge"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+              style="font-size: 0.55rem; padding: 0.2em 0.4em;"
+            >0</span>
+          </button>
+
+          <!-- Bootstrap 5 dropdown menu, anchored to the button -->
+          <ul
+            class="dropdown-menu dropdown-menu-end ll-notif-dropdown"
+            aria-labelledby="navNotifBtn"
+          >
+            <!-- Header row -->
+            <li>
+              <div class="d-flex align-items-center justify-content-between px-3 py-2 border-bottom"
+                   style="border-color: var(--border-color) !important;">
+                <span class="fw-semibold" style="font-size: 0.82rem;">Notifications</span>
+                <!-- Mark-all-read button -->
+                <button
+                  id="navNotifMarkRead"
+                  class="btn btn-link p-0 text-muted"
+                  style="font-size: 0.75rem;"
+                  type="button"
+                >
+                  Mark all read
+                </button>
+              </div>
+            </li>
+
+            <!-- Notification items — populated by JS or static stubs -->
+            <li id="navNotifList">
+              <!-- Populated dynamically; fallback shown if empty -->
+            </li>
+
+            <!-- Empty-state fallback (visible when no items) -->
+            <li id="navNotifEmpty" class="px-3 py-3 text-center text-muted" style="font-size: 0.8rem;">
+              <i class="bi bi-check-circle me-1"></i>All caught up
+            </li>
+
+            <!-- Footer link -->
+            <li><hr class="dropdown-divider" style="border-color: var(--border-color);"></li>
+            <li>
+              <a class="dropdown-item text-center" href="/logs" style="font-size: 0.8rem;">
+                View system logs
+              </a>
+            </li>
+          </ul>
+        </li>
+
+        <!-- ── Settings gear (unchanged) ── -->
+        <li class="nav-item">
+          <a href="/os" class="nav-link ll-nav-icon-btn" aria-label="System Settings">
+            <i class="bi bi-gear"></i>
+          </a>
+        </li>
+
+      </ul>
+    </div>
+  </div>
+</nav>

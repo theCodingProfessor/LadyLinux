@@ -4,94 +4,823 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lady Linux - Users</title>
+  <script>
+    document.documentElement.setAttribute("data-ui-ready", "false");
+  </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/static/css/style.css" rel="stylesheet">
+  <style>
+    .user-detail-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .user-detail-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+    .user-detail-value {
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.82rem;
+      color: var(--text-main);
+      word-break: break-all;
+    }
+    .user-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--accent-soft);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: var(--accent);
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+    .user-avatar-lg {
+      width: 64px;
+      height: 64px;
+      font-size: 1.6rem;
+    }
+    .user-row-clickable {
+      cursor: pointer;
+      transition: background var(--transition-speed);
+    }
+    .user-row-clickable.selected {
+      background: var(--accent-soft) !important;
+    }
+    .user-row-clickable:hover {
+      background: rgba(196, 181, 253, 0.06) !important;
+    }
+    .shell-badge {
+      font-family: monospace;
+      font-size: 0.75rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border-radius: var(--radius-small);
+      padding: 0.15rem 0.5rem;
+    }
+    .detail-empty {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .detail-empty i { font-size: 2rem; display: block; margin-bottom: 0.5rem; opacity: 0.4; }
+    .section-divider {
+      border-top: 1px solid var(--border-color);
+      margin: 1rem 0;
+    }
+    #userDetailPanel { min-height: 220px; }
+    .modal-content {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-medium);
+    }
+    .modal-header { border-bottom: 1px solid var(--border-color); }
+    .modal-footer { border-top: 1px solid var(--border-color); }
+    .form-control, .form-select {
+      background: var(--bg-main);
+      border-color: var(--border-color);
+      color: var(--text-main);
+    }
+    .form-control:focus, .form-select:focus {
+      background: var(--bg-main);
+      border-color: var(--accent);
+      color: var(--text-main);
+      box-shadow: 0 0 0 3px var(--color-focus-ring);
+    }
+    .form-label { color: var(--text-muted); font-size: 0.83rem; }
+  </style>
 </head>
-<body>
-  <div class="container-fluid py-4">
-    <header class="mb-4">
-      <h1 class="display-5">Users</h1>
-      <p class="text-muted">Account management and permissions.</p>
-    </header>
+<body data-page="users">
+  {% include "nav.html" %}
 
-    <nav id="nav-container" class="mb-4"></nav>
+  {% include "controls.html" %}
+  {% include "lady_panel.html" %}
+
+  <main class="container pb-5">
+    {% include "context_nav.html" %}
+
+    <!-- Page header -->
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+      <div>
+        <h1 class="h4 mb-0">User &amp; Account Settings</h1>
+        <p class="text-muted mb-0" style="font-size:0.85rem">
+          Manage system users, roles, and account configuration
+        </p>
+      </div>
+      <button class="btn btn-primary btn-sm d-flex align-items-center gap-2"
+              type="button" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="bi bi-person-plus"></i> Add User
+      </button>
+    </div>
 
     <div class="row g-4">
-      <div class="col-12 col-lg-6">
-        <div class="card h-100">
-          <div class="card-body p-4">
-            <h2 class="h4 mb-3">Current Users</h2>
-            <ul class="list-group" id="userList">
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>NAME</span>
-                <span class="badge user-role">Admin</span>
+
+      <!-- LEFT COLUMN -->
+      <div class="col-12 col-lg-8 d-flex flex-column gap-4">
+
+        <!-- User List -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+              <h2 class="h5 mb-0">System Users</h2>
+              <div class="d-flex gap-2 align-items-center">
+                <span class="text-muted" style="font-size:0.8rem">
+                  <span id="userCountBadge">—</span> users
+                </span>
+                <button class="btn btn-outline-secondary btn-sm" id="refreshUsersBtn" title="Refresh">
+                  <i class="bi bi-arrow-clockwise"></i>
+                </button>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-dark table-hover align-middle mb-0">
+                <thead>
+                  <tr>
+                    <th style="width:40px"></th>
+                    <th scope="col" aria-sort="ascending">
+                      <button type="button" class="ll-sort-button" data-users-sort="name">
+                        <span>User</span>
+                        <i class="bi bi-caret-up-fill ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                      </button>
+                    </th>
+                    <th scope="col" aria-sort="none">
+                      <button type="button" class="ll-sort-button" data-users-sort="uid">
+                        <span>UID</span>
+                        <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                      </button>
+                    </th>
+                    <th scope="col" aria-sort="none">
+                      <button type="button" class="ll-sort-button" data-users-sort="shell">
+                        <span>Shell</span>
+                        <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                      </button>
+                    </th>
+                    <th scope="col" aria-sort="none">
+                      <button type="button" class="ll-sort-button" data-users-sort="home">
+                        <span>Home</span>
+                        <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="userList">
+                  <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                      <span class="spinner-border spinner-border-sm me-2"></span>Loading…
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Account Detail Panel -->
+        <section class="card ll-dashboard-card" id="userDetailPanel">
+          <div class="card-body">
+            <h2 class="h5 mb-3">Account Details</h2>
+            <div id="userDetailContent">
+              <div class="detail-empty">
+                <i class="bi bi-person-circle"></i>
+                Select a user above to view account details
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-12 col-lg-4 d-flex flex-column gap-4">
+
+        <!-- Active Sessions -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">Active Sessions</h2>
+              <button class="btn btn-link btn-sm p-0 text-muted" id="refreshSessionsBtn" title="Refresh">
+                <i class="bi bi-arrow-clockwise"></i>
+              </button>
+            </div>
+            <ul class="list-group ll-action-list" id="sessionList">
+              <li class="list-group-item d-flex justify-content-between">
+                <span>admin@tty1</span><small>2h 14m</small>
               </li>
-              <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span>guest</span>
-                <span class="badge user-role">Standard</span>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>guest@pts0</span><small>18m</small>
+              </li>
+              <li class="list-group-item d-flex justify-content-between">
+                <span>service@api</span><small>always on</small>
               </li>
             </ul>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="col-12 col-lg-6">
-        <div class="card h-100">
-          <div class="card-body p-4">
-            <h2 class="h4 mb-3">Actions</h2>
-            <div class="d-grid gap-3">
-              <button class="btn btn-primary" id="addUserBtn" type="button">Add User</button>
-              <button class="btn btn-primary" id="changePasswordBtn" type="button">Change Password</button>
-              <button class="btn btn-primary" id="removeUserBtn" type="button">Remove User</button>
+        <!-- Quick Actions -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <h2 class="h5 mb-1">Quick Actions</h2>
+            <p class="text-muted mb-3" style="font-size:0.78rem">Select a user first to enable actions</p>
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+                      id="editUserBtn" type="button" disabled
+                      data-bs-toggle="modal" data-bs-target="#editUserModal">
+                <i class="bi bi-pencil"></i> Edit User
+              </button>
+              <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+                      id="changePasswordBtn" type="button" disabled
+                      data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                <i class="bi bi-key"></i> Change Password
+              </button>
+              <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2"
+                      id="changeShellBtn" type="button" disabled
+                      data-bs-toggle="modal" data-bs-target="#changeShellModal">
+                <i class="bi bi-terminal"></i> Change Shell
+              </button>
+              <div class="section-divider my-1"></div>
+              <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2"
+                      id="removeUserBtn" type="button" disabled
+                      data-bs-toggle="modal" data-bs-target="#removeUserModal">
+                <i class="bi bi-person-x"></i> Remove User
+              </button>
             </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      <div class="col-12">
-        <div class="card">
-          <div class="card-body p-4">
-            <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-2 mb-3">
-              <div>
-                <h2 class="h4 mb-1">AI Control</h2>
-                <p class="text-muted mb-0">Issue user-management prompts through the shared assistant.</p>
-              </div>
-              <span class="badge text-bg-secondary">Users module active</span>
+        <!-- Assistant Actions -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <h2 class="h5 mb-1">Permissions</h2>
+            <p class="text-muted mb-3" style="font-size:0.78rem">Guided operations via assistant</p>
+            <div class="d-grid gap-2">
+              <button class="btn btn-outline-secondary btn-sm" id="addUserAssistBtn" type="button">
+                Add User via Assistant
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" id="editPasswordAssistBtn" type="button" disabled>
+                Edit Password via Assistant
+              </button>
+              <button class="btn btn-outline-secondary btn-sm" id="removeUserAssistBtn" type="button" disabled>
+                Remove User via Assistant
+              </button>
             </div>
+          </div>
+        </section>
 
-            <form id="chatForm" class="row g-3 align-items-center">
-              <div class="col-12 col-lg">
-                <label for="prompt" class="form-label">Assistant Prompt</label>
-                <input
-                  type="text"
-                  id="prompt"
-                  class="form-control"
-                  placeholder="Example: Add a new admin named Alex"
-                  autocomplete="off"
-                >
-              </div>
-              <div class="col-12 col-lg-auto">
-                <button type="submit" class="btn btn-primary w-100">Execute</button>
-              </div>
-            </form>
+      </div>
+    </div>
+  </main>
+
+  <!-- MODAL: Add User -->
+  <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="addUserModalLabel">
+            <i class="bi bi-person-plus me-2"></i>Add User
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label" for="newUsername">Username</label>
+            <input type="text" class="form-control" id="newUsername" placeholder="e.g. jdoe" autocomplete="off">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="newUserShell">Default Shell</label>
+            <select class="form-select" id="newUserShell">
+              <option value="/bin/bash">/bin/bash</option>
+              <option value="/bin/sh">/bin/sh</option>
+              <option value="/bin/zsh">/bin/zsh</option>
+              <option value="/usr/bin/fish">/usr/bin/fish</option>
+              <option value="/sbin/nologin">/sbin/nologin</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="newUserHome">Home Directory</label>
+            <input type="text" class="form-control" id="newUserHome" placeholder="/home/username" autocomplete="off">
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="newUserSudo">
+            <label class="form-check-label text-muted" for="newUserSudo" style="font-size:0.85rem">
+              Add to sudo group
+            </label>
           </div>
         </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="confirmAddUserBtn">
+            <i class="bi bi-check-lg me-1"></i>Create User
+          </button>
+        </div>
       </div>
+    </div>
+  </div>
 
-      <div class="col-12">
-        <div class="card d-none" id="chatResponseCard">
-          <div class="card-body p-4">
-            <h2 class="h4 mb-3">Assistant Response</h2>
-            <div id="chatResponse" class="border rounded p-3 response-area"></div>
+  <!-- MODAL: Edit User -->
+  <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="editUserModalLabel">
+            <i class="bi bi-pencil me-2"></i>Edit User
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3" style="font-size:0.85rem">
+            Editing: <strong id="editUserTarget">—</strong>
+          </p>
+          <div class="mb-3">
+            <label class="form-label" for="editUserComment">Display Name / Comment</label>
+            <input type="text" class="form-control" id="editUserComment" placeholder="Full name or description">
           </div>
+          <div class="mb-3">
+            <label class="form-label" for="editUserShellSelect">Shell</label>
+            <select class="form-select" id="editUserShellSelect">
+              <option value="/bin/bash">/bin/bash</option>
+              <option value="/bin/sh">/bin/sh</option>
+              <option value="/bin/zsh">/bin/zsh</option>
+              <option value="/usr/bin/fish">/usr/bin/fish</option>
+              <option value="/sbin/nologin">/sbin/nologin</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="confirmEditUserBtn">
+            <i class="bi bi-check-lg me-1"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Change Password -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePwModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changePwModalLabel">
+            <i class="bi bi-key me-2"></i>Change Password
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3" style="font-size:0.85rem">
+            Changing password for: <strong id="changePwTarget">—</strong>
+          </p>
+          <div class="mb-3">
+            <label class="form-label" for="newPassword">New Password</label>
+            <input type="password" class="form-control" id="newPassword" autocomplete="new-password">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="confirmPassword">Confirm Password</label>
+            <input type="password" class="form-control" id="confirmPassword" autocomplete="new-password">
+          </div>
+          <div id="passwordMatchError" class="text-danger d-none" style="font-size:0.82rem">
+            <i class="bi bi-exclamation-triangle me-1"></i>Passwords do not match
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="confirmChangePasswordBtn">
+            <i class="bi bi-check-lg me-1"></i>Update Password
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Change Shell -->
+  <div class="modal fade" id="changeShellModal" tabindex="-1" aria-labelledby="changeShellModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="changeShellModalLabel">
+            <i class="bi bi-terminal me-2"></i>Change Shell
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-muted mb-3" style="font-size:0.85rem">
+            Changing shell for: <strong id="changeShellTarget">—</strong>
+          </p>
+          <div class="mb-3">
+            <label class="form-label" for="shellSelect">Login Shell</label>
+            <select class="form-select" id="shellSelect">
+              <option value="/bin/bash">/bin/bash</option>
+              <option value="/bin/sh">/bin/sh</option>
+              <option value="/bin/zsh">/bin/zsh</option>
+              <option value="/usr/bin/fish">/usr/bin/fish</option>
+              <option value="/sbin/nologin">/sbin/nologin</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" id="confirmChangeShellBtn">
+            <i class="bi bi-check-lg me-1"></i>Apply
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Remove User -->
+  <div class="modal fade" id="removeUserModal" tabindex="-1" aria-labelledby="removeUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger" id="removeUserModalLabel">
+            <i class="bi bi-person-x me-2"></i>Remove User
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-1" style="font-size:0.9rem">
+            Remove user: <strong id="removeUserTarget">—</strong>?
+          </p>
+          <p class="text-muted mb-3" style="font-size:0.83rem">
+            This will delete the account. Home directory removal is optional.
+          </p>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="removeHomeDir">
+            <label class="form-check-label text-muted" for="removeHomeDir" style="font-size:0.85rem">
+              Also remove home directory
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger btn-sm" id="confirmRemoveUserBtn">
+            <i class="bi bi-trash me-1"></i>Remove User
+          </button>
         </div>
       </div>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/design_engine.js"></script>
   <script src="/static/js/themes.js"></script>
+  <script src="/static/js/user_theme.js"></script>
+  <script src="/static/js/global.js"></script>
+  <script type="module" src="/static/js/ui_event_bus.js"></script>
+  <script src="/static/js/actions.js"></script>
   <script src="/static/js/main.js"></script>
   <script src="/static/js/chat.js"></script>
+  <script src="/static/js/ladyWidget.js"></script>
+  <script src="/static/js/voice_client.js"></script>
+
+  <script>
+  (function () {
+    "use strict";
+
+    let selectedUser = null;
+
+    // Sort state — mirrors services sort pattern
+    let currentUserSortKey = "name";
+    let currentUserSortDirection = "asc";
+    let allUsersData = [];
+
+    const userList        = document.getElementById("userList");
+    const userCountBadge  = document.getElementById("userCountBadge");
+    const detailContent   = document.getElementById("userDetailContent");
+    const editUserBtn     = document.getElementById("editUserBtn");
+    const changePwBtn     = document.getElementById("changePasswordBtn");
+    const changeShellBtn  = document.getElementById("changeShellBtn");
+    const removeUserBtn   = document.getElementById("removeUserBtn");
+    const editPwAssist    = document.getElementById("editPasswordAssistBtn");
+    const removeAssist    = document.getElementById("removeUserAssistBtn");
+
+    function initials(name) {
+      return (name || "?").slice(0, 2).toUpperCase();
+    }
+
+    function shellLabel(shell) {
+      if (!shell) return "—";
+      return `<span class="shell-badge">${shell.split("/").pop()}</span>`;
+    }
+
+    function truncate(str, n) {
+      if (!str) return "—";
+      return str.length > n ? str.slice(0, n) + "…" : str;
+    }
+
+    function setActionState(enabled) {
+      [editUserBtn, changePwBtn, changeShellBtn, removeUserBtn, editPwAssist, removeAssist]
+        .forEach(btn => { if (btn) btn.disabled = !enabled; });
+    }
+
+    /* ── Load user list from /api/users ── */
+    async function loadUsers() {
+      userList.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">
+        <span class="spinner-border spinner-border-sm me-2"></span>Loading…</td></tr>`;
+      try {
+        const res  = await fetch("/api/users");
+        const data = await res.json();
+        const names = Array.isArray(data.users) ? data.users : [];
+        userCountBadge.textContent = names.length;
+
+        if (!names.length) {
+          userList.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No users found</td></tr>`;
+          return;
+        }
+
+        // Fetch full detail for all users in parallel so sort columns have real data
+        const detailResults = await Promise.allSettled(
+          names.map(name => fetch(`/api/users/${encodeURIComponent(name)}`).then(r => r.json()))
+        );
+
+        allUsersData = detailResults.map((result, i) => {
+          if (result.status === "fulfilled" && result.value?.ok && result.value?.user) {
+            return result.value.user;
+          }
+          return { name: names[i], uid: null, shell: null, home: null, gid: null, comment: null };
+        });
+
+        renderUserTable();
+
+        if (allUsersData.length) selectUser(allUsersData[0].name);
+
+      } catch (err) {
+        userList.innerHTML = `<tr><td colspan="5" class="text-center text-danger py-3">
+          <i class="bi bi-exclamation-triangle me-1"></i>Failed to load users</td></tr>`;
+        console.error("loadUsers:", err);
+      }
+    }
+
+    function getSortedUsers(rows) {
+      return [...rows].sort((a, b) => {
+        let result = 0;
+        if (currentUserSortKey === "name") {
+          result = String(a.name || "").localeCompare(String(b.name || ""), undefined, { sensitivity: "base" });
+        } else if (currentUserSortKey === "uid") {
+          const aNum = Number.isFinite(Number(a.uid)) ? Number(a.uid) : Infinity;
+          const bNum = Number.isFinite(Number(b.uid)) ? Number(b.uid) : Infinity;
+          result = aNum - bNum;
+        } else if (currentUserSortKey === "shell") {
+          result = String(a.shell || "").localeCompare(String(b.shell || ""), undefined, { sensitivity: "base" });
+        } else if (currentUserSortKey === "home") {
+          result = String(a.home || "").localeCompare(String(b.home || ""), undefined, { sensitivity: "base" });
+        }
+        return currentUserSortDirection === "desc" ? result * -1 : result;
+      });
+    }
+
+    function renderUserTable() {
+      const sorted = getSortedUsers(allUsersData);
+
+      userList.innerHTML = sorted.map(u => `
+        <tr class="user-row-clickable${selectedUser === u.name ? " selected" : ""}"
+            data-username="${u.name}" tabindex="0"
+            role="button" aria-label="Select user ${u.name}">
+          <td>
+            <div class="user-avatar" style="width:32px;height:32px;font-size:0.72rem;">
+              ${initials(u.name)}
+            </div>
+          </td>
+          <td class="fw-medium">${u.name}</td>
+          <td class="text-muted uid-cell" style="font-size:0.82rem">${u.uid ?? "—"}</td>
+          <td class="shell-cell">${u.shell ? shellLabel(u.shell) : "—"}</td>
+          <td class="text-muted home-cell" style="font-size:0.78rem">${truncate(u.home, 24)}</td>
+        </tr>`).join("");
+
+      userList.querySelectorAll(".user-row-clickable").forEach(row => {
+        row.addEventListener("click",   () => selectUser(row.dataset.username));
+        row.addEventListener("keydown", e => {
+          if (e.key === "Enter" || e.key === " ") selectUser(row.dataset.username);
+        });
+      });
+
+      updateUserSortIndicators();
+    }
+
+    function updateUserSortIndicators() {
+      document.querySelectorAll("[data-users-sort]").forEach(button => {
+        const sortKey = button.getAttribute("data-users-sort");
+        const header  = button.closest("th");
+        const icon    = button.querySelector("[data-sort-icon]");
+        const isActive = sortKey === currentUserSortKey;
+
+        if (header) {
+          header.setAttribute("aria-sort",
+            isActive ? (currentUserSortDirection === "asc" ? "ascending" : "descending") : "none");
+        }
+        button.classList.toggle("is-active", isActive);
+        if (icon) {
+          icon.className = `bi ${isActive
+            ? (currentUserSortDirection === "asc" ? "bi-caret-up-fill" : "bi-caret-down-fill")
+            : "bi-arrow-down-up"} ll-sort-icon`;
+        }
+      });
+    }
+
+    function initUserSorting() {
+      document.querySelectorAll("[data-users-sort]").forEach(button => {
+        button.addEventListener("click", () => {
+          const key = button.getAttribute("data-users-sort");
+          if (currentUserSortKey === key) {
+            currentUserSortDirection = currentUserSortDirection === "asc" ? "desc" : "asc";
+          } else {
+            currentUserSortKey = key;
+            currentUserSortDirection = "asc";
+          }
+          renderUserTable();
+        });
+      });
+    }
+
+    /* ── Select user + load detail ── */
+    async function selectUser(name) {
+      selectedUser = name;
+
+      userList.querySelectorAll(".user-row-clickable").forEach(r =>
+        r.classList.toggle("selected", r.dataset.username === name));
+
+      ["editUserTarget","changePwTarget","changeShellTarget","removeUserTarget"]
+        .forEach(id => { const el = document.getElementById(id); if (el) el.textContent = name; });
+
+      setActionState(true);
+
+      /* Apply this user's saved theme */
+      if (typeof window.setActiveUser === "function") {
+        window.setActiveUser(name);
+      }
+
+      detailContent.innerHTML = `<div class="text-center text-muted py-4">
+        <span class="spinner-border spinner-border-sm me-2"></span>Loading details…</div>`;
+
+      try {
+        // Use cached data from allUsersData — avoids duplicate fetch per click
+        const cached = allUsersData.find(u => u.name === name);
+        const data = cached ? { ok: true, user: cached } : { ok: false };
+
+        if (!data.ok || !data.user) {
+          detailContent.innerHTML = `<div class="detail-empty">
+            <i class="bi bi-exclamation-circle"></i>
+            ${data.stderr || "Could not load user details"}
+          </div>`;
+          return;
+        }
+
+        const u = data.user;
+
+        /* Fetch user's saved theme pref for the detail panel */
+        let savedTheme = null;
+        if (typeof window.getUserTheme === "function") {
+          savedTheme = await window.getUserTheme(name);
+        }
+
+        /* Pre-fill modals */
+        const editComment = document.getElementById("editUserComment");
+        const editShell   = document.getElementById("editUserShellSelect");
+        const shellSel    = document.getElementById("shellSelect");
+        if (editComment) editComment.value = u.comment || "";
+        if (editShell)   editShell.value   = u.shell   || "/bin/bash";
+        if (shellSel)    shellSel.value    = u.shell   || "/bin/bash";
+
+        detailContent.innerHTML = `
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="user-avatar user-avatar-lg">${initials(u.name)}</div>
+            <div>
+              <div class="fw-semibold fs-5">${u.name}</div>
+              <div class="text-muted" style="font-size:0.83rem">${u.comment || "No display name set"}</div>
+              <div class="mt-1">${shellLabel(u.shell)}</div>
+            </div>
+          </div>
+          <div class="user-detail-grid mb-3">
+            <div class="user-detail-row">
+              <span class="user-detail-label">UID</span>
+              <span class="user-detail-value">${u.uid}</span>
+            </div>
+            <div class="user-detail-row">
+              <span class="user-detail-label">GID</span>
+              <span class="user-detail-value">${u.gid}</span>
+            </div>
+            <div class="user-detail-row">
+              <span class="user-detail-label">Home Directory</span>
+              <span class="user-detail-value">${u.home || "—"}</span>
+            </div>
+            <div class="user-detail-row">
+              <span class="user-detail-label">Login Shell</span>
+              <span class="user-detail-value">${u.shell || "—"}</span>
+            </div>
+          </div>
+          <div class="section-divider"></div>
+          <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+            <label class="user-detail-label mb-0" style="min-width:fit-content">Theme Preference</label>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <select class="form-select form-select-sm" id="userThemeSelect" style="width:auto;min-width:140px">
+                <option value="">— use global —</option>
+                <option value="softcore" ${savedTheme === "softcore" ? "selected" : ""}>Soft Core</option>
+                <option value="crimson"  ${savedTheme === "crimson"  ? "selected" : ""}>Crimson</option>
+                <option value="glass"    ${savedTheme === "glass"    ? "selected" : ""}>Glass</option>
+                <option value="terminal" ${savedTheme === "terminal" ? "selected" : ""}>Terminal</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="saveUserThemeBtn">
+                <i class="bi bi-check-lg me-1"></i>Save
+              </button>
+              <span class="text-muted d-none" id="userThemeSaved" style="font-size:0.78rem">
+                <i class="bi bi-check-circle me-1 text-success"></i>Saved
+              </span>
+            </div>
+          </div>
+          <div class="section-divider"></div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#editUserModal">
+              <i class="bi bi-pencil"></i> Edit
+            </button>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+              <i class="bi bi-key"></i> Password
+            </button>
+            <button class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1"
+                    data-bs-toggle="modal" data-bs-target="#changeShellModal">
+              <i class="bi bi-terminal"></i> Shell
+            </button>
+            <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1 ms-auto"
+                    data-bs-toggle="modal" data-bs-target="#removeUserModal">
+              <i class="bi bi-person-x"></i> Remove
+            </button>
+          </div>`;
+
+        /* Wire theme save button */
+        document.getElementById("saveUserThemeBtn")?.addEventListener("click", async () => {
+          const sel = document.getElementById("userThemeSelect");
+          const savedEl = document.getElementById("userThemeSaved");
+          if (!sel) return;
+          const theme = sel.value;
+          if (theme && typeof window.saveUserTheme === "function") {
+            await window.saveUserTheme(name, theme);
+            if (typeof window.applyTheme === "function") {
+              window.applyTheme(theme, { remote: false, persist: false });
+            }
+          }
+          if (savedEl) {
+            savedEl.classList.remove("d-none");
+            setTimeout(() => savedEl.classList.add("d-none"), 2000);
+          }
+        });
+
+      } catch (err) {
+        detailContent.innerHTML = `<div class="detail-empty">
+          <i class="bi bi-exclamation-circle"></i>Failed to load details</div>`;
+        console.error("selectUser:", err);
+      }
+    }
+
+    /* ── Password validation ── */
+    document.getElementById("confirmPassword")?.addEventListener("input", () => {
+      const pw1   = document.getElementById("newPassword").value;
+      const pw2   = document.getElementById("confirmPassword").value;
+      const err   = document.getElementById("passwordMatchError");
+      const match = pw1 === pw2 && pw1.length > 0;
+      err.classList.toggle("d-none", !pw2 || match);
+    });
+
+    /* ── Refresh ── */
+    document.getElementById("refreshUsersBtn")?.addEventListener("click", loadUsers);
+
+    /* ── Assistant bridge ── */
+    function sendToAssistant(prompt) {
+      const input = document.getElementById("chatInput") ||
+                    document.querySelector("[data-chat-input]");
+      if (input) {
+        input.value = prompt;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.focus();
+      }
+    }
+
+    document.getElementById("addUserAssistBtn")?.addEventListener("click", () =>
+      sendToAssistant("Add a new system user. What username and shell should I use?"));
+
+    document.getElementById("editPasswordAssistBtn")?.addEventListener("click", () =>
+      sendToAssistant(`Change the password for user "${selectedUser || ""}".`));
+
+    document.getElementById("removeUserAssistBtn")?.addEventListener("click", () =>
+      sendToAssistant(`Remove the user "${selectedUser || ""}" from the system.`));
+
+    /* ── Init ── */
+    initUserSorting();
+    loadUsers();
+
+  }());
+  </script>
 </body>
 </html>

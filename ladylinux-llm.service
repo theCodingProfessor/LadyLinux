@@ -1,0 +1,15 @@
+[Unit]
+Description=LadyLinux LLM Runtime
+After=network.target ollama.service
+
+[Service]
+Type=simple
+User=ladylinux
+WorkingDirectory=/opt/ladylinux
+ExecStart=/usr/bin/ollama serve
+Restart=always
+RestartSec=3
+Environment=OLLAMA_HOST=127.0.0.1
+
+[Install]
+WantedBy=multi-user.target
