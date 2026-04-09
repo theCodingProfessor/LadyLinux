@@ -265,7 +265,6 @@ def build_firewall_rag_documents(firewall_json=None):
     status_json_text = json.dumps(snapshot, indent=2)
     documents = [
         {
-            "chunk_id": "runtime-firewall-summary",
             "text": "\n".join(summary_lines),
             "source_path": "/runtime/firewall/summary.txt",
             "line_start": 1,
@@ -274,7 +273,6 @@ def build_firewall_rag_documents(firewall_json=None):
             "domain": "firewall",
         },
         {
-            "chunk_id": "runtime-firewall-rules",
             "text": "\n".join(rules_lines),
             "source_path": "/runtime/firewall/rules.txt",
             "line_start": 1,
@@ -283,7 +281,6 @@ def build_firewall_rag_documents(firewall_json=None):
             "domain": "firewall",
         },
         {
-            "chunk_id": "runtime-firewall-json",
             "text": status_json_text,
             "source_path": "/runtime/firewall/status.json",
             "line_start": 1,
@@ -302,7 +299,6 @@ def build_firewall_rag_documents(firewall_json=None):
             f"{raw_output}"
         )
         documents.append({
-            "chunk_id": "runtime-firewall-raw-output",
             "text": raw_text,
             "source_path": "/runtime/firewall/raw_output.txt",
             "line_start": 1,
