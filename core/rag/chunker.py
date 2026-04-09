@@ -11,9 +11,10 @@ import logging
 import os
 from datetime import datetime, timezone
 
-from core.rag.config import CHUNK_OVERLAP, CHUNK_SIZE, MAX_FILE_SIZE, domain_for_path, is_path_allowed
+from core.rag.config import CHUNK_OVERLAP, CHUNK_SIZE, MAX_FILE_SIZE, allowed_for_rag
+from core.rag.domain_router import detect_domain_from_path
 
-log = logging.getLogger("rag_layer.chunker")
+log = logging.getLogger("core.rag.chunker")
 
 
 # ── Helpers ──────────────────────────────────────────────────────────
@@ -50,7 +51,7 @@ def chunk_file(path: str) -> list[dict]:
         domain       – domain tag from config.DOMAIN_MAP
     """
     # ── Guard: allowlist / denylist ──
-    if not is_path_allowed(path):
+    if not allowed_for_rag(path):
         log.debug("Skipping denied/unlisted path: %s", path)
         return []
 
@@ -89,7 +90,7 @@ def chunk_file(path: str) -> list[dict]:
     filename = os.path.basename(abs_path)
     directory = os.path.dirname(abs_path)
     filetype = os.path.splitext(filename)[1].lstrip(".").lower() or "text"
-    domain = domain_for_path(path)
+    domain = detect_domain_from_path(path)
 
     # ── Sliding-window chunking ──
     chunks: list[dict] = []
@@ -124,3 +125,7 @@ def chunk_file(path: str) -> list[dict]:
 
     log.debug("Chunked %s → %d chunk(s)", path, len(chunks))
     return chunks
+
+
+
+
