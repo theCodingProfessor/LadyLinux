@@ -36,6 +36,11 @@ log = logging.getLogger("core.rag.vector_store")
 _client: QdrantClient | None = None
 
 
+def client() -> QdrantClient:
+    """Backward-compatible exported client accessor."""
+    return _get_client()
+
+
 def _get_client() -> QdrantClient:
     """Return (and lazily create) the module-level QdrantClient."""
     global _client
@@ -214,3 +219,4 @@ def search(
         domain or "any",
     )
     return results
+
