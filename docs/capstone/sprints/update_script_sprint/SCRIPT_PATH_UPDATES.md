@@ -33,7 +33,7 @@ All 5 active template files now correctly reference:
 
 ```html
 
-<script src="/static/js/chat.js"></script>
+<script src="/static/js/archive/v3/chat.js"></script>
 ```
 
 This ensures the chat functionality will work across all pages.

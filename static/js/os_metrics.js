@@ -244,14 +244,23 @@ function collectMetricAlerts(metrics) {
 function collectServiceAlert(services) {
   if (!Array.isArray(services) || services.length === 0) return null;
 
-  const badServices = services.filter((service) => ["dead", "failed", "unknown"].includes(String(service.status || "").toLowerCase()));
+  // Only alert on relevant services so boot artifacts and dead-by-design
+  // units don't generate misleading warnings.
+  const relevantServices = services.filter(
+    (s) => typeof isRelevantService === "function" && isRelevantService(s)
+  );
+
+  const badServices = relevantServices.filter(
+    (service) => ["failed"].includes(String(service.status || "").toLowerCase())
+  );
+
   if (!badServices.length) return null;
 
   return {
-    level: "warning",
+    level: badServices.length >= 3 ? "critical" : "warning",
     message: badServices.length === 1
       ? `Service ${badServices[0].name} requires attention (${badServices[0].status}).`
-      : `${badServices.length} services require attention.`,
+      : `${badServices.length} relevant services require attention.`,
     targetTab: "services-tab",
   };
 }

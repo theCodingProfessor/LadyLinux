@@ -1,17 +1,19 @@
-<div class="top-context-nav">
-  <a href="/os" class="context-link {% if request.url.path == '/os' %}active{% endif %}">
-    System
-  </a>
-  <a href="/users" class="context-link {% if request.url.path == '/users' %}active{% endif %}">
-    Users
-  </a>
-  <a href="/network" class="context-link {% if request.url.path == '/network' %}active{% endif %}">
-    Network
-  </a>
-  <a href="/firewall" class="context-link {% if request.url.path == '/firewall' %}active{% endif %}">
-    Firewall
-  </a>
-  <a href="/logs" class="context-link {% if request.url.path == '/logs' %}active{% endif %}">
-    Logs
-  </a>
+<div class="top-context-nav-wrapper mb-3">
+  <button
+    id="contextNavToggle"
+    class="ll-context-nav-toggle"
+    type="button"
+    aria-label="Toggle page navigation"
+    title="Collapse navigation bar"
+  >
+    <i class="bi bi-layout-text-sidebar-reverse" id="contextNavIcon"></i>
+  </button>
+
+  <div class="top-context-nav" id="contextNavLinks">
+    <a href="/os" class="context-link {% if request.url.path == '/os' %}active{% endif %}">System</a>
+    <a href="/users" class="context-link {% if request.url.path == '/users' %}active{% endif %}">Users</a>
+    <a href="/network" class="context-link {% if request.url.path == '/network' %}active{% endif %}">Network</a>
+    <a href="/firewall" class="context-link {% if request.url.path == '/firewall' %}active{% endif %}">Firewall</a>
+    <a href="/logs" class="context-link {% if request.url.path == '/logs' %}active{% endif %}">Logs</a>
+  </div>
 </div>

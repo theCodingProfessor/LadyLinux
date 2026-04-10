@@ -378,10 +378,26 @@ pre.response-area {
 
 .chat-response-stream {
   min-height: 8rem;
-  max-height: 12rem;
+  max-height: none;           /* removed fixed cap — user controls height */
   overflow-y: auto;
   margin-bottom: 0.75rem;
   padding: 0.875rem;
+
+  /* Enable vertical resize handle at the bottom edge */
+  resize: vertical;
+
+  /* Explicit height gives the browser an anchor to resize from */
+  height: 12rem;
+
+  /* Visual affordance — subtle bottom border so the resize handle is visible */
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 40%, var(--border-color));
+  border-radius: var(--ui-radius-medium);
+  box-sizing: border-box;
+}
+
+/* Resize handle accent on hover so it's discoverable */
+.chat-response-stream:hover {
+  border-bottom-color: var(--accent);
 }
 
 .chat-confirmation {
@@ -564,11 +580,13 @@ html[data-high-contrast="true"] .response-area {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
-/* Popup mini console */
+/* Popup mini console — anchored to middle-right, opens left of the hub */
 .lady-panel {
   position: fixed;
-  bottom: 90px;
-  right: 20px;
+  top: 50vh;
+  right: 90px;
+  bottom: auto;
+  transform: translateY(-50%);
   width: 320px;
   height: 420px;
   background: var(--bg-surface);
@@ -577,7 +595,7 @@ html[data-high-contrast="true"] .response-area {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  z-index: 9999;
+  z-index: 9998;
   padding: 12px;
 }
 
@@ -589,22 +607,6 @@ html[data-high-contrast="true"] .response-area {
   justify-content: space-between;
   align-items: center;
   padding-bottom: 10px;
-}
-
-.lady-header-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.lady-expand-toggle {
-  border: 1px solid var(--border-color);
-  background: transparent;
-  color: inherit;
-  border-radius: var(--radius-small, var(--ui-radius-small));
-  font-size: 0.8rem;
-  line-height: 1.1;
-  padding: 0.35rem 0.55rem;
 }
 
 .lady-close {
@@ -629,29 +631,6 @@ html[data-high-contrast="true"] .response-area {
   flex: 1;
   padding: 0;
   overflow-y: auto;
-}
-
-.lady-panel.expanded {
-  top: clamp(4.5rem, 8vh, 6.5rem);
-  right: clamp(1rem, 2vw, 2rem);
-  bottom: clamp(1rem, 2vh, 2rem);
-  left: clamp(1rem, 4vw, 4rem);
-  width: auto;
-  height: auto;
-  max-height: none;
-}
-
-.lady-panel.expanded #lady-response {
-  padding-right: 0.25rem;
-}
-
-@media (max-width: 991.98px) {
-  .lady-panel.expanded {
-    top: 0.75rem;
-    right: 0.75rem;
-    bottom: 0.75rem;
-    left: 0.75rem;
-  }
 }
 
 .lady-input {
@@ -683,11 +662,41 @@ html[data-high-contrast="true"] .response-area {
    LADY LINUX - AI DASHBOARD LAYOUT
    ===================================================== */
 
+/* ── Topbar: must not clip Bootstrap dropdowns ── */
 .ll-topbar {
   background: color-mix(in srgb, var(--bg-panel) 84%, transparent);
   border-bottom: 1px solid var(--border-color);
   box-shadow: var(--effect-glow);
   backdrop-filter: blur(14px);
+  overflow: visible !important;  /* prevents dropdown from being hidden behind navbar */
+  position: relative;            /* establishes stacking context for dropdown z-index */
+  z-index: 1060;                 /* sits above all backdrop-filter page cards */
+}
+
+/* ── Notification dropdown: themed to match LL palette ── */
+.ll-notif-dropdown {
+  min-width: 300px;
+  max-height: 380px;
+  overflow-y: auto;
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-medium) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  z-index: 1070 !important;
+}
+
+.ll-notif-dropdown .dropdown-item {
+  color: var(--text-main) !important;
+}
+
+.ll-notif-dropdown .dropdown-item:hover,
+.ll-notif-dropdown .dropdown-item:focus {
+  background-color: var(--accent-soft, rgba(196, 181, 253, 0.1)) !important;
+  color: var(--text-main) !important;
+}
+
+.ll-notif-dropdown .dropdown-divider {
+  border-color: var(--border-color) !important;
 }
 
 .ll-topbar .nav-link {
@@ -1133,3 +1142,212 @@ html[data-high-contrast="true"] .response-area {
     z-index: 1000;
   }
 }
+
+/* =====================================================
+   CONTEXT NAV COLLAPSE
+   ===================================================== */
+.top-context-nav-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ll-context-nav-toggle {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: var(--ui-radius-small);
+  color: var(--text-muted);
+  padding: 0.2rem 0.45rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color var(--transition-speed), border-color var(--transition-speed);
+  flex-shrink: 0;
+}
+.ll-context-nav-toggle:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Collapsed state hides the link row */
+#contextNavLinks.context-nav-collapsed {
+  display: none;
+}
+
+/* Flip icon when collapsed */
+.context-nav-is-collapsed #contextNavIcon {
+  transform: scaleX(-1);
+}
+
+/* =====================================================
+   DASHBOARD DRAG AND DROP
+   ===================================================== */
+.ll-drag-handle {
+  cursor: grab;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--transition-speed);
+  padding: 0.25rem;
+  line-height: 1;
+}
+.ll-dashboard-card:hover .ll-drag-handle {
+  opacity: 1;
+}
+.ll-drag-handle:active {
+  cursor: grabbing;
+}
+.ll-drag-ghost {
+  opacity: 0.4;
+}
+.ll-drag-chosen {
+  border-color: var(--accent) !important;
+}
+.ll-dragging {
+  box-shadow: 0 1.5rem 3rem rgba(0,0,0,0.5), var(--effect-glow) !important;
+  transform: scale(1.01);
+}
+.ll-widget-drag-bar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.25rem 0.5rem 0.25rem 0;
+  opacity: 0;
+  transition: opacity var(--transition-speed);
+}
+[data-widget-id]:hover > .ll-widget-drag-bar {
+  opacity: 1;
+}
+
+/* Metric card drag ghost — scoped to grid layout */
+.ll-os-metric-grid .ll-drag-ghost {
+  opacity: 0.35;
+  border-style: dashed !important;
+}
+
+/* ── Voice mic button states ─────────────────────────────────────────── */
+[data-mic-btn] {
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+}
+
+/* Active listening: pulse accent border */
+[data-mic-btn].mic-listening {
+  background-color: var(--accent);
+  color: black;
+  border-color: var(--accent);
+  animation: mic-pulse 1s ease-in-out infinite;
+}
+
+/* Processing: muted spinner feel */
+[data-mic-btn].mic-processing {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+/* Speaking: soft accent */
+[data-mic-btn].mic-speaking {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Error: red signal */
+[data-mic-btn].mic-error {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 50%, transparent); }
+  50%       { box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+
+/* =====================================================
+   LADY LINUX - RADIAL LAUNCHER
+   ===================================================== */
+
+/* Root container — anchored to middle-right edge */
+.lady-radial-root {
+  position: fixed;
+  top: 50vh;
+  right: 22px;
+  bottom: auto;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  z-index: 9999;
+}
+
+/* Hub button — sits at center of root, always visible */
+.lady-btn {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  background: var(--accent);
+  color: var(--color-on-accent, black);
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 2;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+/* Hub rotates 45deg when radial is open — signals close action */
+.lady-btn.is-open {
+  transform: rotate(45deg);
+}
+
+/* Spoke base — hidden at hub center by default */
+.lady-spoke {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-surface);
+  color: var(--text-main);
+  font-size: 1rem;
+  cursor: pointer;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Start collapsed at hub center */
+  transform: translate(0, 0) scale(0);
+  opacity: 0;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.2s ease;
+}
+
+/* Spoke expanded state — fan out along --spoke-angle */
+.lady-radial-root.is-open .lady-spoke {
+  transform: var(--spoke-translate) scale(1);
+  opacity: 1;
+}
+
+/* Per-spoke translate values — arc fans LEFT from hub (no off-screen right) */
+#ladySpokePanel      { --spoke-translate: translate(-7px,  -75px); }  /* up        */
+#ladySpokeMetrics    { --spoke-translate: translate(-65px, -45px); }  /* up-left   */
+#ladySpokeTheme      { --spoke-translate: translate(-75px,  -7px); }  /* left      */
+#ladySpokeFullscreen { --spoke-translate: translate(-65px,  42px); }  /* down-left */
+
+/* Stagger the animation so spokes fan out sequentially */
+#ladySpokePanel      { transition-delay: 0ms;   }
+#ladySpokeMetrics    { transition-delay: 40ms;  }
+#ladySpokeTheme      { transition-delay: 80ms;  }
+#ladySpokeFullscreen { transition-delay: 120ms; }
+
+/* Spoke hover state */
+.lady-spoke:hover,
+.lady-spoke:focus-visible {
+  background: var(--accent);
+  color: var(--color-on-accent, black);
+  border-color: var(--accent);
+  outline: none;
+}
+
+/* Remove old .lady-actions grid — replaced by radial */
+.lady-actions { display: none; }

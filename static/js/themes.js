@@ -590,12 +590,17 @@ function applyTemporaryTheme(themeConfig) {
 }
 
 function applyAndSaveCustomTheme(slotKey, themeConfig, activityMessage) {
+  // Store config in memory and localStorage so it survives page refresh
   THEMES[slotKey] = themeConfig;
   localStorage.setItem(slotKey, JSON.stringify(themeConfig));
   localStorage.setItem(ACTIVE_CUSTOM_SLOT_KEY, slotKey);
   activeCustomSlot = slotKey;
   loadCustomPreview(slotKey);
-  applyTheme(slotKey);
+
+  // Apply locally — bypass remote API because custom slots are frontend-only.
+  // Calling applyTheme(slotKey) would POST to /api/theme/custom-1/apply which
+  // the backend doesn't know about and returns nothing useful.
+  applyTheme(themeConfig, { persist: true, remote: false });
   return true;
 }
 
@@ -647,10 +652,47 @@ function applyThemeInstructionFromText(text) {
   return true;
 }
 
-function restoreTheme() {
-  const saved = localStorage.getItem(THEME_SELECTION_STORAGE_KEY) || "softcore";
-  if (saved && THEMES[saved]) {
-    applyTheme(saved, { remote: false });
+async function restoreTheme() {
+  const localSaved = localStorage.getItem(THEME_SELECTION_STORAGE_KEY);
+
+  // Hydrate custom slots from localStorage before attempting restore.
+  ["custom-1", "custom-2", "custom-3", "custom-4"].forEach((slot) => {
+    if (!THEMES[slot]) {
+      const raw = localStorage.getItem(slot);
+      if (raw) {
+        try { THEMES[slot] = JSON.parse(raw); } catch (_) {}
+      }
+    }
+  });
+
+  // Step 1: Prefer a device-local selection over shared backend state.
+  if (localSaved && localSaved !== "softcore") {
+    if (THEMES[localSaved] || !localSaved.startsWith("custom-")) {
+      applyTheme(localSaved, { remote: false, persist: false });
+      return;
+    }
+  }
+
+  // Step 2: No local override — fall back to the backend's shared default.
+  try {
+    const res = await fetch("/api/theme/active");
+    if (res.ok) {
+      const data = await res.json();
+      const backendTheme = data?.theme?.name || data?.active_theme;
+      if (backendTheme) {
+        applyTheme(backendTheme, { remote: false, persist: true });
+        return;
+      }
+    }
+  } catch (_) {
+    // Backend unreachable — fall through to hardcoded default.
+  }
+
+  // Step 3: Hardcoded fallback.
+  const fallback = localSaved || "softcore";
+  if (fallback && THEMES[fallback]) {
+    const isCustomSlot = fallback.startsWith("custom-");
+    applyTheme(fallback, { remote: !isCustomSlot });
     return;
   }
 
@@ -713,8 +755,12 @@ function initCustomThemes() {
       activeCustomSlot = key;
       localStorage.setItem(ACTIVE_CUSTOM_SLOT_KEY, key);
       populateCustomThemeModal(key);
-      const modal = new bootstrap.Modal(document.getElementById("customThemeModal"));
-      modal.show();
+      // Modal only exists on pages that include customThemeModal — guard against null
+      const modalEl = document.getElementById("customThemeModal");
+      if (modalEl) {
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+      }
     });
   });
 
@@ -752,7 +798,7 @@ function loadCustomPreview(slotKey) {
 
 async function initThemes() {
   await loadThemes();
-  restoreTheme();
+  await restoreTheme();
   initThemePicker();
   initCustomThemes();
 }

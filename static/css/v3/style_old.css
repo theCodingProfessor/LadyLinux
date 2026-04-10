@@ -1,0 +1,103 @@
+/*body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+}*/
+#chat-box {
+    border: 1px solid #ccc;
+    padding: 1rem;
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+}
+input {
+    width: 70%;
+    padding: 0.5rem;
+}
+button {
+    padding: 0.5rem 1rem;
+}
+
+/* Global dark theme */
+body {
+    background-color: #121212; /* deep dark background */
+    color: #e0e0e0;            /* light text */
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+h1 { 
+    margin-top: 2em; 
+}
+/* Accent color */
+a, .accent {
+    color: #FFB347;
+}
+
+a:hover {
+    color: #ffc973;
+}
+
+/* Sticky navbar */
+.navbar {
+    background-color: #1e1e1e !important;
+    border-bottom: 2px solid #FFB347;
+}
+
+.navbar-brand {
+    color: #FFB347 !important;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: #e0e0e0 !important;
+}
+
+.nav-link:hover {
+    color: #FFB347 !important;
+}
+
+/* Content area */
+.container {
+    margin-top: 80px; /* push content below sticky nav */
+}
+
+/* Forms */
+form {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+input, textarea {
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+    border: 1px solid #444 !important;
+}
+
+input:focus, textarea:focus {
+    border-color: #FFB347 !important;
+    box-shadow: 0 0 5px #FFB347 !important;
+}
+
+/* Buttons */
+.btn-accent {
+    background-color: #FFB347;
+    color: #121212;
+    border: none;
+}
+
+.btn-accent:hover {
+    background-color: #ffc973;
+    color: #121212;
+}
+
+/* Response output boxes */
+.response-box {
+    background-color: #1a1a1a;
+    border-left: 4px solid #FFB347;
+    padding: 15px;
+    margin-top: 15px;
+    border-radius: 6px;
+    white-space: pre-wrap;
+}

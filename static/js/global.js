@@ -20,9 +20,6 @@ function syncFullscreenUI() {
   });
 }
 
-function toggleTheme() {
-  document.body.classList.toggle("light-theme");
-}
 
 document.addEventListener("fullscreenchange", syncFullscreenUI);
 
@@ -33,95 +30,95 @@ document.addEventListener("DOMContentLoaded", () => {
     button.addEventListener("click", toggleFullscreen);
   });
 
-  const ladyBtn = document.getElementById("ladyBtn");
-  const ladyPanel = document.getElementById("ladyPanel");
-  const ladyClose = document.getElementById("ladyClose");
-  const ladyExpandToggle = document.getElementById("ladyExpandToggle");
-  const ladyRefreshMetrics = document.getElementById("ladyRefreshMetrics");
-  const ladyToggleTheme = document.getElementById("ladyToggleTheme");
+  // Radial menu state
+  const radialRoot     = document.getElementById("ladyRadialRoot");
+  const ladyBtn        = document.getElementById("ladyBtn");
+  const ladyPanel      = document.getElementById("ladyPanel");
+  const ladyClose      = document.getElementById("ladyClose");
+  const ladySpokePanel = document.getElementById("ladySpokePanel");
 
-  const panelModeStorageKey = "lady-panel-mode";
-
-  function setPanelExpanded(isExpanded) {
-    if (!ladyPanel) return;
-
-    ladyPanel.classList.toggle("expanded", isExpanded);
-
-    if (ladyExpandToggle) {
-      ladyExpandToggle.textContent = isExpanded ? "Minimize" : "Expand";
-      ladyExpandToggle.setAttribute("aria-label", isExpanded ? "Minimize Lady panel" : "Expand Lady panel");
-      ladyExpandToggle.setAttribute("aria-pressed", isExpanded ? "true" : "false");
-      ladyExpandToggle.title = isExpanded ? "Minimize" : "Expand";
-    }
-
-    try {
-      window.localStorage.setItem(panelModeStorageKey, isExpanded ? "expanded" : "minimized");
-    } catch (err) {
-      console.debug("Unable to store Lady panel mode:", err);
-    }
-  }
-
-  function setPanelOpen(isOpen) {
-    if (!ladyPanel) return;
-
-    ladyPanel.classList.toggle("hidden", !isOpen);
-    ladyPanel.setAttribute("aria-hidden", isOpen ? "false" : "true");
-
-    if (ladyBtn) {
-      ladyBtn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    }
-  }
-
-  if (ladyPanel) {
-    const savedMode = window.localStorage.getItem(panelModeStorageKey);
-    setPanelExpanded(savedMode === "expanded");
-  }
-
-  if (ladyBtn && ladyPanel) {
+  // Toggle radial open/close on hub click
+  if (ladyBtn && radialRoot) {
     ladyBtn.addEventListener("click", () => {
-      const shouldOpen = ladyPanel.classList.contains("hidden");
-      setPanelOpen(shouldOpen);
+      const isOpen = radialRoot.classList.toggle("is-open");
+      ladyBtn.classList.toggle("is-open", isOpen);
+
+      // If closing radial, also close panel
+      if (!isOpen && ladyPanel) {
+        ladyPanel.classList.add("hidden");
+        ladyPanel.setAttribute("aria-hidden", "true");
+      }
     });
   }
 
+  // Panel spoke opens the chat panel without closing radial
+  if (ladySpokePanel && ladyPanel) {
+    ladySpokePanel.addEventListener("click", () => {
+      const isHidden = ladyPanel.classList.toggle("hidden");
+      ladyPanel.setAttribute("aria-hidden", String(isHidden));
+    });
+  }
+
+  // Close button collapses panel only, leaves radial open
   if (ladyClose && ladyPanel) {
     ladyClose.addEventListener("click", () => {
-      setPanelOpen(false);
+      ladyPanel.classList.add("hidden");
+      ladyPanel.setAttribute("aria-hidden", "true");
     });
   }
 
-  if (ladyExpandToggle && ladyPanel) {
-    ladyExpandToggle.addEventListener("click", () => {
-      const isExpanded = ladyPanel.classList.contains("expanded");
-      setPanelExpanded(!isExpanded);
+  // Metrics spoke
+  const ladySpokeMetrics = document.getElementById("ladySpokeMetrics");
+  if (ladySpokeMetrics) {
+    ladySpokeMetrics.addEventListener("click", () => {
+      if (typeof window.fetchMetrics === "function") window.fetchMetrics();
     });
   }
 
-  if (ladyPanel) {
-    document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || ladyPanel.classList.contains("hidden")) return;
-
-      if (ladyPanel.classList.contains("expanded")) {
-        setPanelExpanded(false);
-        return;
-      }
-
-      setPanelOpen(false);
-    });
-  }
-
-  if (ladyRefreshMetrics) {
-    ladyRefreshMetrics.addEventListener("click", () => {
-      if (typeof window.fetchMetrics === "function") {
-        window.fetchMetrics();
+  // Theme spoke — calls shared handleThemeToggle from nav_controls.js
+  const ladySpokeTheme = document.getElementById("ladySpokeTheme");
+  if (ladySpokeTheme) {
+    ladySpokeTheme.addEventListener("click", () => {
+      if (typeof window.handleThemeToggle === "function") {
+        window.handleThemeToggle();
+      } else {
+        document.getElementById("navThemeToggle")?.click();
       }
     });
   }
 
-  if (ladyToggleTheme) {
-    ladyToggleTheme.addEventListener("click", toggleTheme);
-  }
+  // Close radial when clicking outside both the root and the panel
+  document.addEventListener("click", (e) => {
+    if (
+      radialRoot &&
+      ladyPanel &&
+      !radialRoot.contains(e.target) &&
+      !ladyPanel.contains(e.target)
+    ) {
+      radialRoot.classList.remove("is-open");
+      ladyBtn?.classList.remove("is-open");
+    }
+  });
 });
 
 window.toggleFullscreen = toggleFullscreen;
-window.toggleTheme = toggleTheme;
+
+// ── Context Nav Collapse Toggle ──────────────────────────────
+(function initContextNavCollapse() {
+  const STORAGE_KEY = "lady-context-nav-collapsed";
+  const btn = document.getElementById("contextNavToggle");
+  const links = document.getElementById("contextNavLinks");
+  if (!btn || !links) return;
+
+  // Restore saved state
+  if (localStorage.getItem(STORAGE_KEY) === "true") {
+    links.classList.add("context-nav-collapsed");
+    btn.classList.add("context-nav-is-collapsed");
+  }
+
+  btn.addEventListener("click", () => {
+    const isNowCollapsed = links.classList.toggle("context-nav-collapsed");
+    btn.classList.toggle("context-nav-is-collapsed", isNowCollapsed);
+    localStorage.setItem(STORAGE_KEY, String(isNowCollapsed));
+  });
+})();

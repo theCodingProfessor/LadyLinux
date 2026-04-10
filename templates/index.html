@@ -9,7 +9,7 @@
   </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="/css/v3/style.css" rel="stylesheet">
 </head>
 <body data-page="index">
   {% include "nav.html" %}
@@ -19,14 +19,17 @@
 
   <main class="container pb-4">
     {% include "context_nav.html" %}
-    <div class="row g-4">
-      <div class="col-12">
+    <div class="row g-4" id="dashboard-sortable">
+      <div class="col-12" data-widget-id="ai-console">
         <!-- 1) AI Console -->
         <section class="card ll-dashboard-card ll-console">
           <div class="card-body">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
               <h1 class="h3 mb-0">AI Console</h1>
               <span class="chat-status" id="chatStatus" data-state="idle">idle</span>
+              <span class="ll-drag-handle ms-auto me-2" title="Drag to reorder">
+                <i class="bi bi-grip-vertical"></i>
+              </span>
             </div>
 
             <div class="mb-3 p-3 rounded-3 ll-console-prompt">
@@ -52,58 +55,81 @@
               <div class="col-12 col-md-auto">
                 <button type="submit" class="btn btn-primary w-100">Send</button>
               </div>
+              <!-- Mic button: voice_client.js wires this via data-mic-btn + data-voice-source -->
+              <div class="col-12 col-md-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary w-100"
+                  data-mic-btn
+                  data-voice-source="console"
+                  title="Start voice input"
+                  aria-label="Voice input"
+                >
+                  <i class="bi bi-mic"></i>
+                </button>
+              </div>
             </form>
           </div>
         </section>
       </div>
 
-      <div class="col-12">
-        <!-- 2) System Overview — wired to /api/system/metrics via dashboard.js -->
-        <section class="row g-3">
-          <div class="col-12 col-md-4">
-            <article class="card ll-dashboard-card ll-metric-card h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted mb-1">CPU</h2>
-                <p id="cpuLoad" class="display-6 fw-semibold mb-1">--</p>
-                <p id="cpuMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- utilization</p>
-                <div class="progress ll-metric-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="cpuProgress" class="progress-bar" style="width:0%"></div>
-                </div>
+      <div class="col-12" data-widget-id="metric-cards">
+        <!-- 2) System Overview -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body pb-2">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h6 text-muted mb-0">Live Metrics</h2>
+              <span class="ll-drag-handle" title="Drag to reorder">
+                <i class="bi bi-grip-vertical"></i>
+              </span>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">CPU Usage</h2>
+                    <p id="cpuLoad" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="cpuProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
               </div>
-            </article>
-          </div>
-          <div class="col-12 col-md-4">
-            <article class="card ll-dashboard-card ll-metric-card h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted mb-1">Memory</h2>
-                <p id="memoryUsage" class="display-6 fw-semibold mb-1">--</p>
-                <p id="memoryMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- utilized</p>
-                <div class="progress ll-metric-bar" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="memoryProgress" class="progress-bar" style="width:0%"></div>
-                </div>
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">Memory Usage</h2>
+                    <p id="memoryUsage" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="memoryProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
               </div>
-            </article>
-          </div>
-          <div class="col-12 col-md-4">
-            <article class="card ll-dashboard-card ll-metric-card h-100">
-              <div class="card-body">
-                <h2 class="h6 text-muted mb-1">Disk</h2>
-                <p id="diskUsage" class="display-6 fw-semibold mb-1">--</p>
-                <p id="diskMeta" class="text-muted mb-3" style="font-size:0.8rem;">-- used</p>
-                <div class="progress ll-metric-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                  <div id="diskProgress" class="progress-bar" style="width:0%"></div>
-                </div>
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">Disk Space</h2>
+                    <p id="diskUsage" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="diskProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
               </div>
-            </article>
+            </div>
           </div>
         </section>
       </div>
 
       <!-- 3) Suggested Actions -->
-      <div class="col-12 col-lg-6">
+      <div class="col-12 col-lg-6" data-widget-id="ask-panel">
         <section class="card ll-dashboard-card h-100">
           <div class="card-body">
-            <h2 class="h5 mb-3">Suggested Actions</h2>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">Suggested Actions</h2>
+              <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            </div>
             <div class="list-group ll-action-list ask-list">
               <button type="button" class="list-group-item list-group-item-action ask-item" data-prompt="optimize system performance">Optimize system performance</button>
               <button type="button" class="list-group-item list-group-item-action ask-item" data-prompt="clean up log files">Clean up log files</button>
@@ -114,10 +140,13 @@
       </div>
 
       <!-- 4) Recent Activity -->
-      <div class="col-12 col-lg-6">
+      <div class="col-12 col-lg-6" data-widget-id="activity">
         <section class="card ll-dashboard-card h-100">
           <div class="card-body">
-            <h2 class="h5 mb-3">Recent Activity</h2>
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">Recent Activity</h2>
+              <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            </div>
             <div id="systemActivity" class="response-area activity-feed">
               <ul class="activity-log">
                 <li><span class="activity-entry"><i class="bi bi-file-earmark-text"></i> Config file edited</span></li>
@@ -129,8 +158,50 @@
         </section>
       </div>
 
-      <div class="col-12">
+      <!-- 5) Memory Panel -->
+      <div class="col-12" data-widget-id="memory-panel">
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">What Lady Remembers</h2>
+              <div class="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-light"
+                  id="memoryPanelToggle"
+                  title="Collapse"
+                  aria-expanded="true"
+                  aria-controls="memoryPanelBody"
+                >
+                  <i class="bi bi-chevron-up" id="memoryChevron"></i>
+                </button>
+                <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+              </div>
+            </div>
+            <div id="memoryPanelBody">
+              <!-- stubbed: will be populated by memory system -->
+              <ul class="activity-log" id="memoryList">
+                <li>Asked about firewall rules on the network page</li>
+                <li>Prefers dark mode</li>
+                <li>Restarted ladylinux-api.service during last session</li>
+                <li>Checked CPU usage trends on the System page</li>
+                <li>Requested log file cleanup on 2026-03-28</li>
+              </ul>
+              <div class="mt-3">
+                <button type="button" class="btn btn-sm btn-outline-light" id="memoryClearBtn">
+                  <i class="bi bi-trash"></i> Clear memory
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12" data-widget-id="module-buttons">
         <!-- 5) Module Buttons -->
+        <div class="ll-widget-drag-bar">
+          <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+        </div>
         <section class="row g-3">
           <div class="col-12 col-md-4">
             <a href="/os" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
@@ -149,10 +220,10 @@
             </a>
           </div>
           <div class="col-12 col-md-4">
-            <a href="/firewall" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
+            <a href="/network" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
               <div class="card-body text-center">
-                <i class="bi bi-shield-lock fs-2 d-block mb-2"></i>
-                <span class="h5 mb-0">Firewall</span>
+                <i class="bi bi-globe fs-2 d-block mb-2"></i>
+                <span class="h5 mb-0">Network</span>
               </div>
             </a>
           </div>
@@ -162,16 +233,21 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/design_engine.js"></script>
-  <script src="/static/js/themes.js"></script>
-  <script src="/static/js/global.js"></script>
-  <script type="module" src="/static/js/ui_event_bus.js"></script>
-  <script type="module" src="/static/js/system_metrics.js"></script>
-  <script src="/static/js/actions.js"></script>
-  <script src="/static/js/main.js"></script>
+  <script src="/js/archive/v3/design_engine.js"></script>
+  <script src="/js/archive/v3/themes.js"></script>
+  <!-- Load after themes.js so window.applyTheme is available -->
+  <script src="/static/js/nav_controls.js" defer></script>
+  <script src="/js/archive/v3/global.js"></script>
+  <script type="module" src="/js/archive/v3/ui_event_bus.js"></script>
+  <script type="module" src="/js/archive/v3/system_metrics.js"></script>
+  <script src="/js/archive/v3/actions.js"></script>
+  <script src="/js/archive/v3/main.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <script src="/static/js/chat.js"></script>
-  <script src="/static/js/ladyWidget.js"></script>
-  <script type="module" src="/static/js/dashboard.js"></script>
+  <script src="/js/archive/v3/chat.js"></script>
+  <script src="/js/archive/v3/ladyWidget.js"></script>
+  <script src="/static/js/voice_client.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+  <script src="/static/js/dnd.js"></script>
+  <script type="module" src="/js/archive/v3/dashboard.js"></script>
 </body>
 </html>

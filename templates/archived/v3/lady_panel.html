@@ -1,0 +1,47 @@
+<button id="ladyBtn" class="lady-btn" type="button" title="Open Lady panel" aria-expanded="false">
+  &#129504;
+</button>
+
+<div id="ladyPanel" class="lady-panel hidden" aria-hidden="true">
+  <div class="lady-header">
+    <span>Lady</span>
+    <div class="lady-header-actions">
+      <button
+        id="ladyExpandToggle"
+        class="lady-expand-toggle"
+        type="button"
+        aria-label="Expand Lady panel"
+        aria-pressed="false"
+      >
+        Expand
+      </button>
+      <button id="ladyClose" class="lady-close" type="button" aria-label="Close Lady panel">
+        &times;
+      </button>
+    </div>
+  </div>
+
+  <div class="lady-actions">
+    <button id="ladyRefreshMetrics" class="btn btn-sm btn-outline-light" type="button">
+      Refresh Metrics
+    </button>
+    <button id="ladyToggleTheme" class="btn btn-sm btn-outline-light" type="button">
+      Toggle Theme
+    </button>
+    <button
+      data-fullscreen
+      data-fullscreen-label="text"
+      class="btn btn-sm btn-outline-light"
+      type="button"
+      title="Fullscreen"
+    >
+      Fullscreen
+    </button>
+  </div>
+
+  <div id="lady-response"></div>
+
+  <div class="lady-input">
+    <input id="lady-input" type="text" placeholder="Ask Lady..." autocomplete="off" aria-label="Ask Lady Linux" />
+  </div>
+</div>

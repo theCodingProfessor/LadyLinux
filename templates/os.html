@@ -9,7 +9,7 @@
   </script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-  <link href="/static/css/style.css" rel="stylesheet">
+  <link href="/css/v3/style.css" rel="stylesheet">
 </head>
 <body data-page="system">
   {% include "nav.html" %}
@@ -68,19 +68,22 @@
 
         <!-- System page section tabs -->
         <ul class="nav nav-tabs flex-nowrap overflow-auto" id="systemTabs" role="tablist">
-          <li class="nav-item" role="presentation">
+          <li class="nav-item" role="presentation" data-tab-id="metrics">
             <button class="nav-link active" id="metrics-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#metrics-pane" aria-controls="metrics-pane" aria-selected="true">System Metrics</button>
           </li>
-          <li class="nav-item" role="presentation">
+          <li class="nav-item" role="presentation" data-tab-id="services">
             <button class="nav-link" id="services-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#services-pane" aria-controls="services-pane" aria-selected="false">Services</button>
           </li>
-          <li class="nav-item" role="presentation">
+          <li class="nav-item" role="presentation" data-tab-id="processes">
+            <button class="nav-link" id="processes-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#processes-pane" aria-controls="processes-pane" aria-selected="false">Processes</button>
+          </li>
+          <li class="nav-item" role="presentation" data-tab-id="storage">
             <button class="nav-link" id="storage-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#storage-pane" aria-controls="storage-pane" aria-selected="false">Storage</button>
           </li>
-          <li class="nav-item" role="presentation">
+          <li class="nav-item" role="presentation" data-tab-id="appearance">
             <button class="nav-link" id="appearance-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#appearance-pane" aria-controls="appearance-pane" aria-selected="false">Appearance</button>
           </li>
-          <li class="nav-item" role="presentation">
+          <li class="nav-item" role="presentation" data-tab-id="settings">
             <button class="nav-link" id="settings-tab" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#settings-pane" aria-controls="settings-pane" aria-selected="false">System Settings</button>
           </li>
         </ul>
@@ -94,9 +97,14 @@
               The global status strip provides the quick-glance snapshot. These cards stay focused on deeper inspection details for each subsystem.
             </p>
             <div class="ll-os-metric-grid">
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="cpu-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="cpu-panel" data-metric-id="cpu">
                 <div class="card-body">
-                  <h2 class="h6">CPU</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">CPU</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-skeleton metric-skeleton-value skeleton"></div>
                   <div class="metric-value ll-os-detail-value" id="cpuLoadOS"></div>
                   <canvas id="cpu-graph" class="mini-graph"></canvas>
@@ -107,9 +115,14 @@
                   <div class="metric-meta" id="cpuMetaOS"></div>
                 </div>
               </div>
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="memory-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="memory-panel" data-metric-id="memory">
                 <div class="card-body">
-                  <h2 class="h6">Memory</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">Memory</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-skeleton metric-skeleton-value skeleton"></div>
                   <div class="metric-value ll-os-detail-value" id="memoryUsageOS"></div>
                   <canvas id="memory-graph" class="mini-graph"></canvas>
@@ -120,9 +133,14 @@
                   <div class="metric-meta" id="memoryMetaOS"></div>
                 </div>
               </div>
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="disk-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="disk-panel" data-metric-id="disk">
                 <div class="card-body">
-                  <h2 class="h6">Disk</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">Disk</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-skeleton metric-skeleton-value skeleton"></div>
                   <div class="metric-value ll-os-detail-value" id="diskUsageOS"></div>
                   <canvas id="disk-graph" class="mini-graph"></canvas>
@@ -133,18 +151,28 @@
                   <div class="metric-meta" id="diskMetaOS"></div>
                 </div>
               </div>
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="process-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="process-panel" data-metric-id="processes">
                 <div class="card-body">
-                  <h2 class="h6">Processes</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">Processes</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-skeleton metric-skeleton-value skeleton"></div>
                   <div class="metric-value" id="processCountOS"></div>
                   <div class="metric-skeleton metric-skeleton-meta skeleton"></div>
                   <div class="metric-meta" id="processMetaOS"></div>
                 </div>
               </div>
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="network-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="network-panel" data-metric-id="network">
                 <div class="card-body d-flex flex-column justify-content-between">
-                  <h2 class="h6">Network</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">Network</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-value" id="networkRxOSQuick" style="font-size:0.95rem">
                     <span class="text-muted" style="font-size:0.75rem">RX</span>
                     <strong id="networkRxOS"></strong>
@@ -156,9 +184,14 @@
                   </div>
                 </div>
               </div>
-              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="system-panel">
+              <div class="card ll-dashboard-card ll-os-metric-card h-100" id="system-panel" data-metric-id="system">
                 <div class="card-body">
-                  <h2 class="h6">System</h2>
+                  <div class="d-flex align-items-center justify-content-between mb-1">
+                    <h2 class="h6 mb-0">System</h2>
+                    <span class="ll-drag-handle ll-metric-drag-handle" title="Drag to reorder">
+                      <i class="bi bi-grip-vertical"></i>
+                    </span>
+                  </div>
                   <div class="metric-skeleton metric-skeleton-value skeleton"></div>
                   <div class="metric-value ll-os-detail-value" id="uptimeOS"></div>
                   <div class="metric-skeleton metric-skeleton-meta skeleton"></div>
@@ -174,7 +207,8 @@
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                   <h2 class="h5 mb-0">Services</h2>
                   <div class="ll-segmented-control" role="group" aria-label="Service visibility filter">
-                    <button type="button" class="ll-segmented-control__button is-active" data-service-filter="managed">Managed</button>
+                    <button type="button" class="ll-segmented-control__button is-active" data-service-filter="relevant">Relevant</button>
+                    <button type="button" class="ll-segmented-control__button" data-service-filter="active">Active</button>
                     <button type="button" class="ll-segmented-control__button" data-service-filter="all">All</button>
                   </div>
                 </div>
@@ -211,23 +245,100 @@
             </div>
           </div>
 
+          <div class="tab-pane fade" id="processes-pane" role="tabpanel"
+               aria-labelledby="processes-tab" tabindex="0">
+            <div class="card ll-dashboard-card">
+              <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                  <h2 class="h5 mb-0">Running Processes</h2>
+                  <input type="search" id="process-search" class="form-control form-control-sm w-auto"
+                         placeholder="Filter by name…" aria-label="Filter processes">
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                  <div class="btn-group btn-group-sm" role="group" aria-label="Filter by user">
+                    <button type="button" class="btn btn-outline-secondary active"
+                            data-process-user="all">All Users</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-process-user="user">Non-root</button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            data-process-user="root">Root</button>
+                  </div>
+
+                  <select id="process-status-filter"
+                          class="form-select form-select-sm w-auto"
+                          aria-label="Filter by status">
+                    <option value="all">All Statuses</option>
+                    <option value="running">Running</option>
+                    <option value="sleeping">Sleeping</option>
+                    <option value="idle">Idle</option>
+                  </select>
+
+                  <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                    <input class="form-check-input" type="checkbox"
+                           id="process-hide-kernel" role="switch">
+                    <label class="form-check-label small text-muted" for="process-hide-kernel">
+                      Hide kernel threads
+                    </label>
+                  </div>
+                </div>
+
+                <div class="table-responsive">
+                  <table class="table table-dark table-hover align-middle mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col" aria-sort="none">
+                          <button type="button" class="ll-sort-button" data-process-sort="pid">
+                            <span>PID</span>
+                            <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col" aria-sort="none">
+                          <button type="button" class="ll-sort-button" data-process-sort="name">
+                            <span>Name</span>
+                            <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col" aria-sort="none">
+                          <button type="button" class="ll-sort-button" data-process-sort="user">
+                            <span>User</span>
+                            <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col" aria-sort="none">
+                          <button type="button" class="ll-sort-button" data-process-sort="status">
+                            <span>Status</span>
+                            <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col" aria-sort="descending">
+                          <button type="button" class="ll-sort-button is-active" data-process-sort="cpu">
+                            <span>CPU %</span>
+                            <i class="bi bi-caret-down-fill ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col" aria-sort="none">
+                          <button type="button" class="ll-sort-button" data-process-sort="mem">
+                            <span>Mem %</span>
+                            <i class="bi bi-arrow-down-up ll-sort-icon" data-sort-icon aria-hidden="true"></i>
+                          </button>
+                        </th>
+                        <th scope="col">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="processes-table-body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="tab-pane fade" id="storage-pane" role="tabpanel" aria-labelledby="storage-tab" tabindex="0">
             <div class="card ll-dashboard-card">
               <div class="card-body">
                 <h2 class="h5 mb-3">Storage</h2>
-                <div class="row g-3">
-                  <div class="col-12 col-md-6">
-                    <div class="p-3 rounded-3 ll-console-prompt">
-                      <div class="fw-semibold">Root Partition</div>
-                      <div class="text-muted small">72% used</div>
-                    </div>
-                  </div>
-                  <div class="col-12 col-md-6">
-                    <div class="p-3 rounded-3 ll-console-prompt">
-                      <div class="fw-semibold">Logs Volume</div>
-                      <div class="text-muted small">41% used</div>
-                    </div>
-                  </div>
+                <div class="row g-3" id="storage-partitions">
+                  <div class="col-12 text-muted small">Loading partitions…</div>
                 </div>
               </div>
             </div>
@@ -376,12 +487,9 @@
                   <div class="settings-group">
                     <h3>General</h3>
                     <label for="hostname">Hostname</label>
-                    <input type="text" id="hostname" value="loading...">
+                    <input type="text" id="hostname" value="loading…" autocomplete="off">
                     <label for="timezone">Timezone</label>
-                    <select id="timezone">
-                      <option>UTC</option>
-                      <option>America/New_York</option>
-                    </select>
+                    <input type="text" id="timezone" value="loading…" autocomplete="off">
                   </div>
 
                   <div class="settings-group">
@@ -432,6 +540,30 @@
                       <span>Suggestions Enabled</span>
                     </label>
                   </div>
+
+                  <div class="settings-group" id="githubSyncGroup">
+                    <h3 class="d-flex align-items-center justify-content-between">
+                      GitHub
+                      <span id="githubSyncStatus" class="badge bg-secondary" style="font-size:0.7rem">idle</span>
+                    </h3>
+
+                    <label class="form-label mt-2" style="font-size:0.8rem">Branch</label>
+                    <input type="text" id="githubBranch" class="form-control form-control-sm mb-3"
+                           value="main" placeholder="main">
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm w-100"
+                            id="githubRefreshBtn">
+                      <i class="bi bi-arrow-clockwise me-1"></i>Sync from GitHub
+                    </button>
+
+                    <div id="githubRefreshLog" class="mt-3 d-none"
+                         style="background:var(--bg-main);border:1px solid var(--border-color);
+                                border-radius:var(--ui-radius-small);padding:0.6rem;
+                                font-family:monospace;font-size:0.75rem;
+                                max-height:120px;overflow-y:auto;white-space:pre-wrap;
+                                color:var(--text-muted);">
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -447,17 +579,17 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="/static/js/design_engine.js"></script>
-<script src="/static/js/themes.js"></script>
-<script src="/static/js/global.js"></script>
+  <script src="/js/archive/v3/design_engine.js"></script>
+<script src="/js/archive/v3/themes.js"></script>
+<script src="/js/archive/v3/global.js"></script>
 
-<script type="module" src="/static/js/ui_event_bus.js"></script>
-<script type="module" src="/static/js/system_metrics.js"></script>
+<script type="module" src="/js/archive/v3/ui_event_bus.js"></script>
+<script type="module" src="/js/archive/v3/system_metrics.js"></script>
 
-<script src="/static/js/actions.js"></script>
-<script src="/static/js/main.js"></script>
+<script src="/js/archive/v3/actions.js"></script>
+<script src="/js/archive/v3/main.js"></script>
 
-<script type="module" src="/static/js/os_metrics.js"></script>
+<script type="module" src="/js/archive/v3/os_metrics.js"></script>
 
 <script>
 function checkRagStatus() {
@@ -473,7 +605,149 @@ function checkRagStatus() {
 checkRagStatus();
 </script>
 
-<script src="/static/js/chat.js"></script>
-<script src="/static/js/ladyWidget.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<script src="/static/js/dnd.js"></script>
+<script src="/js/archive/v3/chat.js"></script>
+<script src="/js/archive/v3/ladyWidget.js"></script>
+<script src="/static/js/voice_client.js"></script>
+<script>
+// ── Storage partitions ───────────────────────────────────────────────────────
+function formatBytes(bytes) {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let v = Number(bytes), i = 0;
+  while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+  return `${v >= 10 ? Math.round(v) : v.toFixed(1)} ${units[i]}`;
+}
+
+async function loadStoragePartitions() {
+  const container = document.getElementById("storage-partitions");
+  if (!container) return;
+  try {
+    const res = await fetch("/api/storage/partitions");
+    const data = await res.json();
+    if (!data.ok || !data.partitions?.length) {
+      container.innerHTML = '<div class="col-12 text-muted small">No partition data available.</div>';
+      return;
+    }
+    container.innerHTML = data.partitions.map((p) => `
+      <div class="col-12 col-md-6">
+        <div class="p-3 rounded-3 ll-console-prompt">
+          <div class="fw-semibold">${p.mountpoint}</div>
+          <div class="text-muted small">${p.device} &mdash; ${p.fstype}</div>
+          <div class="progress ll-metric-bar mt-2 mb-1" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(p.percent)}">
+            <div class="progress-bar" style="width:${Math.round(p.percent)}%"></div>
+          </div>
+          <div class="text-muted small">${Math.round(p.percent)}% used &mdash; ${formatBytes(p.used)} / ${formatBytes(p.total)} &mdash; ${formatBytes(p.free)} free</div>
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    container.innerHTML = '<div class="col-12 text-muted small">Failed to load partitions.</div>';
+  }
+}
+
+// ── System settings population ───────────────────────────────────────────────
+async function loadSystemSettings() {
+  const hostnameEl = document.getElementById("hostname");
+  const timezoneEl = document.getElementById("timezone");
+
+  if (hostnameEl) {
+    fetch("/api/system/hostname")
+      .then((r) => r.json())
+      .then((d) => { if (d.hostname) hostnameEl.value = d.hostname; })
+      .catch(() => { hostnameEl.value = "unavailable"; });
+  }
+
+  if (timezoneEl) {
+    fetch("/api/system/timezone")
+      .then((r) => r.json())
+      .then((d) => { if (d.timezone) timezoneEl.value = d.timezone; })
+      .catch(() => { timezoneEl.value = "unavailable"; });
+  }
+}
+
+// ── GitHub Sync button ────────────────────────────────────────────────────────
+(function initGithubRefresh() {
+  const btn    = document.getElementById("githubRefreshBtn");
+  const log    = document.getElementById("githubRefreshLog");
+  const status = document.getElementById("githubSyncStatus");
+  const branchInput = document.getElementById("githubBranch");
+  if (!btn) return;
+
+  btn.addEventListener("click", async () => {
+    const branch = branchInput?.value?.trim() || "main";
+
+    btn.disabled = true;
+    status.textContent = "running";
+    status.className = "badge bg-warning text-dark";
+    log.classList.remove("d-none");
+    log.textContent = `Starting sync for branch '${branch}'...\n`;
+
+    // Remove any previous reload prompt so it doesn't stack on re-sync
+    document.getElementById("githubReloadPrompt")?.remove();
+
+    try {
+      const res  = await fetch(`/api/system/github/refresh?branch=${encodeURIComponent(branch)}`, {
+        method: "POST",
+      });
+      const data = await res.json();
+
+      if (data.status === "ok") {
+        log.textContent += `${data.message}\nPID: ${data.pid}\n`;
+        log.textContent += "Refresh running in background. Service will restart when complete.\n";
+
+        // Prompt the user to reload once the service has had time to restart.
+        // The script exits fast; uvicorn restart takes ~5-10s on this hardware.
+        // We show the prompt at 15s — conservative for a 4-core CPU-only VM.
+        status.textContent = "syncing";
+        status.className   = "badge bg-info text-dark";
+
+        setTimeout(() => {
+          status.textContent = "done";
+          status.className   = "badge bg-success";
+          btn.disabled       = false;
+
+          // Append inline reload prompt below the log box
+          log.textContent += "\nRefresh page to apply changes.";
+
+          // Inject a visible reload button below the log box
+          const prompt = document.createElement("button");
+          prompt.id          = "githubReloadPrompt";
+          prompt.type        = "button";
+          prompt.className   = "btn btn-sm btn-outline-success w-100 mt-2";
+          prompt.innerHTML   = '<i class="bi bi-arrow-clockwise me-1"></i>Refresh Page to Apply';
+          prompt.addEventListener("click", () => window.location.reload());
+          log.insertAdjacentElement("afterend", prompt);
+        }, 15000); // 15s — enough for service restart on CPU-only VM
+
+      } else {
+        log.textContent += `Error: ${data.detail || "Unknown error"}\n`;
+        status.textContent = "error";
+        status.className   = "badge bg-danger";
+        btn.disabled       = false;
+      }
+    } catch (err) {
+      log.textContent += `Request failed: ${err.message}\n`;
+      status.textContent = "error";
+      status.className   = "badge bg-danger";
+      btn.disabled       = false;
+    }
+  });
+})();
+
+// Load storage when tab becomes active; load settings on any settings tab show
+document.getElementById("processes-tab")?.addEventListener("shown.bs.tab", () => {
+  if (typeof window.loadProcesses === "function") {
+    window.loadProcesses();
+  }
+});
+document.getElementById("storage-tab")?.addEventListener("shown.bs.tab", loadStoragePartitions);
+document.getElementById("settings-tab")?.addEventListener("shown.bs.tab", loadSystemSettings);
+
+// Also load storage immediately if storage pane is the default active tab
+if (document.getElementById("storage-pane")?.classList.contains("active")) {
+  loadStoragePartitions();
+}
+</script>
 </body>
 </html>
