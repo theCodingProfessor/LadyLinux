@@ -24,6 +24,7 @@ COLLECTION_NAME = os.getenv("QDRANT_COLLECTION", "ladylinux")
 
 # Embedding model (Ollama)
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+# Note: Using /api/embeddings endpoint (compatible with nomic-embed-text)
 OLLAMA_EMBED_URL = f"{OLLAMA_BASE_URL}/api/embeddings"
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "nomic-embed-text")
 VECTOR_DIM = int(os.getenv("VECTOR_DIM", "768"))  # nomic-embed-text -> 768
@@ -120,11 +121,68 @@ def domain_for_path(path: str) -> str:
             return "docs"
         if any(
             token in normalized
-            for token in ("/api_layer/", "/rag_layer/", "/app/", "/static/js/", ".py", ".js")
+            for token in ("/api_layer/", "/core/rag/", "/app/", "/static/js/", ".py", ".js")
         ):
             return "code"
         return "system-help"
     return detect_domain_from_path(path)
+
+
+# Domain tagging map for system-aware files (used by payload filtering in Qdrant)
+# Maps path prefixes to human-readable domain labels for retrieval filtering
+DOMAIN_MAP: dict[str, str] = {
+    # Firewall domain
+    "/etc/ufw/":            "firewall",
+    "/etc/iptables/":       "firewall",
+    "/etc/nftables/":       "firewall",
+    "/var/log/ufw.log":     "firewall",
+    "/proc/net/iptables":   "firewall",
+    "/proc/net/nf_conntrack": "firewall",
+
+    # Network domain
+    "/etc/network/":        "network",
+    "/etc/netplan/":        "network",
+    "/etc/hostname":        "network",
+    "/etc/hosts":           "network",
+    "/etc/resolv.conf":     "network",
+
+    # SSH domain
+    "/etc/ssh/sshd_config": "ssh",
+
+    # OS domain
+    "/etc/systemd/":        "os",
+    "/etc/modprobe.d/":     "os",
+    "/etc/sysctl":          "os",
+    "/var/log/syslog":      "os",
+    "/var/log/kern.log":    "os",
+    "/var/log/messages":    "os",
+    "/var/log/dmesg":       "os",
+    "/var/log/secure":      "os",
+
+    # Users domain
+    "/var/log/auth.log":    "users",
+    "/var/log/fail2ban":    "users",
+    "/etc/passwd":          "users",
+    "/etc/group":           "users",
+
+    # Package management domain
+    "/var/log/apt/":        "packages",
+    "/var/log/yum.log":     "packages",
+    "/var/log/pacman.log":  "packages",
+
+    # Application domain
+    "/var/log/nginx/":      "applications",
+    "/var/log/apache2/":    "applications",
+    "/var/log/supervisor/": "applications",
+}
+
+
+def get_domain_for_path(path: str) -> str:
+    """Return the domain tag for a given system file path."""
+    for prefix, domain in DOMAIN_MAP.items():
+        if path.startswith(prefix):
+            return domain
+    return "general"
 
 
 # Backward-compatible alias used by existing seed.py.

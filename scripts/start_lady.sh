@@ -311,12 +311,12 @@ echo "  → Log directory ready: $LOG_DIR"
 
 # --- Ensure tracker directory exists (for RAG file tracking) ---
 echo "  → Ensuring RAG tracker directory: /var/lib/ladylinux"
-mkdir_safe "/var/lib/ladylinux"
+mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data
 
 if id "$SERVICE_USER" >/dev/null 2>&1; then
     echo "  → Setting tracker directory permissions..."
-    sudo chown "$SERVICE_USER:$SERVICE_GROUP" "/var/lib/ladylinux" >/dev/null 2>&1 || true
-    sudo chmod 0755 "/var/lib/ladylinux" || true
+    sudo chown -R "$SERVICE_USER:$SERVICE_GROUP" /var/lib/ladylinux >/dev/null 2>&1 || true
+    sudo chmod -R 0755 /var/lib/ladylinux || true
 fi
 echo "  → Tracker directory ready: /var/lib/ladylinux"
 

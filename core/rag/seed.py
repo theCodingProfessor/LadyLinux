@@ -7,7 +7,7 @@ Description: One-shot ingestion script that reads every allow-listed file,
              after startup. Safe to re-run (upserts are idempotent).
 
 Usage:
-    python -m rag_layer.seed          # from project root
+    python -m core.rag.seed          # from project root
 """
 
 import logging
@@ -16,6 +16,7 @@ import sys
 
 from core.rag.chunker import chunk_file
 from core.rag.embedder import embed_texts
+from core.rag.file_tracker import FileTracker
 from core.rag.vector_store import ensure_collection, upsert_chunks
 
 logging.basicConfig(
@@ -127,6 +128,9 @@ def seed() -> dict:
     ensure_collection()
     _log_scope()
 
+    # Initialize file tracker to avoid re-embedding unchanged files
+    tracker = FileTracker()
+
     files = _expand_paths()
     log.info("Seed: found %d candidate file(s)", len(files))
 
@@ -134,6 +138,11 @@ def seed() -> dict:
 
     for path in files:
         try:
+            # --- skip if already tracked and unchanged ---
+            if tracker.is_tracked(path, check_modified=True):
+                log.debug("Skipping %s (already tracked and unchanged)", path)
+                continue
+
             # --- safety: size check ---
             size = os.path.getsize(path)
             if size > MAX_SEED_FILE_SIZE:
@@ -154,6 +163,9 @@ def seed() -> dict:
 
             # --- store ---
             upsert_chunks(chunks, vectors)
+
+            # --- mark as tracked ---
+            tracker.mark_tracked(path)
 
             stats["files_ingested"] += 1
             stats["chunks_stored"] += len(chunks)

@@ -47,10 +47,10 @@ Environment="LADYLINUX_TRACKER_DIR=/var/lib/ladylinux"
 EnvironmentFile=-/etc/ladylinux/ladylinux.env
 
 # ---- Pre-start setup ----
-# Ensure log directory exists and has correct permissions
-ExecStartPre=/usr/bin/mkdir -p /var/log/ladylinux
-ExecStartPre=/usr/bin/chown ladylinux:ladylinux /var/log/ladylinux
-ExecStartPre=/usr/bin/chmod 0755 /var/log/ladylinux
+# Ensure data and log directories exist and have correct permissions
+ExecStartPre=/usr/bin/mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux
+ExecStartPre=/usr/bin/chown -R ladylinux:ladylinux /var/lib/ladylinux /var/log/ladylinux
+ExecStartPre=/usr/bin/chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux
 
 # ---- Application launch ----
 # Adjust the module path below if your FastAPI app entry point changes.

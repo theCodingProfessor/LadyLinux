@@ -190,6 +190,13 @@ else
     sudo chown ladylinux:ladylinux /home/ladylinux
 fi
 
+# Ensure /var/lib/ladylinux and subdirectories exist with correct ownership
+echo "  → Creating application data directories..."
+sudo mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux
+sudo chown -R ladylinux:ladylinux /var/lib/ladylinux /var/log/ladylinux
+sudo chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux
+echo "  → Application directories configured."
+
 # Temporarily set shell to bash for installation tasks
 CURRENT_SHELL=$(getent passwd ladylinux | cut -d: -f7)
 if [ "$CURRENT_SHELL" != "/bin/bash" ]; then

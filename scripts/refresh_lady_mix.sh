@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #===============================================================================
-# LadyLinux VM Refresh Script
-# File: scripts/refresh_vm.sh
-# Author: Sean Connelly
+# LadyLinux VM MIX Refresh Script
+# File: scripts/refresh_lady_mix.sh
+# Author: Clinton Garwood
 # Version: 0.30
 #
 # Purpose:
@@ -42,7 +42,7 @@ set -Eeuo pipefail
 
 #----------------------------- Configuration -----------------------------------
 
-BRANCH="${1:-Capstone_Dev_01}"
+BRANCH="${1:-origin/colab/cap_dar_mix}"
 
 APP_DIR=""
 APP_DIR_CANDIDATES=("/opt/ladylinux/app" "/opt/ladylinux")
@@ -50,9 +50,12 @@ DEFAULT_APP_DIR="/opt/ladylinux"
 REPO_URL="${REPO_URL:-https://github.com/theCodingProfessor/LadyLinux.git}"
 VENV_DIR="/opt/ladylinux/venv"
 ENV_FILE="/etc/ladylinux/ladylinux.env"
+LOG_DIR="/var/log/ladylinux"
+SUDOERS_FILE="/etc/sudoers.d/ladylinux-firewall"
 
 SERVICE_NAME="ladylinux-api.service"
 SERVICE_USER="ladylinux"
+SERVICE_GROUP="ladylinux"
 
 PYTHON_BIN="python3"
 PIP_BIN="$VENV_DIR/bin/pip"
@@ -211,10 +214,12 @@ git_sync() {
     run_as_service git checkout -f "$BRANCH" 2>/dev/null || run_as_service git checkout -b "$BRANCH" "origin/$BRANCH"
   fi
 
-  # Hard align to remote (removes local drift)
+  # Hard align to remote (removes local drift).
+  # --exclude=venv/ prevents git clean from wiping the Python virtual
+  # environment, which lives inside the repo root but is not tracked.
   log "  Hard-aligning to origin/$BRANCH..."
   run_as_service git reset --hard "origin/$BRANCH"
-  run_as_service git clean -fd
+  run_as_service git clean -fd --exclude=venv/ --exclude=venv
 
   local commit
   commit="$(run_as_service git rev-parse --short HEAD)"
@@ -358,6 +363,38 @@ prep_application() {
   # run_as_service "$VENV_DIR/bin/python" -m ladylinux.migrate || die "Migration failed"
 }
 
+ensure_log_directory() {
+  # Create /var/log/ladylinux with proper permissions
+  log "Ensuring log directory: $LOG_DIR"
+  mkdir -p "$LOG_DIR" || die "Failed to create log directory: $LOG_DIR" 1
+
+  # Set ownership to service user if they exist
+  if id "$SERVICE_USER" >/dev/null 2>&1; then
+    chown "$SERVICE_USER":"$SERVICE_GROUP" "$LOG_DIR" >/dev/null 2>&1 || true
+  fi
+
+  chmod 0755 "$LOG_DIR" || die "Failed to set permissions on log directory" 1
+  log "  Log directory ready: $LOG_DIR"
+}
+
+validate_firewall_sudoers() {
+  # Validate sudoers rule syntax (non-fatal; just warn if invalid)
+  if [[ -f "$SUDOERS_FILE" ]]; then
+    log "Validating firewall sudoers rule: $SUDOERS_FILE"
+    if visudo -c -f "$SUDOERS_FILE" >/dev/null 2>&1; then
+      log "  Sudoers rule is valid."
+    else
+      warn "Sudoers rule syntax invalid: $SUDOERS_FILE"
+      warn "  Firewall commands will not have passwordless sudo access."
+      warn "  Consider re-running install_ladylinux.sh --clone to fix."
+    fi
+  else
+    warn "Firewall sudoers rule not found: $SUDOERS_FILE"
+    warn "  Firewall queries may fail with permission errors."
+    warn "  Run install_ladylinux.sh --clone to install sudoers rule."
+  fi
+}
+
 print_summary() {
   pushd "$APP_DIR" >/dev/null
   local commit
@@ -405,15 +442,14 @@ main() {
   if id "$SERVICE_USER" >/dev/null 2>&1; then
     log "Ensuring correct ownership of application directories..."
     chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR" >/dev/null 2>&1 || true
-
-    # Create /var/lib/ladylinux subdirectories for persistent app state
-    log "  Creating persistent data directories..."
-    mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux >/dev/null 2>&1 || true
-    chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux /var/log/ladylinux >/dev/null 2>&1 || true
-    chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux >/dev/null 2>&1 || true
+    mkdir -p /var/lib/ladylinux/{data,cache,logs} >/dev/null 2>&1 || true
+    chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux >/dev/null 2>&1 || true
   else
     warn "Service user '$SERVICE_USER' not found. Skipping ownership adjustments."
   fi
+
+  ensure_log_directory
+  validate_firewall_sudoers
 
   service_stop
   git_sync
@@ -434,11 +470,45 @@ main() {
   print_summary
   echo ""
 
-  service_status
-
   log "======================================================================"
   log "Refresh complete. ✓"
   log "======================================================================"
+  log ""
+  log "═══════════════════════════════════════════════════════════════════════"
+  log "  🎉 LadyLinux Refresh Complete!"
+  log "═══════════════════════════════════════════════════════════════════════"
+  log ""
+  log "The LadyLinux API service is now running!"
+  log ""
+  log "📍 Quick Access:"
+  log "  • Web Interface:  http://localhost:8000"
+  log "  • API Endpoint:   http://localhost:8000/docs"
+  log ""
+  log "🔧 Service Management:"
+  log "  • Check status:   sudo systemctl status ladylinux-api"
+  log "  • Stop service:   sudo systemctl stop ladylinux-api"
+  log "  • Start service:  sudo systemctl start ladylinux-api"
+  log "  • Restart:        sudo systemctl restart ladylinux-api"
+  log "  • View logs:      journalctl -u ladylinux-api -f"
+  log ""
+  log "  To re-run the refresh script, elevate permissions"
+  log "  > sudo chmod +x refresh_lady.sh"
+  log ""
+  log "📚 Documentation:"
+  log "  • Quick Reference: docs/SCRIPTS_QUICK_REFERENCE.md"
+  log "  • Full Guide:      docs/SCRIPTS_INSTALLATION_AND_REFRESH.md"
+  log "  • Quick Start:     QUICK_START_CHECKLIST.md"
+  log ""
+  log "🐍 Run Manually:"
+  log "  cd /opt/ladylinux"
+  log "  source venv/bin/activate"
+  log "  uvicorn api_layer.app:app --reload --host 0.0.0.0 --port 8000"
+  log ""
+
+  service_status
 }
 
+# --- Refresh Workflow is Complete ---
+echo "═══════════════════════════════════════════════════════════════════════"
+echo ""
 main "$@"

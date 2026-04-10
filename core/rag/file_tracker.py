@@ -4,9 +4,10 @@ File: file_tracker.py
 Description: Tracks which files have been embedded to avoid re-processing
              the same files on every uvicorn restart. Uses a JSON file to
              store file paths, their timestamps, and content hashes.
+             Gracefully handles permission errors.
 
 Usage:
-    from rag_layer.file_tracker import FileTracker
+    from core.rag.file_tracker import FileTracker
     tracker = FileTracker()
     if not tracker.is_tracked(path):
         # embed the file
@@ -36,6 +37,7 @@ class FileTracker:
         """Initialize the tracker with an optional custom tracker file path."""
         self.tracker_file = tracker_file or _TRACKER_FILE
         self._data: dict = {}
+        self._writable = True  # Track if we can write to tracker file
         self._load()
 
     def _load(self) -> None:
@@ -57,14 +59,19 @@ class FileTracker:
             self._data = {}
 
     def _save(self) -> None:
-        """Write tracked files to disk."""
+        """Write tracked files to disk. Gracefully handles permission errors."""
+        if not self._writable:
+            # Already determined we can't write; don't keep trying
+            return
+
         try:
             os.makedirs(os.path.dirname(self.tracker_file), exist_ok=True)
             with open(self.tracker_file, "w", encoding="utf-8") as f:
                 json.dump(self._data, f, indent=2)
             log.debug("Saved tracker to %s", self.tracker_file)
         except OSError as exc:
-            log.warning("Failed to save tracker: %s", exc)
+            log.warning("Failed to save tracker: %s (will continue without persistence)", exc)
+            self._writable = False
 
     def _file_hash(self, path: str) -> str:
         """Compute a content hash of the file."""
@@ -98,52 +105,37 @@ class FileTracker:
             current_mtime = os.path.getmtime(path)
             current_hash = self._file_hash(path)
         except OSError as exc:
-            log.warning("Could not check modification time for %s: %s", path, exc)
+            log.warning("Could not check modification of %s: %s", path, exc)
             return False
 
-        tracked = self._data[path]
+        tracked = self._data.get(path, {})
         tracked_mtime = tracked.get("mtime")
         tracked_hash = tracked.get("hash")
 
-        # If content hash hasn't changed, file is still current
-        if current_hash == tracked_hash:
-            log.debug("File %s is tracked and unmodified", path)
-            return True
+        # If mtime or hash differ, the file has been modified.
+        if current_mtime != tracked_mtime or current_hash != tracked_hash:
+            return False
 
-        log.debug("File %s was modified (mtime or hash changed)", path)
-        return False
+        return True
 
     def mark_tracked(self, path: str) -> None:
-        """Mark a file as tracked, recording its mtime and content hash."""
+        """Record that a file has been embedded."""
         path = os.path.abspath(path)
         try:
             mtime = os.path.getmtime(path)
             file_hash = self._file_hash(path)
-
             self._data[path] = {
                 "mtime": mtime,
                 "hash": file_hash,
-                "timestamp": os.path.getctime(path),
             }
             self._save()
-            log.debug("Marked %s as tracked", path)
         except OSError as exc:
             log.warning("Could not track %s: %s", path, exc)
 
-    def untrack(self, path: str) -> None:
-        """Remove a file from the tracking record."""
+    def unmark_tracked(self, path: str) -> None:
+        """Remove a file from the tracking record (e.g., if re-ingestion is needed)."""
         path = os.path.abspath(path)
         if path in self._data:
             del self._data[path]
             self._save()
-            log.debug("Untracked %s", path)
 
-    def clear(self) -> None:
-        """Clear all tracking records."""
-        self._data = {}
-        self._save()
-        log.info("Cleared all tracked files")
-
-    def get_all_tracked(self) -> list[str]:
-        """Return a list of all currently tracked file paths."""
-        return list(self._data.keys())
