@@ -200,8 +200,8 @@ git_sync() {
   run_as_service git fetch --prune origin
 
   # Check if remote branch exists
-  if ! run_as_service git rev-parse --verify "origin/$BRANCH" >/dev/null 2>&1; then
-    die "Remote branch 'origin/$BRANCH' does not exist. Available branches:" 1
+  if ! run_as_service git rev-parse --verify "$BRANCH" >/dev/null 2>&1; then
+    die "Remote branch '$BRANCH' does not exist. Available branches:" 1
   fi
 
   # Get current branch
@@ -211,14 +211,14 @@ git_sync() {
   # Switch branch if needed
   if [ "$current_branch" != "$BRANCH" ]; then
     log "  Switching from branch '$current_branch' to '$BRANCH'..."
-    run_as_service git checkout -f "$BRANCH" 2>/dev/null || run_as_service git checkout -b "$BRANCH" "origin/$BRANCH"
+    run_as_service git checkout -f "$BRANCH" 2>/dev/null || run_as_service git checkout -b "$BRANCH" "$BRANCH"
   fi
 
   # Hard align to remote (removes local drift).
   # --exclude=venv/ prevents git clean from wiping the Python virtual
   # environment, which lives inside the repo root but is not tracked.
   log "  Hard-aligning to origin/$BRANCH..."
-  run_as_service git reset --hard "origin/$BRANCH"
+  run_as_service git reset --hard "$BRANCH"
   run_as_service git clean -fd --exclude=venv/ --exclude=venv
 
   local commit
