@@ -41,7 +41,8 @@ else:
     TOP_K = int(os.getenv("TOP_K", "3"))
 
 # File safety limits
-MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(1 * 1024 * 1024)))  # 1 MB
+# Increased from 1 MB to 10 MB to support larger log files like kern.log
+MAX_FILE_SIZE = int(os.getenv("MAX_FILE_SIZE", str(10 * 1024 * 1024)))  # 10 MB
 
 # Project-focused RAG scope:
 # We intentionally exclude core OS directories from indexing because they
@@ -183,6 +184,60 @@ def get_domain_for_path(path: str) -> str:
         if path.startswith(prefix):
             return domain
     return "general"
+
+
+# ── User-Provided Document Embedding ──────────────────────────────────
+# Allows users to upload and embed their own documents/config files
+USER_RAG_ENABLED = os.getenv("USER_RAG_ENABLED", "true").lower() == "true"
+USER_RAG_PATH = os.getenv("USER_RAG_PATH", "/var/lib/ladylinux/user_uploads")
+USER_RAG_MAX_FILE_SIZE = int(os.getenv("USER_RAG_MAX_FILE_SIZE", str(10 * 1024 * 1024)))  # 10 MB per file
+USER_RAG_MAX_TOTAL = int(os.getenv("USER_RAG_MAX_TOTAL", str(50 * 1024 * 1024)))  # 50 MB total
+USER_RAG_VALID_EXTENSIONS = {
+    ".py", ".md", ".txt", ".conf", ".json", ".yaml", ".yml",
+    ".service", ".sh", ".ini", ".pdf", ".log", ".csv", ".xml"
+}
+
+def user_file_allowed(path: str) -> bool:
+    """
+    Check if a user-provided file is allowed for embedding.
+
+    Rules:
+    1) File must be in USER_RAG_PATH directory (security)
+    2) File size must not exceed USER_RAG_MAX_FILE_SIZE
+    3) File extension must be in USER_RAG_VALID_EXTENSIONS
+    4) Must be a regular file (not directory/symlink)
+    """
+    if not USER_RAG_ENABLED:
+        return False
+
+    # Security: path must be under user uploads directory
+    try:
+        user_path_norm = os.path.abspath(USER_RAG_PATH)
+        file_norm = os.path.abspath(path)
+
+        # Prevent directory traversal attacks
+        if not file_norm.startswith(user_path_norm):
+            return False
+    except (OSError, ValueError):
+        return False
+
+    # Check file exists and is regular file
+    if not os.path.isfile(path):
+        return False
+
+    # Check file size
+    try:
+        if os.path.getsize(path) > USER_RAG_MAX_FILE_SIZE:
+            return False
+    except OSError:
+        return False
+
+    # Check valid extension
+    ext = os.path.splitext(path)[1].lower()
+    if ext not in USER_RAG_VALID_EXTENSIONS:
+        return False
+
+    return True
 
 
 # Backward-compatible alias used by existing seed.py.

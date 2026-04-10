@@ -48,7 +48,7 @@ EnvironmentFile=-/etc/ladylinux/ladylinux.env
 
 # ---- Pre-start setup ----
 # Ensure data and log directories exist and have correct permissions
-ExecStartPre=/usr/bin/mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux
+ExecStartPre=/usr/bin/mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/lib/ladylinux/user_uploads /var/log/ladylinux
 ExecStartPre=/usr/bin/chown -R ladylinux:ladylinux /var/lib/ladylinux /var/log/ladylinux
 ExecStartPre=/usr/bin/chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux
 

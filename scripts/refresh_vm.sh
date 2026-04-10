@@ -408,7 +408,7 @@ main() {
 
     # Create /var/lib/ladylinux subdirectories for persistent app state
     log "  Creating persistent data directories..."
-    mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux >/dev/null 2>&1 || true
+    mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/lib/ladylinux/user_uploads /var/log/ladylinux >/dev/null 2>&1 || true
     chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux /var/log/ladylinux >/dev/null 2>&1 || true
     chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux >/dev/null 2>&1 || true
   else

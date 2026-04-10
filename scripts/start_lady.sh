@@ -311,7 +311,7 @@ echo "  → Log directory ready: $LOG_DIR"
 
 # --- Ensure tracker directory exists (for RAG file tracking) ---
 echo "  → Ensuring RAG tracker directory: /var/lib/ladylinux"
-mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data
+mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/lib/ladylinux/user_uploads
 
 if id "$SERVICE_USER" >/dev/null 2>&1; then
     echo "  → Setting tracker directory permissions..."

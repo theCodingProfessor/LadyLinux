@@ -192,7 +192,7 @@ fi
 
 # Ensure /var/lib/ladylinux and subdirectories exist with correct ownership
 echo "  → Creating application data directories..."
-sudo mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/log/ladylinux
+sudo mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/lib/ladylinux/user_uploads /var/log/ladylinux
 sudo chown -R ladylinux:ladylinux /var/lib/ladylinux /var/log/ladylinux
 sudo chmod -R 0755 /var/lib/ladylinux /var/log/ladylinux
 echo "  → Application directories configured."
