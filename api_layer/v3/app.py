@@ -15,7 +15,9 @@ from api_layer.firewall_core import (
     get_firewall_status_json,
 )
 from api_layer.os_core import get_metrics
-from rag_layer import retrieve, build_context_block, ensure_collection, seed
+from core.rag.retriever import retrieve, build_context_block
+from core.rag.vector_store import ensure_collection
+from core.rag.seed import seed
 
 import logging
 import logging.handlers
