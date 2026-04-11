@@ -10,47 +10,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/static/css/style.css" rel="stylesheet">
-  <style>
-    .iface-state-up   { color: #4ade80; }
-    .iface-state-down { color: #f87171; }
-    .iface-state-unknown { color: var(--text-muted); }
-
-    .addr-chip {
-      font-family: monospace;
-      font-size: 0.75rem;
-      background: var(--accent-soft);
-      color: var(--accent);
-      border-radius: var(--radius-small);
-      padding: 0.1rem 0.45rem;
-      display: inline-block;
-    }
-
-    .conn-row td { font-family: monospace; font-size: 0.78rem; }
-
-    .stat-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: var(--text-muted);
-    }
-    .stat-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-      line-height: 1.1;
-      color: var(--text-main);
-    }
-    .stat-meta { font-size: 0.78rem; color: var(--text-muted); }
-
-    .route-row { font-family: monospace; font-size: 0.78rem; }
-
-    /* keep firewall styles scoped */
-    #networkFirewallResponse, #networkFirewallJSON {
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-small);
-      font-size: 0.82rem;
-    }
-  </style>
+  <!-- All styles moved to /static/css/style.css in [PAGE: NETWORK] section -->
 </head>
 <body data-page="network">
   {% include "nav.html" %}
@@ -80,36 +40,36 @@
       <div class="col-6 col-md-3">
         <div class="card ll-dashboard-card">
           <div class="card-body py-3">
-            <div class="stat-label">RX</div>
-            <div class="stat-value" id="statRx">—</div>
-            <div class="stat-meta">receive rate</div>
+            <div class="network-stat-label">RX</div>
+            <div class="network-stat-value" id="statRx">—</div>
+            <div class="network-stat-meta">receive rate</div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card ll-dashboard-card">
           <div class="card-body py-3">
-            <div class="stat-label">TX</div>
-            <div class="stat-value" id="statTx">—</div>
-            <div class="stat-meta">transmit rate</div>
+            <div class="network-stat-label">TX</div>
+            <div class="network-stat-value" id="statTx">—</div>
+            <div class="network-stat-meta">transmit rate</div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card ll-dashboard-card">
           <div class="card-body py-3">
-            <div class="stat-label">Interfaces</div>
-            <div class="stat-value" id="statIfaceCount">—</div>
-            <div class="stat-meta" id="statIfaceUp">— up</div>
+            <div class="network-stat-label">Interfaces</div>
+            <div class="network-stat-value" id="statIfaceCount">—</div>
+            <div class="network-stat-meta" id="statIfaceUp">— up</div>
           </div>
         </div>
       </div>
       <div class="col-6 col-md-3">
         <div class="card ll-dashboard-card">
           <div class="card-body py-3">
-            <div class="stat-label">Connections</div>
-            <div class="stat-value" id="statConnCount">—</div>
-            <div class="stat-meta">active sockets</div>
+            <div class="network-stat-label">Connections</div>
+            <div class="network-stat-value" id="statConnCount">—</div>
+            <div class="network-stat-meta">active sockets</div>
           </div>
         </div>
       </div>
@@ -330,7 +290,7 @@
 
     function addrChips(addresses) {
       if (!addresses || !addresses.length) return '<span class="text-muted">—</span>';
-      return addresses.map(a => `<span class="addr-chip">${a}</span>`).join(" ");
+      return addresses.map(a => `<span class="network-addr-chip">${a}</span>`).join(" ");
     }
 
     function setLoading(tbodyId, cols) {
@@ -464,7 +424,7 @@
           const local   = parts[4] || "—";
           const peer    = parts[5] || "—";
           const process = parts[6] || "—";
-          return `<tr class="conn-row">
+          return `<tr class="network-conn-row">
             <td>${proto}</td>
             <td>${local}</td>
             <td>${peer}</td>
@@ -554,7 +514,7 @@
           const parts   = line.trim().split(/\s+/);
           const dest    = parts[0] || "—";
           const details = parts.slice(1).join(" ") || "—";
-          return `<tr class="route-row">
+          return `<tr class="network-route-row">
             <td>${dest}</td>
             <td class="text-muted">${details}</td>
           </tr>`;

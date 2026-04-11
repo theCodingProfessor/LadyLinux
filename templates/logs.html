@@ -22,425 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Barlow+Condensed:wght@400;600;700&display=swap" rel="stylesheet">
 
   <!-- ── Page-scoped styles only — never touches global style.css ── -->
-  <style>
-    /* ── Log page design tokens ── */
-    :root {
-      --log-mono:        'IBM Plex Mono', 'Fira Code', monospace;
-      --log-label:       'Barlow Condensed', sans-serif;
-      --log-green:       #4ade80;
-      --log-amber:       #fbbf24;
-      --log-red:         #f87171;
-      --log-blue:        #60a5fa;
-      --log-green-soft:  rgba(74, 222, 128, 0.08);
-      --log-amber-soft:  rgba(251, 191, 36, 0.08);
-      --log-red-soft:    rgba(241, 113, 113, 0.10);
-      --log-gutter:      2.2rem;   /* left gutter for level indicator bar */
-    }
-
-    /* ── Top masthead ── */
-    .log-masthead {
-      /* Subtle scanline texture via repeating-linear-gradient */
-      background: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(255,255,255,0.012) 2px,
-        rgba(255,255,255,0.012) 4px
-      ), var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-large);
-      padding: 1.25rem 1.5rem;
-      margin-bottom: 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    /* Page title */
-    .log-masthead__title {
-      font-family: var(--log-label);
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      line-height: 1;
-      color: var(--text-main);
-    }
-
-    /* Blinking cursor after title — pure CSS, no JS */
-    .log-masthead__title::after {
-      content: '▮';
-      display: inline-block;
-      color: var(--accent);
-      margin-left: 0.35rem;
-      animation: logCursorBlink 1.1s step-end infinite;
-    }
-
-    @keyframes logCursorBlink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
-    }
-
-    /* Subtitle / path breadcrumb */
-    .log-masthead__sub {
-      font-family: var(--log-mono);
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      letter-spacing: 0.05em;
-      margin-top: 0.2rem;
-    }
-
-    /* ── Toolbar controls row ── */
-    .log-toolbar {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
-
-    /* Lines selector — monospace styled */
-    .log-select {
-      font-family: var(--log-mono);
-      font-size: 0.75rem;
-      background: var(--bg-main);
-      color: var(--text-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-small);
-      padding: 0.28rem 0.6rem;
-      width: auto;
-      cursor: pointer;
-    }
-
-    .log-select:focus {
-      outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--color-focus-ring);
-    }
-
-    /* Toolbar icon buttons */
-    .log-icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 2rem;
-      height: 2rem;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-small);
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: color 120ms, border-color 120ms, background 120ms;
-      font-size: 0.85rem;
-    }
-
-    .log-icon-btn:hover {
-      color: var(--text-main);
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    /* Auto-scroll toggle */
-    .log-autoscroll-label {
-      font-family: var(--log-mono);
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    /* ── Search bar ── */
-    .log-search-wrap {
-      display: flex;
-      align-items: center;
-      background: var(--bg-main);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-small);
-      overflow: hidden;
-      max-width: 400px;
-      transition: border-color 120ms;
-    }
-
-    .log-search-wrap:focus-within {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--color-focus-ring);
-    }
-
-    .log-search-icon {
-      padding: 0 0.65rem;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      pointer-events: none;
-    }
-
-    /* Search input inherits mono font for that true terminal feel */
-    #logSearch {
-      font-family: var(--log-mono);
-      font-size: 0.75rem;
-      background: transparent;
-      border: none;
-      color: var(--text-main);
-      padding: 0.35rem 0;
-      flex: 1;
-      min-width: 0;
-    }
-
-    #logSearch::placeholder { color: var(--text-muted); opacity: 0.7; }
-    #logSearch:focus        { outline: none; }
-
-    .log-search-clear {
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      padding: 0 0.55rem;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: color 120ms;
-    }
-
-    .log-search-clear:hover { color: var(--text-main); }
-
-    /* ── Two-column layout ── */
-    .log-layout {
-      display: grid;
-      grid-template-columns: 220px 1fr; /* sidebar + main */
-      gap: 0.85rem;
-      align-items: start;
-    }
-
-    @media (max-width: 900px) {
-      /* Collapse to single column on narrow screens */
-      .log-layout { grid-template-columns: 1fr; }
-    }
-
-    /* ── Source sidebar ── */
-    .log-sidebar {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-medium);
-      overflow: hidden;
-      /* Sidebar stays at top on scroll */
-      position: sticky;
-      top: 1rem;
-    }
-
-    /* Sidebar group header */
-    .src-header {
-      font-family: var(--log-label);
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      padding: 0.6rem 0.75rem 0.25rem;
-      /* Thin accent line above each group */
-      border-top: 1px solid var(--border-color);
-    }
-
-    .src-header:first-child { border-top: none; }
-
-    /* Source select buttons */
-    .source-item {
-      display: flex;
-      align-items: center;
-      padding: 0.38rem 0.75rem;
-      color: var(--text-muted);
-      font-family: var(--log-mono);
-      font-size: 0.75rem;
-      cursor: pointer;
-      border: none;
-      background: none;
-      text-align: left;
-      width: 100%;
-      gap: 0.4rem;
-      transition: background 100ms, color 100ms;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .source-item i {
-      /* Icon stays fixed width so text aligns across items */
-      flex-shrink: 0;
-      width: 1rem;
-      text-align: center;
-    }
-
-    .source-item:hover {
-      background: var(--accent-soft);
-      color: var(--text-main);
-    }
-
-    .source-item.active {
-      background: color-mix(in srgb, var(--accent) 15%, transparent);
-      color: var(--accent);
-      font-weight: 500;
-    }
-
-    /* Active indicator: left accent bar */
-    .source-item.active::before {
-      content: '';
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--accent);
-      border-radius: 0 2px 2px 0;
-    }
-
-    .source-item { position: relative; } /* needed for ::before */
-
-    /* File list loader */
-    #fileList .text-muted {
-      font-family: var(--log-mono);
-      font-size: 0.72rem;
-      padding: 0.4rem 0.75rem;
-    }
-
-    /* ── Main log panel ── */
-    .log-panel {
-      background: var(--bg-surface);
-      border: 1px solid var(--border-color);
-      border-radius: var(--radius-medium);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-
-    /* Panel top bar — source name + line count */
-    .log-panel__bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 1rem;
-      border-bottom: 1px solid var(--border-color);
-      background: color-mix(in srgb, var(--bg-main) 60%, transparent);
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    /* Source name — shown as a path-style chip */
-    #logSourceLabel {
-      font-family: var(--log-mono);
-      font-size: 0.72rem;
-      color: var(--accent);
-      background: var(--accent-soft);
-      padding: 0.18rem 0.55rem;
-      border-radius: 4px;
-      letter-spacing: 0.03em;
-    }
-
-    /* Line count badge */
-    #logLineCount {
-      font-family: var(--log-mono);
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      letter-spacing: 0.04em;
-    }
-
-    /* ── Log output area ── */
-    .log-output {
-      font-family: var(--log-mono);
-      font-size: 0.77rem;
-      line-height: 1.55;
-      background: var(--bg-main);
-      overflow-y: auto;
-      /* Height: full viewport minus masthead + toolbar + panel bar */
-      height: calc(100vh - 280px);
-      min-height: 320px;
-
-      /* Custom scrollbar — thin and accent-colored */
-      scrollbar-width: thin;
-      scrollbar-color: var(--border-color) transparent;
-    }
-
-    .log-output::-webkit-scrollbar       { width: 5px; }
-    .log-output::-webkit-scrollbar-track { background: transparent; }
-    .log-output::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
-    .log-output::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-    /* ── Individual log line ── */
-    .log-line {
-      /* Left gutter for the level-color bar */
-      padding: 0.12rem 0.85rem 0.12rem var(--log-gutter);
-      white-space: pre-wrap;
-      word-break: break-all;
-      position: relative;
-      border-left: 2px solid transparent; /* overridden per level */
-      transition: background 80ms;
-    }
-
-    .log-line:hover {
-      background: color-mix(in srgb, var(--text-main) 4%, transparent);
-    }
-
-    /* Hidden by search filter */
-    .log-line.ll-hidden { display: none; }
-
-    /* ── Level-coded left border + tint ── */
-    .log-error {
-      color: var(--log-red);
-      border-left-color: var(--log-red);
-      background: var(--log-red-soft);
-    }
-
-    .log-warn {
-      color: var(--log-amber);
-      border-left-color: var(--log-amber);
-      background: var(--log-amber-soft);
-    }
-
-    .log-info {
-      /* Info lines are muted — high-volume, low priority */
-      color: var(--text-muted);
-      border-left-color: transparent;
-    }
-
-    /* Default (no classifier match) — default text color, no border */
-
-    /* ── Empty / loading state inside log-output ── */
-    .log-empty {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100%;
-      color: var(--text-muted);
-      font-size: 0.8rem;
-      gap: 0.5rem;
-    }
-
-    /* ── Level legend pills in panel bar ── */
-    .log-legend {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .log-legend__item {
-      font-family: var(--log-label);
-      font-size: 0.6rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      padding: 0.12rem 0.45rem;
-      border-radius: 3px;
-    }
-
-    .log-legend__item--err  { color: var(--log-red);   background: var(--log-red-soft);   }
-    .log-legend__item--warn { color: var(--log-amber); background: var(--log-amber-soft); }
-    .log-legend__item--ok   { color: var(--log-green); background: var(--log-green-soft); }
-
-    /* ── Fade-in animation for new log lines (applied via JS class) ── */
-    @keyframes logLineIn {
-      from { opacity: 0; transform: translateX(-4px); }
-      to   { opacity: 1; transform: translateX(0);    }
-    }
-
-    .log-line--new {
-      animation: logLineIn 180ms ease-out forwards;
-    }
-  </style>
+  <!-- All styles moved to /static/css/style.css in [PAGE: LOGS] section -->
 </head>
 
 <body data-page="logs">
@@ -456,21 +38,21 @@
     {% include "context_nav.html" %}
 
     <!-- ── Masthead ── -->
-    <div class="log-masthead">
+    <div class="logs-masthead">
       <div>
         <!-- Title with blinking cursor via CSS -->
-        <div class="log-masthead__title">System Logs</div>
-        <div class="log-masthead__sub">
+        <div class="logs-masthead__title">System Logs</div>
+        <div class="logs-masthead__sub">
           <!-- Dynamically reflects active source via JS (logSourceLabel is in panel bar) -->
           /var/log &nbsp;·&nbsp; journalctl &nbsp;·&nbsp; ladylinux actions
         </div>
       </div>
 
       <!-- ── Toolbar — all IDs match existing logs.js hooks ── -->
-      <div class="log-toolbar">
+      <div class="logs-toolbar">
 
         <!-- Lines-per-load selector — id="linesSelect" required by loadSource() -->
-        <select class="log-select" id="linesSelect" title="Max lines to load">
+        <select class="logs-select" id="linesSelect" title="Max lines to load">
           <option value="50">50 lines</option>
           <option value="100" selected>100 lines</option>
           <option value="200">200 lines</option>
@@ -491,12 +73,12 @@
         </div>
 
         <!-- Copy visible lines — id="copyBtn" required by copy handler -->
-        <button class="log-icon-btn" id="copyBtn" title="Copy visible lines to clipboard" type="button">
+        <button class="logs-icon-btn" id="copyBtn" title="Copy visible lines to clipboard" type="button">
           <i class="bi bi-clipboard"></i>
         </button>
 
         <!-- Refresh — id="refreshBtn" required by refresh handler -->
-        <button class="log-icon-btn" id="refreshBtn" title="Reload current source" type="button">
+        <button class="logs-icon-btn" id="refreshBtn" title="Reload current source" type="button">
           <i class="bi bi-arrow-clockwise"></i>
         </button>
 
@@ -505,7 +87,7 @@
 
     <!-- ── Search bar — IDs required by applyFilter() ── -->
     <div class="mb-3">
-      <div class="log-search-wrap" style="max-width:440px">
+      <div class="logs-search-wrap" style="max-width:440px">
         <span class="log-search-icon"><i class="bi bi-search"></i></span>
         <!-- id="logSearch" — applyFilter() binds to input event -->
         <input
@@ -523,17 +105,17 @@
     </div>
 
     <!-- ── Two-column layout: sidebar + log panel ── -->
-    <div class="log-layout">
+    <div class="logs-layout">
 
       <!-- ── Source sidebar — id="fileList" populated by loadFileList() ── -->
-      <aside class="log-sidebar" aria-label="Log sources">
+      <aside class="logs-sidebar" aria-label="Log sources">
 
         <!-- Built-in sources group -->
-        <div class="src-header">Built-in</div>
+        <div class="logs-src-header">Built-in</div>
 
         <!-- data-source / data-param / data-label required by selectSource() -->
         <button
-          class="source-item active"
+          class="logs-source-item active"
           data-source="journal"
           data-param=""
           data-label="Journal"
@@ -543,7 +125,7 @@
         </button>
 
         <button
-          class="source-item"
+          class="logs-source-item"
           data-source="ladylinux"
           data-param=""
           data-label="LadyLinux Actions"
@@ -553,7 +135,7 @@
         </button>
 
         <!-- Log files group — id="fileList" populated dynamically by loadFileList() -->
-        <div class="src-header">Log Files</div>
+        <div class="logs-src-header">Log Files</div>
         <div id="fileList">
           <!-- Populated by loadFileList() via /api/logs/files -->
           <div class="text-muted px-2 py-2" style="font-size:0.72rem">
@@ -564,19 +146,19 @@
       </aside>
 
       <!-- ── Log output panel ── -->
-      <section class="log-panel" aria-label="Log output">
+      <section class="logs-panel" aria-label="Log output">
 
         <!-- Panel top bar: active source chip + line count + level legend -->
-        <div class="log-panel__bar">
+        <div class="logs-panel__bar">
           <!-- id="logSourceLabel" — updated by selectSource() -->
           <span id="logSourceLabel" title="Active log source">Journal</span>
 
           <div class="d-flex align-items-center gap-2">
             <!-- Level legend — visual only, no JS dependency -->
-            <div class="log-legend" aria-hidden="true">
-              <span class="log-legend__item log-legend__item--err">ERR</span>
-              <span class="log-legend__item log-legend__item--warn">WARN</span>
-              <span class="log-legend__item log-legend__item--ok">OK</span>
+            <div class="logs-legend" aria-hidden="true">
+              <span class="logs-legend__item logs-legend__item--err">ERR</span>
+              <span class="logs-legend__item logs-legend__item--warn">WARN</span>
+              <span class="logs-legend__item logs-legend__item--ok">OK</span>
             </div>
 
             <!-- id="logLineCount" — updated by updateCount() -->
@@ -585,9 +167,9 @@
         </div>
 
         <!-- id="logOutput" — renderLines() writes .log-line divs here -->
-        <div class="log-output" id="logOutput" aria-live="off" aria-label="Log lines">
+        <div class="logs-output" id="logOutput" aria-live="off" aria-label="Log lines">
           <!-- Initial loading placeholder — replaced on first loadSource() call -->
-          <div class="log-empty">
+          <div class="logs-empty">
             <span class="spinner-border spinner-border-sm"></span>
             Loading…
           </div>
@@ -624,9 +206,9 @@
        Order matters: error > warn > info (more specific first).
     ────────────────────────────────────────────────────────────────────── */
     function lineClass(text) {
-      if (/error|fail|critical|emerg|alert|crit/i.test(text)) return "log-error";
-      if (/warn|warning/i.test(text))                         return "log-warn";
-      if (/\binfo\b/i.test(text))                             return "log-info";
+      if (/error|fail|critical|emerg|alert|crit/i.test(text)) return "logs-error";
+      if (/warn|warning/i.test(text))                         return "logs-warn";
+      if (/\binfo\b/i.test(text))                             return "logs-info";
       return ""; /* default — inherits text-main color */
     }
 
@@ -643,12 +225,12 @@
       const rows = [...lines].reverse();
 
       if (!rows.length) {
-        out.innerHTML = `<div class="log-empty">No log entries found.</div>`;
+        out.innerHTML = `<div class="logs-empty">No log entries found.</div>`;
         document.getElementById("logLineCount").textContent = "0 / 0 lines";
         return;
       }
 
-      /* Build HTML string — avoids repeated DOM mutations for perf */
+      // Build HTML string — avoids repeated DOM mutations for perf
       out.innerHTML = rows.map(line => {
         const cls    = lineClass(line);
         /* Search filter: hide lines that don't match */
@@ -658,7 +240,7 @@
           .replace(/&/g, "&amp;")
           .replace(/</g, "&lt;")
           .replace(/>/g, "&gt;");
-        return `<div class="log-line${cls ? " " + cls : ""}${hidden}">${safe}</div>`;
+        return `<div class="logs-line${cls ? " " + cls : ""}${hidden}">${safe}</div>`;
       }).join("");
 
       updateCount();
@@ -689,7 +271,7 @@
       const lines = document.getElementById("linesSelect").value;
 
       /* Show loading state immediately */
-      out.innerHTML = `<div class="log-empty">
+        out.innerHTML = `<div class="logs-empty">
         <span class="spinner-border spinner-border-sm"></span>Loading…</div>`;
       document.getElementById("logLineCount").textContent = "—";
 
@@ -742,9 +324,9 @@
           return;
         }
 
-        /* Render one .source-item per file — same data-* attrs as static items above */
+        // Render one .source-item per file — same data-* attrs as static items above
         container.innerHTML = files.map(f =>
-          `<button class="source-item" type="button"
+          `<button class="logs-source-item" type="button"
                    data-source="file"
                    data-param="/var/log/${f}"
                    data-label="${f}">
@@ -753,7 +335,7 @@
         ).join("");
 
         /* Wire click handlers for dynamically created buttons */
-        container.querySelectorAll(".source-item").forEach(btn =>
+        container.querySelectorAll(".logs-source-item").forEach(btn =>
           btn.addEventListener("click", () => selectSource(btn))
         );
 
@@ -772,7 +354,7 @@
     ────────────────────────────────────────────────────────────────────── */
     function selectSource(btn) {
       /* Deactivate all, activate clicked */
-      document.querySelectorAll(".source-item").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".logs-source-item").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
 
       /* Read source descriptor from data attributes */

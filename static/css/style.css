@@ -1351,3 +1351,684 @@ html[data-high-contrast="true"] .response-area {
 
 /* Remove old .lady-actions grid — replaced by radial */
 .lady-actions { display: none; }
+
+/*
+════════════════════════════════════════════════════════════════════════════════
+  PAGE: USERS
+  File: templates/users.html
+  Description: User and account management, user selection, quick actions
+════════════════════════════════════════════════════════════════════════════════
+*/
+
+/* ── Component: Detail Row ── */
+.users-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.users-detail-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.users-detail-value {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 0.82rem;
+  color: var(--text-main);
+  word-break: break-all;
+}
+
+.users-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+/* ── Component: Avatar ── */
+.users-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  border: 2px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--accent);
+  flex-shrink: 0;
+  font-weight: 600;
+}
+
+.users-avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: 1.6rem;
+}
+
+/* ── Component: Interactive Row ── */
+.users-row-clickable {
+  cursor: pointer;
+  transition: background var(--transition-speed);
+}
+
+.users-row-clickable.selected {
+  background: var(--accent-soft) !important;
+}
+
+.users-row-clickable:hover {
+  background: rgba(196, 181, 253, 0.06) !important;
+}
+
+/* ── Component: Shell Badge ── */
+.users-shell-badge {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: var(--radius-small);
+  padding: 0.15rem 0.5rem;
+}
+
+/* ── Component: Detail Panel ── */
+.users-detail-empty {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.users-detail-empty i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 0.5rem;
+  opacity: 0.4;
+}
+
+.users-section-divider {
+  border-top: 1px solid var(--border-color);
+  margin: 1rem 0;
+}
+
+#userDetailPanel {
+  min-height: 220px;
+}
+
+/* ── Component: Modal Styling ── */
+#addUserModal .modal-content,
+#editUserModal .modal-content,
+#changePasswordModal .modal-content,
+#changeShellModal .modal-content,
+#removeUserModal .modal-content {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-medium);
+}
+
+#addUserModal .modal-header,
+#editUserModal .modal-header,
+#changePasswordModal .modal-header,
+#changeShellModal .modal-header,
+#removeUserModal .modal-header {
+  border-bottom: 1px solid var(--border-color);
+}
+
+#addUserModal .modal-footer,
+#editUserModal .modal-footer,
+#changePasswordModal .modal-footer,
+#changeShellModal .modal-footer,
+#removeUserModal .modal-footer {
+  border-top: 1px solid var(--border-color);
+}
+
+#addUserModal .form-control,
+#addUserModal .form-select,
+#editUserModal .form-control,
+#editUserModal .form-select,
+#changePasswordModal .form-control,
+#changePasswordModal .form-select,
+#changeShellModal .form-control,
+#changeShellModal .form-select,
+#removeUserModal .form-control,
+#removeUserModal .form-select {
+  background: var(--bg-main);
+  border-color: var(--border-color);
+  color: var(--text-main);
+}
+
+#addUserModal .form-control:focus,
+#addUserModal .form-select:focus,
+#editUserModal .form-control:focus,
+#editUserModal .form-select:focus,
+#changePasswordModal .form-control:focus,
+#changePasswordModal .form-select:focus,
+#changeShellModal .form-control:focus,
+#changeShellModal .form-select:focus,
+#removeUserModal .form-control:focus,
+#removeUserModal .form-select:focus {
+  background: var(--bg-main);
+  border-color: var(--accent);
+  color: var(--text-main);
+  box-shadow: 0 0 0 3px var(--color-focus-ring);
+}
+
+#addUserModal .form-label,
+#editUserModal .form-label,
+#changePasswordModal .form-label,
+#changeShellModal .form-label,
+#removeUserModal .form-label {
+  color: var(--text-muted);
+  font-size: 0.83rem;
+}
+
+/*
+════════════════════════════════════════════════════════════════════════════════
+  PAGE: NETWORK
+  File: templates/network.html
+  Description: Network interfaces, connections, routes, and firewall
+════════════════════════════════════════════════════════════════════════════════
+*/
+
+/* ── Component: Interface State ── */
+.network-iface-state-up {
+  color: #4ade80;
+}
+
+.network-iface-state-down {
+  color: #f87171;
+}
+
+.network-iface-state-unknown {
+  color: var(--text-muted);
+}
+
+/* ── Component: Address Chip ── */
+.network-addr-chip {
+  font-family: monospace;
+  font-size: 0.75rem;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: var(--radius-small);
+  padding: 0.1rem 0.45rem;
+  display: inline-block;
+}
+
+/* ── Component: Connection Row ── */
+.network-conn-row td {
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+
+/* ── Component: Statistics ── */
+.network-stat-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.network-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--text-main);
+}
+
+.network-stat-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+/* ── Component: Route Row ── */
+.network-route-row {
+  font-family: monospace;
+  font-size: 0.78rem;
+}
+
+/* ── Component: Firewall Output ── */
+#networkFirewallResponse,
+#networkFirewallJSON {
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  font-size: 0.82rem;
+}
+
+/*
+════════════════════════════════════════════════════════════════════════════════
+  PAGE: LOGS
+  File: templates/logs.html
+  Description: System logs viewer with multi-source support, search, and filtering
+════════════════════════════════════════════════════════════════════════════════
+*/
+
+/* ── Design Tokens for Logs Page ── */
+:root {
+  --log-mono:        'IBM Plex Mono', 'Fira Code', monospace;
+  --log-label:       'Barlow Condensed', sans-serif;
+  --log-green:       #4ade80;
+  --log-amber:       #fbbf24;
+  --log-red:         #f87171;
+  --log-blue:        #60a5fa;
+  --log-green-soft:  rgba(74, 222, 128, 0.08);
+  --log-amber-soft:  rgba(251, 191, 36, 0.08);
+  --log-red-soft:    rgba(241, 113, 113, 0.10);
+  --log-gutter:      2.2rem;
+}
+
+/* ── Component: Masthead ── */
+.logs-masthead {
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(255,255,255,0.012) 2px,
+    rgba(255,255,255,0.012) 4px
+  ), var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-large);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.logs-masthead__title {
+  font-family: var(--log-label);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--text-main);
+}
+
+.logs-masthead__title::after {
+  content: '▮';
+  display: inline-block;
+  color: var(--accent);
+  margin-left: 0.35rem;
+  animation: logsCursorBlink 1.1s step-end infinite;
+}
+
+@keyframes logsCursorBlink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.logs-masthead__sub {
+  font-family: var(--log-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-top: 0.2rem;
+}
+
+/* ── Component: Toolbar ── */
+.logs-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.logs-select {
+  font-family: var(--log-mono);
+  font-size: 0.75rem;
+  background: var(--bg-main);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  padding: 0.28rem 0.6rem;
+  width: auto;
+  cursor: pointer;
+}
+
+.logs-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.logs-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 120ms, border-color 120ms, background 120ms;
+  font-size: 0.85rem;
+}
+
+.logs-icon-btn:hover {
+  color: var(--text-main);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.logs-autoscroll-label {
+  font-family: var(--log-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* ── Component: Search Bar ── */
+.logs-search-wrap {
+  display: flex;
+  align-items: center;
+  background: var(--bg-main);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+  max-width: 400px;
+  transition: border-color 120ms;
+}
+
+.logs-search-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--color-focus-ring);
+}
+
+.logs-search-icon {
+  padding: 0 0.65rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  pointer-events: none;
+}
+
+#logSearch {
+  font-family: var(--log-mono);
+  font-size: 0.75rem;
+  background: transparent;
+  border: none;
+  color: var(--text-main);
+  padding: 0.35rem 0;
+  flex: 1;
+  min-width: 0;
+}
+
+#logSearch::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+#logSearch:focus {
+  outline: none;
+}
+
+.logs-search-clear {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  padding: 0 0.55rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: color 120ms;
+}
+
+.logs-search-clear:hover {
+  color: var(--text-main);
+}
+
+/* ── Component: Layout ── */
+.logs-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .logs-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Component: Sidebar ── */
+.logs-sidebar {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  position: sticky;
+  top: 1rem;
+}
+
+.logs-src-header {
+  font-family: var(--log-label);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  padding: 0.6rem 0.75rem 0.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.logs-src-header:first-child {
+  border-top: none;
+}
+
+.logs-source-item {
+  display: flex;
+  align-items: center;
+  padding: 0.38rem 0.75rem;
+  color: var(--text-muted);
+  font-family: var(--log-mono);
+  font-size: 0.75rem;
+  cursor: pointer;
+  border: none;
+  background: none;
+  text-align: left;
+  width: 100%;
+  gap: 0.4rem;
+  transition: background 100ms, color 100ms;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.logs-source-item i {
+  flex-shrink: 0;
+  width: 1rem;
+  text-align: center;
+}
+
+.logs-source-item:hover {
+  background: var(--accent-soft);
+  color: var(--text-main);
+}
+
+.logs-source-item.active {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.logs-source-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+}
+
+#fileList .text-muted {
+  font-family: var(--log-mono);
+  font-size: 0.72rem;
+  padding: 0.4rem 0.75rem;
+}
+
+/* ── Component: Log Panel ── */
+.logs-panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.logs-panel__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-main) 60%, transparent);
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+#logSourceLabel {
+  font-family: var(--log-mono);
+  font-size: 0.72rem;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 0.18rem 0.55rem;
+  border-radius: 4px;
+  letter-spacing: 0.03em;
+}
+
+#logLineCount {
+  font-family: var(--log-mono);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+/* ── Component: Log Output ── */
+.logs-output {
+  font-family: var(--log-mono);
+  font-size: 0.77rem;
+  line-height: 1.55;
+  background: var(--bg-main);
+  overflow-y: auto;
+  height: calc(100vh - 280px);
+  min-height: 320px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+.logs-output::-webkit-scrollbar {
+  width: 5px;
+}
+
+.logs-output::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.logs-output::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.logs-output::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* ── Component: Log Line ── */
+.logs-line {
+  padding: 0.12rem 0.85rem 0.12rem var(--log-gutter);
+  white-space: pre-wrap;
+  word-break: break-all;
+  position: relative;
+  border-left: 2px solid transparent;
+  transition: background 80ms;
+}
+
+.logs-line:hover {
+  background: color-mix(in srgb, var(--text-main) 4%, transparent);
+}
+
+.logs-line.ll-hidden {
+  display: none;
+}
+
+/* ── Component: Log Levels ── */
+.logs-error {
+  color: var(--log-red);
+  border-left-color: var(--log-red);
+  background: var(--log-red-soft);
+}
+
+.logs-warn {
+  color: var(--log-amber);
+  border-left-color: var(--log-amber);
+  background: var(--log-amber-soft);
+}
+
+.logs-info {
+  color: var(--text-muted);
+  border-left-color: transparent;
+}
+
+/* ── Component: Empty State ── */
+.logs-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  gap: 0.5rem;
+}
+
+/* ── Component: Legend ── */
+.logs-legend {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logs-legend__item {
+  font-family: var(--log-label);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.45rem;
+  border-radius: 3px;
+}
+
+.logs-legend__item--err {
+  color: var(--log-red);
+  background: var(--log-red-soft);
+}
+
+.logs-legend__item--warn {
+  color: var(--log-amber);
+  background: var(--log-amber-soft);
+}
+
+.logs-legend__item--ok {
+  color: var(--log-green);
+  background: var(--log-green-soft);
+}
+
+/* ── Animation ── */
+@keyframes logsLineIn {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0);    }
+}
+
+.logs-line--new {
+  animation: logsLineIn 180ms ease-out forwards;
+}
+
