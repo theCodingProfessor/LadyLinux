@@ -3,11 +3,16 @@
    ===================================================== */
 
 /* Widget element bindings */
-const input = document.getElementById("lady-input");
-const output = document.getElementById("lady-response");
+function initLadyWidget() {
+  const input = document.getElementById("lady-input");
+  const output = document.getElementById("lady-response");
 
-/* Widget chat behavior: reuse shared chat.js sendPrompt + parser pipeline */
-if (input && output) {
+  /* Widget chat behavior: reuse shared chat.js sendPrompt + parser pipeline */
+  if (!input || !output) {
+    console.warn("Lady widget elements not found. This is expected if running before DOM is ready.");
+    return false;
+  }
+
   input.addEventListener("keydown", async (e) => {
     if (e.key !== "Enter") return;
 
@@ -46,4 +51,15 @@ if (input && output) {
 
     output.scrollTop = output.scrollHeight;
   });
+
+  return true;
 }
+
+// Initialize on DOM ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initLadyWidget);
+} else {
+  initLadyWidget();
+}
+
+

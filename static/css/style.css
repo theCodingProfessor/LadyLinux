@@ -665,6 +665,44 @@ html[data-high-contrast="true"] .response-area {
 .lady-message-user {
   color: var(--text-muted);
 }
+
+/* Expand toggle button */
+.lady-expand-toggle {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 0.9rem;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.lady-expand-toggle:hover {
+  color: var(--accent);
+  transform: scale(1.1);
+}
+
+/* Expanded state for panel */
+.lady-panel.expanded {
+  width: 600px;
+  height: 700px;
+  top: 20px;
+  bottom: 20px;
+  transform: none;
+  right: 20px;
+}
+
+.lady-panel.expanded #lady-response {
+  flex: 1;
+  min-height: 400px;
+}
+
+.lady-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 /* =====================================================
    LADY LINUX - AI DASHBOARD LAYOUT
    ===================================================== */

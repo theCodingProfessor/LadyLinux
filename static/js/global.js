@@ -67,6 +67,33 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Expand toggle for panel
+  const ladyExpandToggle = document.getElementById("ladyExpandToggle");
+  if (ladyExpandToggle && ladyPanel) {
+    ladyExpandToggle.addEventListener("click", () => {
+      const isExpanded = ladyPanel.classList.toggle("expanded");
+      ladyExpandToggle.setAttribute("aria-pressed", String(isExpanded));
+
+      // Save expanded state
+      try {
+        localStorage.setItem("lady-panel-expanded", String(isExpanded));
+      } catch (err) {
+        console.error("Failed to save panel state:", err);
+      }
+    });
+
+    // Restore expanded state on page load
+    try {
+      const wasExpanded = localStorage.getItem("lady-panel-expanded") === "true";
+      if (wasExpanded) {
+        ladyPanel.classList.add("expanded");
+        ladyExpandToggle.setAttribute("aria-pressed", "true");
+      }
+    } catch (err) {
+      console.error("Failed to restore panel state:", err);
+    }
+  }
+
   // Metrics spoke
   const ladySpokeMetrics = document.getElementById("ladySpokeMetrics");
   if (ladySpokeMetrics) {

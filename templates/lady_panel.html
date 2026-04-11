@@ -73,14 +73,18 @@
         type="button"
         aria-label="Expand Lady panel"
         aria-pressed="false"
+        title="Expand panel"
       >
-        Expand
+        <i class="bi bi-arrows-expand"></i>
       </button>
-      <button id="ladyClose" class="lady-close" type="button" aria-label="Close Lady panel">
+      <button id="ladyClose" class="lady-close" type="button" aria-label="Close Lady panel" title="Close">
         &times;
       </button>
     </div>
   </div>
+
+  <!-- Response area -->
+  <div id="lady-response" style="flex: 1; overflow-y: auto;"></div>
 
   <!-- Input row -->
   <div class="lady-input d-flex align-items-center gap-2">
@@ -95,11 +99,5 @@
     >
       <i class="bi bi-mic"></i>
     </button>
-  </div>
-
-  <div id="lady-response"></div>
-
-  <div class="lady-input">
-    <input id="lady-input" type="text" placeholder="Ask Lady..." autocomplete="off" aria-label="Ask Lady Linux" />
   </div>
 </div>
