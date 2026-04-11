@@ -183,14 +183,18 @@
   <!-- ── Script stack — exact same order as other pages in this project ── -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script src="/static/js/archive/design_engine.js"></script>
-  <script src="/static/js/archivethemes.js"></script>
-  <script src="/static/js/archiveglobal.js"></script>
-  <script type="module" src="/js/archive/v3/ui_event_bus.js"></script>
+  <script src="/static/js/archive/themes.js"></script>
+  <script src="/static/js/nav_controls.js" defer></script>
+  <script src="/static/js/global.js"></script>
+  <script type="module" src="/static/js/archive/ui_event_bus.js"></script>
   <script src="/static/js/archive/actions.js"></script>
   <script src="/static/js/archive/main.js"></script>
-  <script src="/static/js/archive/chat.js"></script>
-  <script src="/static/js/archive/ladyWidget.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/static/js/chat.js"></script>
+  <script src="/static/js/ladyWidget.js"></script>
   <script src="/static/js/voice_client.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+  <script src="/static/js/dnd.js"></script>
 
   <!-- ── Inline log logic — self-contained IIFE, no global leaks ── -->
   <script>
