@@ -48,13 +48,11 @@ body {
 html[data-ui-ready="false"] {
   /* Show page but indicate loading - opacity approach is better than visibility */
   opacity: 0.5;
-  pointer-events: none;
   transition: opacity 300ms ease-out;
 }
 
 html[data-ui-ready="true"] {
   opacity: 1;
-  pointer-events: auto;
   transition: opacity 300ms ease-out;
 }
 
