@@ -80,6 +80,24 @@ app.include_router(search_router)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+def _render_template(request: Request, name: str, context: dict | None = None):
+    """Render Jinja templates across old/new Starlette TemplateResponse signatures.
+
+    Newer Starlette (>= 0.24) requires named parameters (request=..., name=..., context=...),
+    while older versions use positional (name, context).
+    """
+    merged_context = {"request": request, **(context or {})}
+    try:
+        # Try newer Starlette/FastAPI: request is a separate argument
+        return templates.TemplateResponse(
+            request=request,
+            name=name,
+            context=merged_context,
+        )
+    except TypeError:
+        # Fallback to older Starlette/FastAPI: (name, context) signature
+        return templates.TemplateResponse(name, merged_context)
+
 LOG_FILE = "/var/log/ladylinux/actions.log"
 OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 
@@ -789,12 +807,12 @@ def rag_status():
 
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return _render_template(request, "index.html")
 
 
 @app.get("/network")
 def network_page(request: Request):
-    return templates.TemplateResponse("network.html", {"request": request})
+    return _render_template(request, "network.html")
 
 
 @app.get("/firewall")
@@ -806,18 +824,18 @@ def firewall_redirect():
 @app.post("/users")
 @app.get("/users")
 def users_page(request: Request):
-    return templates.TemplateResponse("users.html", {"request": request})
+    return _render_template(request, "users.html")
 
 
 @app.post("/os")
 @app.get("/os")
 def os_page(request: Request):
-    return templates.TemplateResponse("os.html", {"request": request})
+    return _render_template(request, "os.html")
 
 
 @app.get("/logs")
 def logs_page(request: Request):
-    return templates.TemplateResponse("logs.html", {"request": request})
+    return _render_template(request, "logs.html")
 
 
 # Legacy: previously targeted phi3, now routes to mistral via Ollama.
