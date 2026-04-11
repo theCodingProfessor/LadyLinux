@@ -373,7 +373,7 @@ ensure_log_directory() {
     chown "$SERVICE_USER":"$SERVICE_GROUP" "$LOG_DIR" >/dev/null 2>&1 || true
   fi
 
-  chmod 0755 "$LOG_DIR" || die "Failed to set permissions on log directory" 1
+   chmod 0777 "$LOG_DIR" || die "Failed to set permissions on log directory" 1
   log "  Log directory ready: $LOG_DIR"
 }
 
@@ -438,15 +438,16 @@ main() {
 
   assert_paths
 
-  # Ensure correct ownership baseline for service user (non-fatal).
-  if id "$SERVICE_USER" >/dev/null 2>&1; then
-    log "Ensuring correct ownership of application directories..."
-    chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR" >/dev/null 2>&1 || true
-    mkdir -p /var/lib/ladylinux/{data,cache,logs} >/dev/null 2>&1 || true
-    chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux >/dev/null 2>&1 || true
-  else
-    warn "Service user '$SERVICE_USER' not found. Skipping ownership adjustments."
-  fi
+   # Ensure correct ownership baseline for service user (non-fatal).
+   if id "$SERVICE_USER" >/dev/null 2>&1; then
+     log "Ensuring correct ownership of application directories..."
+     chown -R "$SERVICE_USER":"$SERVICE_USER" "$APP_DIR" >/dev/null 2>&1 || true
+     mkdir -p /var/lib/ladylinux/{data,cache,logs} >/dev/null 2>&1 || true
+     chown -R "$SERVICE_USER":"$SERVICE_USER" /var/lib/ladylinux >/dev/null 2>&1 || true
+     chmod -R 0777 /var/lib/ladylinux >/dev/null 2>&1 || true
+   else
+     warn "Service user '$SERVICE_USER' not found. Skipping ownership adjustments."
+   fi
 
   ensure_log_directory
   validate_firewall_sudoers
