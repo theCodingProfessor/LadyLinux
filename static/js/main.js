@@ -736,6 +736,11 @@ async function initializeApp() {
   }
 }
 
+/* Fallback: ensure page is visible within 5 seconds even if initialization fails */
+setTimeout(() => {
+  document.documentElement.setAttribute("data-ui-ready", "true");
+}, 5000);
+
 /*
 ---------------------------------------------------------
 Run once the DOM is ready.

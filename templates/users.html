@@ -722,14 +722,9 @@
     document.getElementById("editPasswordAssistBtn")?.addEventListener("click", () =>
       sendToAssistant(`Change the password for user "${selectedUser || ""}".`));
 
-    document.getElementById("removeUserAssistBtn")?.addEventListener("click", () =>
-      sendToAssistant(`Remove the user "${selectedUser || ""}" from the system.`));
+  <script src="/static/js/users.js"></script>
+</body>
+</html>
 
-    /* ── Init ── */
-    initUserSorting();
-    loadUsers();
-
-  }());
-  </script>
 </body>
 </html>
