@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from api_layer.logging_filters import IgnoreMetricsFilter
 from api_layer.firewall_core import (
     ensure_firewall_snapshot_vectorized,
     get_firewall_status_json,
@@ -55,6 +56,12 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
 )
+
+# Attach noise filter to uvicorn loggers
+_metrics_filter = IgnoreMetricsFilter()
+logging.getLogger("uvicorn.access").addFilter(_metrics_filter)
+logging.getLogger("uvicorn.error").addFilter(_metrics_filter)
+logging.getLogger("uvicorn").addFilter(_metrics_filter)
 
 # Add file handler to root logger if it was created successfully
 if rotating_handler:
