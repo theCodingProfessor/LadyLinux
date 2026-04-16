@@ -153,58 +153,115 @@ def upsert_chunks(chunks: list[dict], vectors: list[list[float]]) -> int:
 def search(
     query_vector: list[float],
     top_k: int = 5,
-    domain: str | None = "any",
+    domain: str | None = None,
 ) -> list[dict]:
-    """
-    Return top_k most similar chunks.
+    """Return the *top_k* most similar chunks for *query_vector*.
+
+    If *domain* is provided (e.g. ``"firewall"``), results are filtered to
+    only that domain via a Qdrant payload filter.
+
+    Each result dict contains:
+        text, source_path, line_start, line_end, timestamp, domain, score
     """
     client = _get_client()
 
     query_filter = None
-
-    if domain and domain != "any":
+    if domain:
         query_filter = Filter(
             must=[FieldCondition(key="domain", match=MatchValue(value=domain))]
         )
 
-    # qdrant-client >= 1.16 uses query_points(); search() was removed.
-    # with_vectors=False avoids returning full vectors in each hit, reducing
-    # response payload size and improving query performance.
-    response = client.query_points(
-        collection_name=COLLECTION_NAME,
-        query=query_vector,
-        query_filter=query_filter,
-        limit=top_k,
-        with_vectors=False,
-    )
-
-    hits = response.points
+    if hasattr(client, "search"):
+        hits = client.search(
+            collection_name=COLLECTION_NAME,
+            query_vector=query_vector,
+            query_filter=query_filter,
+            limit=top_k,
+        )
+    else:
+        query_result = client.query_points(
+            collection_name=COLLECTION_NAME,
+            query=query_vector,
+            query_filter=query_filter,
+            limit=top_k,
+        )
+        hits = getattr(query_result, "points", query_result)
 
     results = []
-
     for hit in hits:
         payload = hit.payload or {}
-
-        results.append(
-            {
-                "text": payload.get("text", ""),
-                "source_path": payload.get("source_path", ""),
-                "filepath": payload.get("filepath", payload.get("source_path", "")),
-                "filename": payload.get("filename", ""),
-                "directory": payload.get("directory", ""),
-                "filetype": payload.get("filetype", "text"),
-                "line_start": payload.get("line_start", 0),
-                "line_end": payload.get("line_end", 0),
-                "timestamp": payload.get("timestamp", ""),
-                "domain": payload.get("domain", "general"),
-                "score": hit.score,
-            }
-        )
+        results.append({
+            "text": payload.get("text", ""),
+            "source_path": payload.get("source_path", ""),
+            "line_start": payload.get("line_start", 0),
+            "line_end": payload.get("line_end", 0),
+            "timestamp": payload.get("timestamp", ""),
+            "domain": payload.get("domain", "general"),
+            "score": hit.score,
+        })
 
     log.info(
         "Search returned %d result(s) (domain=%s)",
         len(results),
         domain or "any",
     )
-
     return results
+#
+# def search(
+#     query_vector: list[float],
+#     top_k: int = 5,
+#     domain: str | None = "any",
+# ) -> list[dict]:
+#     """
+#     Return top_k most similar chunks.
+#     """
+#     client = _get_client()
+#
+#     query_filter = None
+#
+#     if domain and domain != "any":
+#         query_filter = Filter(
+#             must=[FieldCondition(key="domain", match=MatchValue(value=domain))]
+#         )
+#
+#     # qdrant-client >= 1.16 uses query_points(); search() was removed.
+#     # with_vectors=False avoids returning full vectors in each hit, reducing
+#     # response payload size and improving query performance.
+#     response = client.query_points(
+#         collection_name=COLLECTION_NAME,
+#         query=query_vector,
+#         query_filter=query_filter,
+#         limit=top_k,
+#         with_vectors=False,
+#     )
+#
+#     hits = response.points
+#
+#     results = []
+#
+#     for hit in hits:
+#         payload = hit.payload or {}
+#
+#         results.append(
+#             {
+#                 "text": payload.get("text", ""),
+#                 "source_path": payload.get("source_path", ""),
+#                 "filepath": payload.get("filepath", payload.get("source_path", "")),
+#                 "filename": payload.get("filename", ""),
+#                 "directory": payload.get("directory", ""),
+#                 "filetype": payload.get("filetype", "text"),
+#                 "line_start": payload.get("line_start", 0),
+#                 "line_end": payload.get("line_end", 0),
+#                 "timestamp": payload.get("timestamp", ""),
+#                 "domain": payload.get("domain", "general"),
+#                 "score": hit.score,
+#             }
+#         )
+#
+#     log.info(
+#         "Search returned %d result(s) (domain=%s)",
+#         len(results),
+#         domain or "any",
+#     )
+#
+#     return results
