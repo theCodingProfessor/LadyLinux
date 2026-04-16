@@ -15,6 +15,7 @@ import os
 import sys
 
 from core.rag.chunker import chunk_file
+from core.rag.config import QDRANT_MODE
 from core.rag.embedder import embed_texts
 from core.rag.file_tracker import FileTracker
 from core.rag.vector_store import ensure_collection, upsert_chunks
@@ -128,8 +129,16 @@ def seed() -> dict:
     ensure_collection()
     _log_scope()
 
-    # Initialize file tracker to avoid re-embedding unchanged files
+    # Initialize file tracker to avoid re-embedding unchanged files.
+    # Note: In in-memory mode, the Qdrant collection is empty on each startup,
+    # so we need to reset the tracker to force re-ingestion. In persistent mode,
+    # the tracker will correctly skip unchanged files.
     tracker = FileTracker()
+
+    # Check if we should reset tracker (in-memory mode always needs fresh seed)
+    if QDRANT_MODE == "memory":
+        log.debug("In-memory mode detected; resetting file tracker for fresh seed")
+        tracker.reset()
 
     files = _expand_paths()
     log.info("Seed: found %d candidate file(s)", len(files))

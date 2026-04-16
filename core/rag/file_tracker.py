@@ -139,3 +139,12 @@ class FileTracker:
             del self._data[path]
             self._save()
 
+    def reset(self) -> None:
+        """Clear all tracking data and remove tracker file from disk."""
+        self._data = {}
+        try:
+            if os.path.exists(self.tracker_file):
+                os.remove(self.tracker_file)
+                log.info("Tracker file reset: %s", self.tracker_file)
+        except OSError as exc:
+            log.warning("Could not remove tracker file: %s", exc)
