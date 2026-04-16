@@ -166,6 +166,8 @@ def system_metrics_endpoint():
 
 class PromptRequest(BaseModel):
     prompt: str
+    messages: list[dict] | None = None
+    context: dict | None = None
 
 
 @app.post("/ask_llm")
@@ -567,6 +569,71 @@ async def ask_firewall(req: FirewallRequest):
         "Deprecated endpoint /ask_firewall called; forwarding to unified /ask_rag flow"
     )
     return _run_firewall_rag(req.prompt, action=req.action, top_k=6)
+
+
+@app.post("/api/prompt/stream")
+async def api_prompt_stream(req: PromptRequest):
+    """NDJSON streaming endpoint for chat.js.
+    
+    This endpoint provides the stream protocol that chat.js expects:
+    - token events: {type: "token", text: "..."}
+    - done event: {type: "done", model: "...", retrieved_chunks: ...}
+    """
+    prompt = req.prompt
+    
+    def generate():
+        # Map context hint to RAG domain if provided
+        context_hint = ""
+        if req.context and isinstance(req.context, dict):
+            context_hint = req.context.get("page_context", "")
+        
+        domain = "docs"  # default
+        if context_hint == "firewall":
+            domain = "firewall"
+        elif context_hint in ("system-monitor", "network-manager", "log-viewer"):
+            domain = "system-help"
+        
+        try:
+            # Retrieve from RAG layer
+            results, _ = _retrieve_results(prompt, top_k=6, domain=domain)
+            full_prompt = _build_rag_prompt(prompt, results)
+            
+            # Stream tokens
+            resp = requests.post(
+                OLLAMA_URL,
+                json={"model": "mistral:latest", "prompt": full_prompt},
+                stream=True,
+                timeout=600,
+            )
+            resp.raise_for_status()
+            
+            for line in resp.iter_lines():
+                if line:
+                    chunk = json.loads(line)
+                    text = chunk.get("response", "")
+                    if text:
+                        yield json.dumps({"type": "token", "text": text}) + "\n"
+            
+            # Emit done event
+            yield json.dumps({
+                "type": "done",
+                "route": "rag",
+                "model": "mistral",
+                "retrieved_chunks": len(results),
+                "domain": domain,
+            }) + "\n"
+        except requests.ConnectionError:
+            yield json.dumps({
+                "type": "error",
+                "message": f"Could not connect to Ollama at {OLLAMA_URL}",
+            }) + "\n"
+        except Exception as exc:
+            yield json.dumps({
+                "type": "error",
+                "message": str(exc),
+            }) + "\n"
+    
+    return StreamingResponse(generate(), media_type="application/x-ndjson")
 
 
 @app.get("/firewall_status")
