@@ -11,6 +11,8 @@ const THEME_LABELS = {
   crimson: "Crimson Core",
   glass: "Glass",
   terminal: "Terminal",
+  jungle: "Jungle",
+  dark_mode: "Dark",
   "custom-1": "Custom 1",
   "custom-2": "Custom 2",
   "custom-3": "Custom 3",
