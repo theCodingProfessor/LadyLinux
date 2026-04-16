@@ -18,8 +18,9 @@
 class PromptRequest(BaseModel):
     prompt: str
     messages: list[dict] | None = None
-    context: dict | None = None
+    context: str | None = None  # String value: "firewall", "dashboard", "system-monitor", etc.
 ```
+Note: `context` is a **string** (page context label), not a dict. Values are sent from `chat.js` based on current page path.
 
 ### 2. Restored `/api/prompt/stream` Endpoint
 - Returns proper NDJSON format that `chat.js` expects
@@ -92,4 +93,29 @@ curl -X POST http://127.0.0.1:8000/ask_rag \
 - Both endpoints now functional
 - RAG layer integration complete
 - Streaming protocols aligned
+
+## Troubleshooting
+
+### 422 Unprocessable Entity Error
+**Cause**: The `PromptRequest.context` field type was defined as `dict`, but `chat.js` sends it as a string (e.g., `"firewall"`, `"dashboard"`).
+
+**Fix**: Changed `context: dict | None = None` → `context: str | None = None` in `PromptRequest` model.
+
+**What chat.js sends**: 
+```javascript
+{
+  "prompt": "...",
+  "messages": [...],
+  "context": "firewall"  // or "dashboard", "system-monitor", etc.
+}
+```
+
+**How the backend maps it**:
+```python
+context_hint = req.context or ""  # Get the string value
+if context_hint == "firewall":
+    domain = "firewall"
+elif context_hint in ("system-monitor", "network-manager", "log-viewer"):
+    domain = "system-help"
+```
 

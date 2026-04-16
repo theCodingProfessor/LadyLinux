@@ -167,7 +167,7 @@ def system_metrics_endpoint():
 class PromptRequest(BaseModel):
     prompt: str
     messages: list[dict] | None = None
-    context: dict | None = None
+    context: str | None = None
 
 
 @app.post("/ask_llm")
@@ -582,11 +582,9 @@ async def api_prompt_stream(req: PromptRequest):
     prompt = req.prompt
     
     def generate():
-        # Map context hint to RAG domain if provided
-        context_hint = ""
-        if req.context and isinstance(req.context, dict):
-            context_hint = req.context.get("page_context", "")
-        
+        # Map context hint to RAG domain (context is sent as a string from chat.js)
+        context_hint = req.context or ""
+
         domain = "docs"  # default
         if context_hint == "firewall":
             domain = "firewall"
