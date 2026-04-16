@@ -17,6 +17,8 @@ const THEME_LABELS = {
   "custom-2": "Custom 2",
   "custom-3": "Custom 3",
   "custom-4": "Custom 4",
+  "custom-5": "Custom 5",
+  "custom-6": "Custom 6",
 };
 
 const FONT_FAMILY_MAP = {
