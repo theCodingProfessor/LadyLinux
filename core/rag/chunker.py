@@ -37,7 +37,7 @@ def _line_range_for_span(text: str, start: int, end: int) -> tuple[int, int]:
 
 # ── Public API ───────────────────────────────────────────────────────
 
-def chunk_file(path: str) -> list[dict]:
+def chunk_file(path: str, skip_allowlist_check: bool = False) -> list[dict]:
     """
     Read *path* and split its contents into overlapping text chunks.
 
@@ -48,9 +48,13 @@ def chunk_file(path: str) -> list[dict]:
         line_end     – last line covered (1-based)
         timestamp    – ISO-8601 mtime of the file
         domain       – domain tag from config.DOMAIN_MAP
+
+    Args:
+        path: File path to chunk
+        skip_allowlist_check: If True, skip RAG allowlist validation (used by seed.py)
     """
     # ── Guard: allowlist / denylist ──
-    if not is_path_allowed(path):
+    if not skip_allowlist_check and not is_path_allowed(path):
         log.debug("Skipping denied/unlisted path: %s", path)
         return []
 

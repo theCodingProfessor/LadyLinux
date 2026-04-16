@@ -129,16 +129,20 @@ def seed() -> dict:
     ensure_collection()
     _log_scope()
 
+    log.info("QDRANT_MODE: %s", QDRANT_MODE)
+
     # Initialize file tracker to avoid re-embedding unchanged files.
     # Note: In in-memory mode, the Qdrant collection is empty on each startup,
     # so we need to reset the tracker to force re-ingestion. In persistent mode,
     # the tracker will correctly skip unchanged files.
     tracker = FileTracker()
+    log.info("FileTracker loaded with %d tracked file(s)", len(tracker._data))
 
     # Check if we should reset tracker (in-memory mode always needs fresh seed)
     if QDRANT_MODE == "memory":
-        log.debug("In-memory mode detected; resetting file tracker for fresh seed")
+        log.info("In-memory mode detected; resetting file tracker for fresh seed")
         tracker.reset()
+        log.info("File tracker reset complete; _data now has %d items", len(tracker._data))
 
     files = _expand_paths()
     log.info("Seed: found %d candidate file(s)", len(files))
@@ -152,6 +156,8 @@ def seed() -> dict:
                 log.debug("Skipping %s (already tracked and unchanged)", path)
                 continue
 
+            log.debug("Processing %s (not tracked or modified)", path)
+
             # --- safety: size check ---
             size = os.path.getsize(path)
             if size > MAX_SEED_FILE_SIZE:
@@ -161,9 +167,14 @@ def seed() -> dict:
                 log.debug("Skipping empty file %s", path)
                 continue
 
+            log.debug("Chunking %s (size: %.1f KB)", path, size / 1024)
+
             # --- chunk ---
-            chunks = chunk_file(path)
+            # Note: skip_allowlist_check=True because seed.py uses its own scope
+            # (ALLOWED_SEED_ROOTS) which is different from RAG retrieval scope
+            chunks = chunk_file(path, skip_allowlist_check=True)
             if not chunks:
+                log.debug("Skipping %s (no chunks produced)", path)
                 continue
 
             # --- embed ---
