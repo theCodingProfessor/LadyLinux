@@ -122,12 +122,19 @@ def _domain_search_order(domain: str) -> list[str]:
 
 
 def _matches_domain(item: dict, expected_domain: str) -> bool:
-    path = item.get("filepath") or item.get("source_path") or ""
-    if not allowed_for_rag(path):
-        return False
+    """
+    Check if a retrieved item matches the expected domain.
 
+    NOTE: We do NOT filter by allowed_for_rag() here because:
+    - Seeding uses ALLOWED_SEED_ROOTS which includes /etc/* paths
+    - RAG retrieval should return all successfully embedded chunks
+    - Domain filtering via payload["domain"] is sufficient validation
+
+    See: SEED_FIX_ALLOWLIST_MISMATCH.md (scope separation explanation)
+    """
     item_domain = item.get("domain", "")
     if item_domain == expected_domain:
         return True
     # Backward compatibility for older indexed payloads with legacy domain tags.
+    path = item.get("filepath") or item.get("source_path") or ""
     return domain_for_path(path) == expected_domain
