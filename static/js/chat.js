@@ -579,34 +579,15 @@ function executeAction(actionName, params, options = {}) {
   return result.ok;
 }
 
-/* Shared backend transport for all UI chat surfaces */
-async function sendPrompt(prompt) {
-  // Add user turn to history before sending so backend sees full context
-  conversationHistory.push({ role: "user", content: prompt });
-  persistChatHistory();
+function mapPathToRagDomain(pathname) {
+  const path = String(pathname || "").toLowerCase();
+  if (path === "/firewall") return "firewall";
+  if (path === "/os" || path === "/network" || path === "/logs") return "system-help";
+  if (path === "/users") return "docs";
+  return "docs";
+}
 
-  const response = await fetch("/api/prompt/stream", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      prompt,
-      messages: conversationHistory,
-      // Derive page context from current URL path so the backend knows where
-      // the user is and can inject page-relevant live data automatically.
-      context: ({
-        "/":        "dashboard",
-        "/os":      "system-monitor",
-        "/network": "network-manager",
-        "/users":   "user-manager",
-        "/logs":    "log-viewer",
-      })[window.location.pathname] ?? "unknown",
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`);
-  }
-
+async function consumeNdjsonStream(response) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -614,17 +595,14 @@ async function sendPrompt(prompt) {
   let finalPayload = null;
 
   // Kick off a visible "thinking" indicator immediately
-  replaceLastAssistantLine("▌", { isPlaceholder: true });
+  replaceLastAssistantLine(".", { isPlaceholder: true });
 
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
-
-    // Process every complete line in the buffer
     const lines = buffer.split("\n");
-    // Keep the last (possibly incomplete) line in the buffer
     buffer = lines.pop();
 
     for (const line of lines) {
@@ -635,37 +613,27 @@ async function sendPrompt(prompt) {
       try {
         event = JSON.parse(trimmed);
       } catch {
-        // Malformed line — skip
         continue;
       }
 
       if (event.type === "token") {
-        // Append token and update the DOM live
         accumulatedText += event.text || "";
         replaceLastAssistantLine(accumulatedText, {});
-
       } else if (event.type === "done") {
-        // LLM finished — record metadata for Dev Mode
         lastRagMeta = {
           model: event.model || "mistral",
-          retrievedChunks: Number.isFinite(event.retrieved_chunks)
-            ? event.retrieved_chunks
-            : 0,
+          retrievedChunks: Number.isFinite(event.retrieved_chunks) ? event.retrieved_chunks : 0,
         };
         finalPayload = accumulatedText;
-
       } else if (
         event.type === "tool" ||
         event.type === "command" ||
         event.type === "ui"
       ) {
-        // Instant structured response — no streaming needed
         lastRagMeta = { model: "mistral", retrievedChunks: 0 };
 
-        // Handle set_theme: return a descriptive string rather than bare return
         if (event.route === "ui" && event.action === "set_theme") {
           finalPayload = event.message || "Theme updated";
-        // Handle set_ui_override: apply CSS vars directly and return a string
         } else if (event.tool === "set_ui_override" || event.action === "set_ui_override") {
           const rawData = event.data;
           const overrides = rawData?.data || rawData;
@@ -676,34 +644,26 @@ async function sendPrompt(prompt) {
             document.documentElement.style.setProperty(key, value);
           });
           finalPayload = event.message || "UI updated";
-        // Handle list_services: format service data as readable text
         } else if (event.tool === "list_services" && event.data?.services?.length) {
           const services = event.data.services;
-          const lines = services.map(
-            (s) => `• ${s.name} — ${s.status || "unknown"}`
-          );
+          const linesOut = services.map((s) => `- ${s.name} - ${s.status || "unknown"}`);
           if (typeof window.loadServices === "function") {
             window.loadServices();
           }
-          finalPayload = `${event.message || "Services retrieved"}\n\n${lines.join("\n")}`;
+          finalPayload = `${event.message || "Services retrieved"}\n\n${linesOut.join("\n")}`;
         } else if (event.tool === "check_process") {
           const d = event.data?.data || event.data || {};
           const proc = d.process || event.data?.process || "process";
           const running = d.running ?? event.data?.running;
           finalPayload = running
-            ? `✓ ${proc} is running. PIDs: ${(d.pids || []).join(", ") || "unknown"}`
-            : `✗ ${proc} is not running.`;
+            ? `OK ${proc} is running. PIDs: ${(d.pids || []).join(", ") || "unknown"}`
+            : `Not running: ${proc}.`;
         } else if (event.tool === "kill_process") {
-          finalPayload = event.message
-            || event.data?.message
-            || "Kill command sent.";
+          finalPayload = event.message || event.data?.message || "Kill command sent.";
         } else if (!event.tool || !event.data) {
           finalPayload = event.message || "Done.";
         } else {
-          // Format as the legacy response string so processAssistantReply works
           finalPayload = event.message || "";
-          // Preserve structured payload for action handling by embedding it
-          // in the same format the old JSON path used
           if (event.data || event.action) {
             const structuredHint = JSON.stringify({
               route: event.route,
@@ -716,14 +676,12 @@ async function sendPrompt(prompt) {
             finalPayload = `${event.message || ""}\n%%LLACTION%%: ${structuredHint}`;
           }
         }
-
       } else if (event.type === "error") {
         throw new Error(event.message || "Backend error");
       }
     }
   }
 
-  // Handle any remaining buffer content
   if (buffer.trim()) {
     try {
       const event = JSON.parse(buffer.trim());
@@ -732,7 +690,7 @@ async function sendPrompt(prompt) {
         finalPayload = accumulatedText;
       }
     } catch {
-      // Incomplete final line — ignore
+      // ignore
     }
   }
 
@@ -740,7 +698,95 @@ async function sendPrompt(prompt) {
     throw new Error("Stream ended without a response");
   }
 
-  // Append assistant turn and cap history to avoid context overflow
+  return finalPayload;
+}
+
+async function consumeTextStream(response) {
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let accumulatedText = "";
+
+  // Kick off a visible "thinking" indicator immediately
+  replaceLastAssistantLine(".", { isPlaceholder: true });
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    accumulatedText += decoder.decode(value, { stream: true });
+    replaceLastAssistantLine(accumulatedText, {});
+  }
+
+  const finalPayload = accumulatedText.trim();
+  if (!finalPayload) {
+    throw new Error("Stream ended without a response");
+  }
+
+  // /ask_rag does not currently return metadata in stream events.
+  lastRagMeta = { model: "mistral", retrievedChunks: 0 };
+  return finalPayload;
+}
+
+/* Shared backend transport for all UI chat surfaces */
+async function sendPrompt(prompt) {
+  // Add user turn to history before sending so backend sees full context
+  conversationHistory.push({ role: "user", content: prompt });
+  persistChatHistory();
+
+  const pagePath = window.location.pathname;
+  const domain = mapPathToRagDomain(pagePath);
+
+  // Preferred path: unified /ask_rag endpoint backed by core/rag.
+  let response = await fetch("/ask_rag", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      prompt,
+      domain,
+      top_k: domain === "firewall" ? 6 : undefined,
+    }),
+  });
+
+  // Compatibility fallback if some environments still expose the NDJSON endpoint.
+  if (!response.ok && (response.status === 404 || response.status === 405)) {
+    response = await fetch("/api/prompt/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        prompt,
+        messages: conversationHistory,
+        context: ({
+          "/": "dashboard",
+          "/os": "system-monitor",
+          "/network": "network-manager",
+          "/users": "user-manager",
+          "/logs": "log-viewer",
+          "/firewall": "firewall",
+        })[pagePath] ?? "unknown",
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const finalPayload = await consumeNdjsonStream(response);
+
+    conversationHistory.push({ role: "assistant", content: finalPayload });
+    if (conversationHistory.length > MAX_HISTORY_TURNS * 2) {
+      conversationHistory = conversationHistory.slice(-MAX_HISTORY_TURNS * 2);
+    }
+    persistChatHistory();
+
+    return finalPayload;
+  }
+
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  const finalPayload = await consumeTextStream(response);
+
   conversationHistory.push({ role: "assistant", content: finalPayload });
   if (conversationHistory.length > MAX_HISTORY_TURNS * 2) {
     conversationHistory = conversationHistory.slice(-MAX_HISTORY_TURNS * 2);
