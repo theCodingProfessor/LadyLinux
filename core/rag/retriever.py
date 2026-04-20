@@ -23,10 +23,14 @@ def retrieve(
     """Retrieve the most relevant chunks for a natural-language *query*.
 
     Domain-aware behavior:
-    - Allowed domains are: docs, code, system-help.
-    - If no domain is provided, retrieval defaults to docs.
-    - For system-help, search order is system-help -> docs -> code.
-      This prevents system-live questions from pulling code chunks first.
+    - Supported domains include: docs, code, system-help, firewall, network, ssh, os, users, packages, applications
+    - If no domain is provided, retrieval defaults to docs
+    - Retrieval searches ALL domains in priority order to maximize coverage
+
+    Search strategy:
+    - Specific system domain (firewall, network, etc.) → searches that domain first, then others
+    - Project domain (docs, code, system-help) → searches project resources first, then all system domains
+    - This ensures chunks are found regardless of initial context routing
     """
     if not query or not query.strip():
         log.warning("Empty query - returning no results")
@@ -116,36 +120,43 @@ def retrieve_context(query: str, domain: str = "docs", top_k: int | None = None)
 def _domain_search_order(domain: str) -> list[str]:
     """Return the order of domains to search based on the requested domain.
     
-    This ensures that:
-    - System-specific queries (firewall, network, ssh, etc.) find system-tagged chunks
-    - Fallback searches include project docs and code
-    - All available domains are eventually searched for broad queries
+    CRITICAL DESIGN: This function must include ALL domains in the search order.
+
+    Problem it solves:
+    - Seed stores chunks with domain="firewall", "network", "ssh", "os", etc.
+    - But retrieval was only searching ["system-help", "docs", "code"]
+    - Result: System chunks were never found
+
+    Solution:
+    - Always search ALL domains, in priority order
+    - Specific domain first (if requested), then all others
+    - Ensures chunks are found regardless of context routing
+
+    Search strategy:
+    - Specific queries (firewall, network, etc.) → that domain first, then all others
+    - Generic queries (docs, system-help) → project docs first, then ALL system domains
+    - This gives priority to relevant domains while falling back comprehensively
     """
-    # System-specific domains with fallback to general docs/code
-    if domain == "firewall":
-        return ["firewall", "system-help", "docs", "code"]
-    if domain == "network":
-        return ["network", "system-help", "docs", "code"]
-    if domain == "ssh":
-        return ["ssh", "system-help", "docs", "code"]
-    if domain == "os":
-        return ["os", "system-help", "docs", "code"]
-    if domain == "users":
-        return ["users", "system-help", "docs", "code"]
-    if domain == "packages":
-        return ["packages", "system-help", "docs", "code"]
-    if domain == "applications":
-        return ["applications", "system-help", "docs", "code"]
-    
-    # Project-focused domains
+    all_system_domains = [
+        "firewall", "network", "ssh", "os", "users", "packages", "applications"
+    ]
+
+    # Specific system domain requested: search it first, then everything else
+    if domain in all_system_domains:
+        # Move requested domain to front, keep others after
+        remaining = [d for d in all_system_domains if d != domain]
+        return [domain, "system-help"] + remaining + ["docs", "code"]
+
+    # Project "system-help" domain: search it first, then ALL system domains, then code/docs
     if domain == "system-help":
-        return ["system-help", "docs", "code"]
+        return ["system-help"] + all_system_domains + ["docs", "code"]
+
+    # Project "code" domain: search project code, then docs, then all system domains
     if domain == "code":
-        return ["code", "docs", "system-help"]
-    
-    # Default: start with docs, then try system-help, then everything else
-    # This handles the case where domain=None or domain="docs"
-    return ["docs", "system-help", "code", "firewall", "network", "ssh", "os", "users"]
+        return ["code", "docs", "system-help"] + all_system_domains
+
+    # Default for "docs" or None: docs first, then system domains, then code
+    return ["docs", "system-help"] + all_system_domains + ["code"]
 
 
 def _matches_domain(item: dict, expected_domain: str) -> bool:
