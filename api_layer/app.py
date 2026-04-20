@@ -5,11 +5,27 @@ import os
 import requests
 import subprocess
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
+from api_layer.logging_filters import IgnoreMetricsFilter
+from api_layer.routes.system import router as system_router
+from api_layer.routes.services import router as services_router
+from api_layer.routes.storage import router as storage_router
+from api_layer.routes.logs import router as logs_router
+from api_layer.routes.network import router as network_router
+from api_layer.routes.firewall import router as firewall_router
+from api_layer.routes.theme import router as theme_router
+from api_layer.routes.packages import router as packages_router
+from api_layer.routes import users as users_router
+from api_layer.routes.audio import router as audio_router
+from api_layer.routes.media import router as media_router
+from api_layer.routes.open import router as open_router
+from api_layer.routes.search import router as search_router
+from api_layer.routes.ws import router as ws_router
+from api_layer.routes.voice_ws import router as voice_ws_router
 from api_layer.firewall_core import (
     ensure_firewall_snapshot_vectorized,
     get_firewall_status_json,
@@ -56,6 +72,12 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
+# Attach noise filter to uvicorn loggers
+_metrics_filter = IgnoreMetricsFilter()
+logging.getLogger("uvicorn.access").addFilter(_metrics_filter)
+logging.getLogger("uvicorn.error").addFilter(_metrics_filter)
+logging.getLogger("uvicorn").addFilter(_metrics_filter)
+
 # Add file handler to root logger if it was created successfully
 if rotating_handler:
     logging.getLogger().addHandler(rotating_handler)
@@ -64,6 +86,23 @@ if rotating_handler:
 log = logging.getLogger("api_layer.app")
 
 app = FastAPI()
+
+# Composition root — all route groups registered here.
+app.include_router(system_router)
+app.include_router(services_router)
+app.include_router(storage_router)
+app.include_router(logs_router)
+app.include_router(network_router)
+app.include_router(firewall_router)
+app.include_router(theme_router)
+app.include_router(packages_router)
+app.include_router(users_router.router)
+app.include_router(audio_router)
+app.include_router(media_router)
+app.include_router(open_router)
+app.include_router(search_router)
+app.include_router(ws_router)
+app.include_router(voice_ws_router)
 
 
 # ── Startup: initialise Qdrant collection and seed in background ─────
@@ -130,7 +169,18 @@ def index(request: Request):
 
 @app.get("/firewall")
 def firewall_page(request: Request):
-    return _render_template(request, "firewall.html")
+    # Firewall UI now lives as a tab inside the Network page.
+    return RedirectResponse(url="/network", status_code=302)
+
+
+@app.get("/network")
+def network_page(request: Request):
+    return _render_template(request, "network.html")
+
+
+@app.get("/logs")
+def logs_page(request: Request):
+    return _render_template(request, "logs.html")
 
 
 @app.get("/fw_old")

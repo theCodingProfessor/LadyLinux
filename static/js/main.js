@@ -704,8 +704,11 @@ async function initializeApp() {
     initServiceFilters();
     initServicesSorting();
     initAskSuggestions();
+    initProcessControls();
     initChat();
     syncOverviewFromDocument();
+    loadServices();
+    loadProcesses();
 
     document.addEventListener("lady:overview-sync", syncOverviewFromDocument);
     document.addEventListener("lady:action-complete", (event) => {

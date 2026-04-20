@@ -542,9 +542,24 @@ function applyTheme(themeInput, options = {}) {
   if (typeof themeInput === "string" && options.remote !== false) {
     fetch(`/api/theme/theme/${encodeURIComponent(themeInput)}/apply`, {
       method: "POST",
-    }).catch((error) => {
-      console.error("Backend theme apply error:", error);
-    });
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const cssVars = data?.css || data?.theme?.css_variables;
+        if (cssVars && typeof cssVars === "object") {
+          Object.entries(cssVars).forEach(([k, v]) =>
+            document.documentElement.style.setProperty(k, v)
+          );
+        }
+        localStorage.setItem(THEME_SELECTION_STORAGE_KEY, themeInput);
+        document.documentElement.setAttribute("data-theme", themeInput);
+        updateActiveThemeCard(themeInput);
+        if (typeof syncAllThemeIcons === "function") syncAllThemeIcons(themeInput);
+        notifyOverviewSync();
+      })
+      .catch((error) => {
+        console.error("Backend theme apply error:", error);
+      });
 
     return true;
   }
