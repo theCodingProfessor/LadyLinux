@@ -38,7 +38,7 @@ if gpu_available():
 else:
     CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "256"))
     CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "32"))
-    TOP_K = int(os.getenv("TOP_K", "3"))
+    TOP_K = int(os.getenv("TOP_K", "5"))
 
 # File safety limits
 # Increased from 1 MB to 10 MB to support larger log files like kern.log
@@ -68,7 +68,19 @@ EXCLUDED_RAG_PATHS: list[str] = [
 ]
 
 RAG_DOMAIN = "lady_linux"
-RAG_DOMAINS = ("docs", "code", "system-help")
+# All domains that can be tagged during seeding (from both ALLOWED_RAG_PATHS and ALLOWED_SEED_ROOTS)
+RAG_DOMAINS = (
+    "docs",           # Project markdown documentation
+    "code",           # Project Python/JS code
+    "system-help",    # General system files (fallback)
+    "firewall",       # /etc/ufw/, /etc/iptables/, etc.
+    "network",        # /etc/network/, /etc/netplan/, etc.
+    "ssh",            # /etc/ssh/ config
+    "os",             # /etc/systemd/, kernel logs, sysctl
+    "users",          # /var/log/auth.log, passwd, group
+    "packages",       # /var/log/apt/, yum, pacman
+    "applications",   # /var/log/nginx/, apache2, etc.
+)
 
 
 def _normalize(path: str) -> str:
@@ -113,10 +125,23 @@ def domain_for_path(path: str) -> str:
     """Return the payload domain tag for a given file path.
 
     Resolution order:
-    1) fixed Lady Linux domain for project-scoped chunks
-    2) fallback keyword router when callers explicitly request it
+    1) Check DOMAIN_MAP for system file paths (used during seeding)
+    2) Check project-scoped files via allowed_for_rag
+    3) Fallback to keyword-based domain detection
+
+    IMPORTANT: This function is used by BOTH the seeding pipeline and retrieval,
+    so it must correctly identify domains for all files in ALLOWED_SEED_ROOTS,
+    not just ALLOWED_RAG_PATHS.
     """
     normalized = _normalize(path).lower()
+
+    # First, check DOMAIN_MAP for system file paths (highest priority)
+    # This ensures /etc/ufw/, /etc/ssh/, etc. get correct domains during seed
+    for prefix, domain in DOMAIN_MAP.items():
+        if normalized.startswith(prefix.lower()) or path.startswith(prefix):
+            return domain
+
+    # Then check project-scoped files
     if allowed_for_rag(path):
         if "/docs/" in normalized or normalized.endswith(".md"):
             return "docs"
@@ -126,6 +151,8 @@ def domain_for_path(path: str) -> str:
         ):
             return "code"
         return "system-help"
+
+    # Fallback: use keyword-based detection for uncategorized paths
     return detect_domain_from_path(path)
 
 

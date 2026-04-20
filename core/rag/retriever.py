@@ -114,11 +114,38 @@ def retrieve_context(query: str, domain: str = "docs", top_k: int | None = None)
 
 
 def _domain_search_order(domain: str) -> list[str]:
+    """Return the order of domains to search based on the requested domain.
+    
+    This ensures that:
+    - System-specific queries (firewall, network, ssh, etc.) find system-tagged chunks
+    - Fallback searches include project docs and code
+    - All available domains are eventually searched for broad queries
+    """
+    # System-specific domains with fallback to general docs/code
+    if domain == "firewall":
+        return ["firewall", "system-help", "docs", "code"]
+    if domain == "network":
+        return ["network", "system-help", "docs", "code"]
+    if domain == "ssh":
+        return ["ssh", "system-help", "docs", "code"]
+    if domain == "os":
+        return ["os", "system-help", "docs", "code"]
+    if domain == "users":
+        return ["users", "system-help", "docs", "code"]
+    if domain == "packages":
+        return ["packages", "system-help", "docs", "code"]
+    if domain == "applications":
+        return ["applications", "system-help", "docs", "code"]
+    
+    # Project-focused domains
     if domain == "system-help":
         return ["system-help", "docs", "code"]
     if domain == "code":
         return ["code", "docs", "system-help"]
-    return ["docs", "system-help", "code"]
+    
+    # Default: start with docs, then try system-help, then everything else
+    # This handles the case where domain=None or domain="docs"
+    return ["docs", "system-help", "code", "firewall", "network", "ssh", "os", "users"]
 
 
 def _matches_domain(item: dict, expected_domain: str) -> bool:
