@@ -154,7 +154,8 @@ cd LadyLinux
 sudo ./scripts/install_ladylinux.sh --clone --branch main --repair-layout
 
 # Daily use
-sudo ./scripts/refresh_vm.sh main
+# sudo ./scripts/refresh_vm.sh [branch name]
+sudo ./scripts/refresh_vm.sh Capstone_Dev_01
 If you follow this workflow exactly, you will avoid:
 
 nested repo issues

@@ -6,7 +6,7 @@
 #   Run the LadyLinux FastAPI application as a managed system service.
 #
 # Assumptions:
-#   - Application code is located at /opt/ladylinux/app
+#   - Application code is located at /opt/ladylinux
 #   - Python virtual environment exists at /opt/ladylinux/venv
 #   - Environment configuration is defined in /etc/ladylinux/ladylinux.env
 #   - Service runs as the dedicated "ladylinux" system user
@@ -34,20 +34,30 @@ User=ladylinux
 Group=ladylinux
 
 # Working directory is the cloned repo
-WorkingDirectory=/opt/ladylinux/app
-
-# Load environment variables (ports, paths, modes, etc.)
-EnvironmentFile=-/etc/ladylinux/ladylinux.env
+WorkingDirectory=/opt/ladylinux
 
 # Explicit PATH so systemd does not rely on shell defaults
 Environment="PATH=/opt/ladylinux/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin"
+Environment="LADYLINUX_HOST=0.0.0.0"
+Environment="LADYLINUX_PORT=8000"
+Environment="LADYLINUX_TRACKER_DIR=/var/lib/ladylinux"
+
+# Load environment variables (ports, paths, modes, etc.).
+# Values from the env file override the defaults above.
+EnvironmentFile=-/etc/ladylinux/ladylinux.env
+
+# ---- Pre-start setup ----
+# Ensure data and log directories exist and have correct permissions
+ExecStartPre=/usr/bin/mkdir -p /var/lib/ladylinux/qdrant /var/lib/ladylinux/data /var/lib/ladylinux/user_uploads /var/log/ladylinux
+ExecStartPre=/usr/bin/chown -R ladylinux:ladylinux /var/lib/ladylinux /var/log/ladylinux
+ExecStartPre=/usr/bin/chmod -R 0777 /var/lib/ladylinux /var/log/ladylinux
 
 # ---- Application launch ----
 # Adjust the module path below if your FastAPI app entry point changes.
-# Example assumes: app_layer.py defines `app = FastAPI(...)`
-ExecStart=/opt/ladylinux/venv/bin/uvicorn app_layer:app \
-    --host ${LADYLINUX_HOST:-0.0.0.0} \
-    --port ${LADYLINUX_PORT:-8000}
+# After refactoring: api_layer/app.py defines `app = FastAPI(...)`
+ExecStart=/opt/ladylinux/venv/bin/uvicorn api_layer.app:app \
+    --host ${LADYLINUX_HOST} \
+    --port ${LADYLINUX_PORT}
 
 # ---- Restart policy ----
 Restart=on-failure
@@ -58,7 +68,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
 ProtectHome=true
-ReadWritePaths=/var/lib/ladylinux /opt/ladylinux
+ReadWritePaths=/var/lib/ladylinux /opt/ladylinux /var/log/ladylinux
 
 # ---- Logging ----
 # Logs are available via:
