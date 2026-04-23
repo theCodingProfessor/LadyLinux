@@ -101,10 +101,10 @@ All scripts reference:
 sudo ./scripts/refresh_lady.sh main
 
 # 2. Test install script
-sudo ./scripts/start_lady.sh
+sudo ./scripts/system_build.sh
 
 # 3. Test shutdown script
-sudo ./scripts/stop_ll.sh
+sudo ./scripts/system_stop.sh
 
 # 4. Verify logging
 tail -f /var/log/ladylinux/ladylinux.log
@@ -171,7 +171,7 @@ These scripts are ready for immediate use:
 # Use in your normal workflow
 sudo ./scripts/install_ladylinux.sh --clone --branch main
 sudo ./scripts/refresh_lady.sh main
-sudo ./scripts/stop_ll.sh
+sudo ./scripts/system_stop.sh
 ```
 
 All scripts now work together with consistent behavior and messaging.

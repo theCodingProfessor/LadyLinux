@@ -2,14 +2,14 @@
 
 #===============================================================================
 # LadyLinux Installation Script
-# File: start_lady.sh
+# File: system_build.sh
 #
 # Purpose:
 #   Idempotent installation script that checks existing system state before
 #   installing components. Safe to run multiple times.
 #
 # Usage:
-#   sudo ./start_lady.sh
+#   sudo ./system_build.sh
 #===============================================================================
 
 set -euo pipefail
@@ -108,7 +108,7 @@ fi
 
 # --- Clone or update LadyLinux repository ---
 echo "[5/10] Setting up LadyLinux repository..."
-BRANCH="${LADYLINUX_BRANCH:-Capstone_Dev_01}"
+BRANCH="${LADYLINUX_BRANCH:-main}"
 echo "  → Using branch: $BRANCH"
 
 if [ -d "/opt/ladylinux" ]; then
@@ -145,11 +145,11 @@ else
 fi
 
 # --- Make installer scripts executable (if they exist) ---
-if [ -f "/opt/ladylinux/scripts/install_ladylinux.sh" ]; then
-    sudo chmod +x /opt/ladylinux/scripts/install_ladylinux.sh
+if [ -f "/opt/ladylinux/scripts/system_build.sh" ]; then
+    sudo chmod +x /opt/ladylinux/scripts/system_build.sh
 fi
-if [ -f "/opt/ladylinux/scripts/refresh_vm.sh" ]; then
-    sudo chmod +x /opt/ladylinux/scripts/refresh_vm.sh
+if [ -f "/opt/ladylinux/scripts/system_refresh.sh" ]; then
+    sudo chmod +x /opt/ladylinux/scripts/system_refresh.sh
 fi
 
 # --- Install Ollama ---

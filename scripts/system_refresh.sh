@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #===============================================================================
 # LadyLinux VM MIX Refresh Script
-# File: scripts/refresh_lady_mix.sh
+# File: scripts/system_refresh.sh
 # Author: Clinton Garwood
 # Version: 0.30
 #
@@ -19,11 +19,11 @@
 #   6) Restart service and print summary
 #
 # Usage:
-#   sudo ./scripts/refresh_vm.sh [branch]
+#   sudo ./scripts/refresh_system.sh [branch]
 #
 # Examples:
-#   sudo ./scripts/refresh_vm.sh develop
-#   sudo ./scripts/refresh_vm.sh main
+#   sudo ./scripts/refresh_system.sh develop
+#   sudo ./scripts/refresh_system.sh main
 #
 # Notes:
 #   - Expects system layout per docs/DEPLOYMENT.md:
@@ -42,7 +42,7 @@ set -Eeuo pipefail
 
 #----------------------------- Configuration -----------------------------------
 
-BRANCH="${1:-origin/colab/cap_dar_mix}"
+BRANCH="${1:-main}"
 
 APP_DIR=""
 APP_DIR_CANDIDATES=("/opt/ladylinux/app" "/opt/ladylinux")
@@ -81,7 +81,7 @@ require_cmd() {
 
 require_root() {
   if [[ "${EUID:-$(id -u)}" -ne 0 ]]; then
-    die "Please run as root (e.g., sudo ./scripts/refresh_vm.sh $BRANCH)" 2
+    die "Please run as root (e.g., sudo ./scripts/system_run.sh $BRANCH)" 2
   fi
 }
 

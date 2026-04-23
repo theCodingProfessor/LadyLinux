@@ -45,12 +45,12 @@ print_info() {
 
 # Check if scripts exist
 echo "Step 1: Verifying script files..."
-if [ ! -f "$SCRIPT_DIR/run_ll.sh" ]; then
-    print_error "run_ll.sh not found at $SCRIPT_DIR/run_ll.sh"
+if [ ! -f "$SCRIPT_DIR/system_run.sh" ]; then
+    print_error "system_run.sh not found at $SCRIPT_DIR/system_run.sh"
     exit 1
 fi
-if [ ! -f "$SCRIPT_DIR/stop_ll.sh" ]; then
-    print_error "stop_ll.sh not found at $SCRIPT_DIR/stop_ll.sh"
+if [ ! -f "$SCRIPT_DIR/system_stop.sh" ]; then
+    print_error "system_stop.sh not found at $SCRIPT_DIR/system_stop.sh"
     exit 1
 fi
 print_status "Both shell scripts found"
@@ -58,10 +58,10 @@ echo ""
 
 # Make shell scripts executable
 echo "Step 2: Making shell scripts executable..."
-chmod +x "$SCRIPT_DIR/run_ll.sh"
-print_status "run_ll.sh is executable"
-chmod +x "$SCRIPT_DIR/stop_ll.sh"
-print_status "stop_ll.sh is executable"
+chmod +x "$SCRIPT_DIR/system_run.sh"
+print_status "system_run.sh is executable"
+chmod +x "$SCRIPT_DIR/system_stop.sh"
+print_status "system_stop.sh is executable"
 echo ""
 
 # Check if Desktop directory exists

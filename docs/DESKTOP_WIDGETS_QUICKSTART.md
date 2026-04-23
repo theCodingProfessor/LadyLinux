@@ -30,7 +30,7 @@ That's it! The script will:
 ```bash
 # 1. Make scripts executable
 chmod +x /opt/ladylinux/scripts/run_ll.sh
-chmod +x /opt/ladylinux/scripts/stop_ll.sh
+chmod +x /opt/ladylinux/scripts/system_stop.sh
 
 # 2. Copy desktop files to desktop
 cp /opt/ladylinux/scripts/LadyLinux-*.desktop ~/Desktop/

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 #===============================================================================
 # LadyLinux Service Shutdown Script
-# File: stop_ll.sh
+# File: system_stop.sh
 #
 # Purpose:
 #   Stop LadyLinux service and related processes gracefully.
 #   Sends SIGTERM first, then SIGKILL if necessary.
 #
 # Usage:
-#   sudo ./stop_ll.sh
+#   sudo ./system_stop.sh
 #
 # Exit codes:
 #   0  success

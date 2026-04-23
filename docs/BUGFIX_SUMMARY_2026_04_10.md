@@ -147,7 +147,7 @@ curl http://localhost:8000/logs      # Logs page
 
 1. **Re-run refresh script** to deploy changes:
    ```bash
-   sudo ./scripts/refresh_lady_mix.sh
+   sudo ./scripts/system_refresh.sh
    ```
 
 2. **Test manual run** as before:

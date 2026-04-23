@@ -23,8 +23,8 @@ Two critical bugs have been identified and **fixed**:
 ### 1️⃣ Deploy the fixes:
 ```bash
 cd /opt/ladylinux/scripts
-sudo chmod +x refresh_lady_mix.sh
-sudo ./refresh_lady_mix.sh
+sudo chmod +x system_refresh.sh
+sudo ./system_refresh.sh
 ```
 
 ### 2️⃣ Verify the service:

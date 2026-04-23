@@ -8,7 +8,7 @@ RL_START_LADY.SH
 
 #===============================================================================
 # LadyLinux Installation Script - User Friendly Edition
-# File: start_lady.sh
+# File: system_build.sh
 #
 # Purpose:
 #   Idempotent installation script that checks existing system state before
@@ -16,7 +16,7 @@ RL_START_LADY.SH
 #   clear explanations of what it does and why it's needed.
 #
 # Usage:
-#   sudo ./start_lady.sh
+#   sudo ./system_build.sh
 #===============================================================================
 
 set -euo pipefail
@@ -706,7 +706,7 @@ STOP_II_.SH
 
 #===============================================================================
 # LadyLinux Service Stop Script - User Friendly Edition
-# File: stop_ll.sh
+# File: system_stop.sh
 #
 # Purpose:
 #   Gracefully stops LadyLinux service and any orphaned processes.
@@ -721,8 +721,8 @@ STOP_II_.SH
 #   [6/6] Log locations
 #
 # Usage:
-#   chmod +x stop_ll.sh
-#   sudo ./stop_ll.sh
+#   chmod +x system_stop.sh
+#   sudo ./system_stop.sh
 #===============================================================================
 
 set -euo pipefail

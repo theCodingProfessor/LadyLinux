@@ -18,7 +18,7 @@ First, ensure both shell scripts have executable permissions:
 
 ```bash
 chmod +x /opt/ladylinux/scripts/run_ll.sh
-chmod +x /opt/ladylinux/scripts/stop_ll.sh
+chmod +x /opt/ladylinux/scripts/system_stop.sh
 ```
 
 ### Step 2: Copy Desktop Files to Desktop
@@ -142,7 +142,7 @@ Alternatively, you can right-click on the desktop icon and select **"Make Link E
 ```bash
 # Make sure scripts are executable
 chmod +x /opt/ladylinux/scripts/run_ll.sh
-chmod +x /opt/ladylinux/scripts/stop_ll.sh
+chmod +x /opt/ladylinux/scripts/system_stop.sh
 
 # Make sure desktop files are executable
 chmod +x ~/Desktop/LadyLinux-Start.desktop

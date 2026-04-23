@@ -117,7 +117,7 @@ journalctl -u ladylinux-api.service -f
 
 ```bash
 # Run the updated install script (includes tracker directory setup)
-sudo ./scripts/start_lady.sh
+sudo ./scripts/system_build.sh
 ```
 
 ---

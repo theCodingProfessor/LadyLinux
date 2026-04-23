@@ -7,8 +7,8 @@ Follow these steps to verify both fixes are working:
 ### Step 1: Deploy Changes
 ```bash
 cd /opt/ladylinux/scripts
-sudo chmod +x refresh_lady_mix.sh
-sudo ./refresh_lady_mix.sh
+sudo chmod +x system_refresh.sh
+sudo ./system_refresh.sh
 ```
 
 This will:
@@ -139,7 +139,7 @@ sudo chmod -R 0775 /var/lib/ladylinux /var/log/ladylinux
 # Revert code changes
 git -C /opt/ladylinux checkout api_layer/app.py
 git -C /opt/ladylinux checkout ladylinux-api.service
-git -C /opt/ladylinux checkout scripts/refresh_lady_mix.sh
+git -C /opt/ladylinux checkout scripts/system_refresh.sh
 git -C /opt/ladylinux checkout scripts/refresh_lady.sh
 ```
 

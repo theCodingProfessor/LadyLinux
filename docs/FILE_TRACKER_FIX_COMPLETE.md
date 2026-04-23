@@ -85,7 +85,7 @@ Environment="LADYLINUX_TRACKER_DIR=/var/lib/ladylinux"
 
 Simply run the updated installer:
 ```bash
-sudo ./scripts/start_lady.sh
+sudo ./scripts/system_build.sh
 ```
 
 The script will:
