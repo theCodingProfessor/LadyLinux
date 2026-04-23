@@ -1,6 +1,7 @@
 # Lady Linux - Frontend Enhancements and UI Contributions
 
 ## Overview
+#### By: Scott Crabb
 
 This document outlines my contributions to the LLM project, primarily focused on improving the user interface, usability, and visual consistency. The work includes styling improvements, theming support, fullscreen functionality, and syntax-related fixes.
 
