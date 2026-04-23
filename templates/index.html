@@ -2,44 +2,252 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lady Linux</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <script>
+    document.documentElement.setAttribute("data-ui-ready", "false");
+  </script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
   <link href="/static/css/style.css" rel="stylesheet">
 </head>
-<body>
-{% include 'nav.html' %}
-<br>
-<div class="container">
-  <h1 class="accent">Welcome to Lady Linux v0.1</h1>
-  <p>This demo shows how an on-board LLM can interact with your system.</p>
+<body data-page="index">
+  {% include "nav.html" %}
 
-  <div id="chatResponse" class="response-box"></div>
-  <form id="chatForm">
-    <label for="prompt" class="form-label">Ask Lady Linux:</label>
-    <input type="text" id="prompt" name="prompt" class="form-control" placeholder="Type your question here...">
-    <button type="submit" class="btn btn-accent mt-3">Send</button>
-  </form>
+  {% include "controls.html" %}
+  {% include "lady_panel.html" %}
 
-</div>
+  <main class="container pb-4">
+    {% include "context_nav.html" %}
+    <div class="row g-4" id="dashboard-sortable">
+      <div class="col-12" data-widget-id="ai-console">
+        <!-- 1) AI Console -->
+        <section class="card ll-dashboard-card ll-console">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+              <h1 class="h3 mb-0">AI Console</h1>
+              <span class="chat-status" id="chatStatus" data-state="idle">idle</span>
+              <span class="ll-drag-handle ms-auto me-2" title="Drag to reorder">
+                <i class="bi bi-grip-vertical"></i>
+              </span>
+            </div>
 
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-<script src="/static/js/chat.js"></script>
+            <div class="mb-3 p-3 rounded-3 ll-console-prompt">
+              <strong>Check system status</strong>
+            </div>
 
+            <div class="response-area chat-response-stream mb-3" id="chatResponse">
+              <p class="mb-2"><strong>System response:</strong></p>
+              <ul class="mb-0">
+                <li>CPU usage</li>
+                <li>Memory usage</li>
+                <li>Disk usage</li>
+              </ul>
+            </div>
+
+            <div id="chatConfirmation" class="chat-confirmation d-none"></div>
+
+            <form id="ucsChatForm" class="row g-2 align-items-center">
+              <div class="col-12 col-md">
+                <label for="ucsPrompt" class="visually-hidden">Assistant Command</label>
+                <input type="text" id="ucsPrompt" class="form-control" autocomplete="off" placeholder="Type command for Lady Linux AI...">
+              </div>
+              <div class="col-12 col-md-auto">
+                <button type="submit" class="btn btn-primary w-100">Send</button>
+              </div>
+              <!-- Mic button: voice_client.js wires this via data-mic-btn + data-voice-source -->
+              <div class="col-12 col-md-auto">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary w-100"
+                  data-mic-btn
+                  data-voice-source="console"
+                  title="Start voice input"
+                  aria-label="Voice input"
+                >
+                  <i class="bi bi-mic"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12" data-widget-id="metric-cards">
+        <!-- 2) System Overview -->
+        <section class="card ll-dashboard-card">
+          <div class="card-body pb-2">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h6 text-muted mb-0">Live Metrics</h2>
+              <span class="ll-drag-handle" title="Drag to reorder">
+                <i class="bi bi-grip-vertical"></i>
+              </span>
+            </div>
+            <div class="row g-3">
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">CPU Usage</h2>
+                    <p id="cpuLoad" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="CPU usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="cpuProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">Memory Usage</h2>
+                    <p id="memoryUsage" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="memoryProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+              <div class="col-12 col-md-4">
+                <article class="card ll-dashboard-card ll-metric-card h-100">
+                  <div class="card-body">
+                    <h2 class="h6 text-muted">Disk Space</h2>
+                    <p id="diskUsage" class="display-6 fw-semibold mb-3">--%</p>
+                    <div class="progress ll-metric-bar" role="progressbar" aria-label="Disk usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                      <div id="diskProgress" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 3) Suggested Actions -->
+      <div class="col-12 col-lg-6" data-widget-id="ask-panel">
+        <section class="card ll-dashboard-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">Suggested Actions</h2>
+              <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            </div>
+            <div class="list-group ll-action-list ask-list">
+              <button type="button" class="list-group-item list-group-item-action ask-item" data-prompt="optimize system performance">Optimize system performance</button>
+              <button type="button" class="list-group-item list-group-item-action ask-item" data-prompt="clean up log files">Clean up log files</button>
+              <button type="button" class="list-group-item list-group-item-action ask-item" data-prompt="update firewall rules">Update firewall rules</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 4) Recent Activity -->
+      <div class="col-12 col-lg-6" data-widget-id="activity">
+        <section class="card ll-dashboard-card h-100">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">Recent Activity</h2>
+              <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+            </div>
+            <div id="systemActivity" class="response-area activity-feed">
+              <ul class="activity-log">
+                <li><span class="activity-entry"><i class="bi bi-file-earmark-text"></i> Config file edited</span></li>
+                <li><span class="activity-entry"><i class="bi bi-person-check"></i> User login</span></li>
+                <li><span class="activity-entry"><i class="bi bi-shield-check"></i> Firewall rule added</span></li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 5) Memory Panel -->
+      <div class="col-12" data-widget-id="memory-panel">
+        <section class="card ll-dashboard-card">
+          <div class="card-body">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h2 class="h5 mb-0">What Lady Remembers</h2>
+              <div class="d-flex align-items-center gap-2">
+                <button
+                  type="button"
+                  class="btn btn-sm btn-outline-light"
+                  id="memoryPanelToggle"
+                  title="Collapse"
+                  aria-expanded="true"
+                  aria-controls="memoryPanelBody"
+                >
+                  <i class="bi bi-chevron-up" id="memoryChevron"></i>
+                </button>
+                <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+              </div>
+            </div>
+            <div id="memoryPanelBody">
+              <!-- stubbed: will be populated by memory system -->
+              <ul class="activity-log" id="memoryList">
+                <li>Asked about firewall rules on the network page</li>
+                <li>Prefers dark mode</li>
+                <li>Restarted ladylinux-api.service during last session</li>
+                <li>Checked CPU usage trends on the System page</li>
+                <li>Requested log file cleanup on 2026-03-28</li>
+              </ul>
+              <div class="mt-3">
+                <button type="button" class="btn btn-sm btn-outline-light" id="memoryClearBtn">
+                  <i class="bi bi-trash"></i> Clear memory
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="col-12" data-widget-id="module-buttons">
+        <!-- 5) Module Buttons -->
+        <div class="ll-widget-drag-bar">
+          <span class="ll-drag-handle" title="Drag to reorder"><i class="bi bi-grip-vertical"></i></span>
+        </div>
+        <section class="row g-3">
+          <div class="col-12 col-md-4">
+            <a href="/os" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
+              <div class="card-body text-center">
+                <i class="bi bi-cpu fs-2 d-block mb-2"></i>
+                <span class="h5 mb-0">System</span>
+              </div>
+            </a>
+          </div>
+          <div class="col-12 col-md-4">
+            <a href="/users" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
+              <div class="card-body text-center">
+                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                <span class="h5 mb-0">Users</span>
+              </div>
+            </a>
+          </div>
+          <div class="col-12 col-md-4">
+            <a href="/network" class="card ll-dashboard-card ll-module-card text-decoration-none h-100">
+              <div class="card-body text-center">
+                <i class="bi bi-globe fs-2 d-block mb-2"></i>
+                <span class="h5 mb-0">Network</span>
+              </div>
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/design_engine.js"></script>
+  <script src="/static/js/themes.js"></script>
+  <!-- Load after themes.js so window.applyTheme is available -->
+  <script src="/static/js/nav_controls.js" defer></script>
+  <script src="/static/js/global.js"></script>
+  <script type="module" src="/static/js/ui_event_bus.js"></script>
+  <script type="module" src="/static/js/system_metrics.js"></script>
+  <script src="/static/js/actions.js"></script>
+  <script src="/static/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="/static/js/chat.js"></script>
+  <script src="/static/js/ladyWidget.js"></script>
+  <script src="/static/js/voice_client.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+  <script src="/static/js/dnd.js"></script>
+  <script type="module" src="/static/js/dashboard.js"></script>
 </body>
 </html>
-
-<!--  
-    <h1>Lady Linux Assistant</h1>
-    <div id="chat-box"></div>
-    <input type="text" id="user-input" placeholder="Type your message...">
-    <button id="send-btn">Send</button>
-
-  <form id="chatForm">
-    <label for="prompt" class="form-label">Ask Lady Linux:</label>
-    <input type="text" id="prompt" name="prompt" class="form-control" placeholder="Type your question here...">
-    <button type="submit" class="btn btn-accent mt-3">Send</button>
-  </form>
-
-  <div id="chatResponse" class="response-box"></div>
-</div>
--->

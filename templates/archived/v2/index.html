@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lady Linux</title>
+  <link href="/css/v3/style.css" rel="stylesheet">
+</head>
+
+<body>
+
+<main class="app-shell">
+  <section class="app-surface">
+
+    <!-- Hero -->
+    <header class="hero">
+      <h1>
+        Lady Linux
+        <span class="build-tag">v0.1.4</span>
+      </h1>
+      <p class="subtitle">
+        Describe what you want to change.
+      </p>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-pill">
+      <a href="/static" class="nav-item active">Home</a>
+      <a href="/system" class="nav-item">System</a>
+      <a href="/users" class="nav-item">Users</a>
+      <a href="/firewall" class="nav-item">Firewall</a>
+      <a href="/os" class="nav-item">OS</a>
+    </nav>
+
+    <!-- AI Control Surface -->
+    <section class="ai-panel">
+      <form class="ai-form" id="aiForm" onsubmit=streamToElement()>
+        <input
+          type="text"
+          id="aiInput"
+          placeholder="Example: Show my firewall status"
+          class="ai-input"
+          autocomplete="off"
+        />
+        <button type="submit" class="ai-button">
+          Execute
+        </button>
+      </form>
+
+      <span class="ai-status">Local model active</span>
+    </section>
+
+    <!-- AI Response -->
+    <div class="response-box hidden" id="aiResponse"></div>
+
+  </section>
+</main>
+
+<script src="/js/archive/v3/chat.js"></script>
+<script src="/js/archive/v3/chat_archive.js"></script>
+
+</body>
+</html>

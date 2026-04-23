@@ -19,13 +19,13 @@ For architectural context, see:
 Bootstrap a new machine (creates directories + service user + clones repo):
 
 ```bash
-sudo ./scripts/install_ladylinux.sh --clone --branch develop
+sudo ./scripts/system_build.sh --clone --branch main
 ```
 
 Refresh/update the running system (pull latest code, update venv if needed, restart service):
 
 ``` bash
-sudo ./scripts/refresh_vm.sh develop
+sudo ./scripts/system_refresh.sh develop_branch_name
 ``` 
 
 ``` bash
@@ -37,7 +37,7 @@ journalctl -u ladylinux-api.service -n 200 --no-pager
 ### Script Overview
 
 ``` bash
-install_ladylinux.sh
+system_build.sh
 ``` 
 
 Bootstraps a host system for a LadyLinux installation.
@@ -63,15 +63,15 @@ What it does NOT do:
 Typical usage:
 
 ``` bash
-sudo ./scripts/install_ladylinux.sh
-sudo ./scripts/install_ladylinux.sh --clone --branch develop
-sudo ./scripts/install_ladylinux.sh --dry-run
+sudo ./scripts/system_build.sh
+sudo ./scripts/system_build.sh --clone --branch develop
+sudo ./scripts/system_build.sh --dry-run
 ``` 
 
 <hr>
 
 ``` text
-refresh_vm.sh
+system_refresh.sh
 ```
 Refreshes the LadyLinux application layer from the GitHub repository and restarts the API service.
 
@@ -97,9 +97,9 @@ What it does NOT do:
 Typical usage:
 
 ``` bash
-sudo ./scripts/refresh_vm.sh develop
-sudo ./scripts/refresh_vm.sh develop --always-rebuild-venv
-sudo ./scripts/refresh_vm.sh develop --dry-run
+sudo ./scripts/system_refresh.sh develop
+sudo ./scripts/system_refresh.sh develop --always-rebuild-venv
+sudo ./scripts/system_refresh.sh develop --dry-run
 ```
 
 Useful options:
